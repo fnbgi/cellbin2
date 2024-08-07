@@ -1,12 +1,12 @@
 # CellBin解决方案技术说明
 
-**引言**
+## **引言**
 
 本文档分为两大部分：“Cellbin的介绍说明”，“Cellbin的使用方法”，旨在帮助用户更好的理解“Cellbin”，并提供获得细胞精度级别的基因矩阵的解决方案。使用此文档的用户需要提前获得测序数据以及生物影像图。
 
-**CellBin**
+## **CellBin**
 
-**CellBin框架说明**
+### **CellBin框架说明**
 
 CellBin是一套将时空测序数据与生物影像图相结合，最后获得细胞级别精度的基因矩阵数据的流程，它嵌入在StereoMap和SAW流程当中，关系如下：
 
@@ -14,13 +14,13 @@ CellBin是一套将时空测序数据与生物影像图相结合，最后获得�
 
 CellBin流程包含QC，拼接，配准，组织分割，细胞分割，细胞修正，生成cellbin矩阵这几个模块。其中QC模块与图像手动处理部分（详见《CellBin解决方案技术说明》中的QC介绍）放在StereoMap v4软件中执行，剩余模块在Stereo-seq Analysis Workflow (SAW) 流程中执行。
 
-**StereoMap v4：** StereoMap 是一款无需编程的桌面端软件，包括 Stereo-seq 数据交互式的可视化、图像的手动处理及小工具三个模块。图像可视化兼容了之前StereoMap3.0的功能，图像处理和小工具兼容 ImageStudio 的部分功能，修改为 Step by step 的方式，降低用户的学习成本，提升用户满意度。
+**StereoMap v4**:  StereoMap 是一款无需编程的桌面端软件，包括 Stereo-seq 数据交互式的可视化、图像的手动处理及小工具三个模块，支持用户在本地电脑桌面端进行几十块数据可视化和简单的探索分析。交互式可视化模块支持多组学、多模态时空数据的展示和基础数据挖掘；图像手动处理模块迁移ImageStudio部分图像处理功能，修改为 Step by step 的方式，降低用户的学习成本，以便为流程化的方式提供图像处理功能。小工具中的 QC 评估图像是否可以调用 SAW 自动的图像分析算法。
 
-**Stereo-seq Analysis Workflow (SAW) ：** SAW软件套件是一套捆绑式pipelines，用于将测序读数定位到其在组织切片上的空间位置，量化空间特征表达，并直观地呈现空间表达分布。
+**Stereo-seq Analysis Workflow (SAW) ：** 时空标准分析流程软件（SAW）是一套捆绑式pipelines，时空标准分析流程软件，核心是将Stereo-seq测序FASTQs的reads定位到其在组织切片上的空间位置，量化基因表达，直观呈现其在空间上的分布。同时提供辅助小工具，支持用户更方便进入下游分析。
 
 **QC**：对生物影像图中拍摄到的芯片 track 线进行质检，判断是否达到后续自动化配准模块要求
 
-**拼接**：如果提供的影像图为拼接好的大图，则跳过这一步。若提供的影像图为显微镜小图，则会将小图拼接成一张大图。
+**拼接（可选）**：如果提供的影像图为拼接好的大图，则跳过这一步。若提供的影像图为显微镜小图，则会将小图拼接成一张大图。
 
 **配准**：基于track线的高精度自动化配准分为两部分：第一部分：有 track 且 QC 通过的情况下，通过track线将计算出图像相对表达矩阵的缩放尺度，以及旋转角度；第二部分：拼接好的影像大图与测序下机后的基因生成的基因可视化图（gene）的做形态学上配准，得到90度倍数的旋转或是翻转，以及超过位移参数。
 
@@ -32,9 +32,9 @@ CellBin流程包含QC，拼接，配准，组织分割，细胞分割，细胞�
 
 以上算法模块的详细介绍可以看：[https://www.biorxiv.org/content/10.1101/2023.02.28.530414v5](https://www.biorxiv.org/content/10.1101/2023.02.28.530414v5)
 
-**CellBin使用**
+### **CellBin使用**
 
-CellBin的使用**需要分别执行**Stereomap v4中**QC**以及SAW中的**SAW count，**才能获得最终Cellbin结果。
+CellBin的使用**需要分别执行**Stereomap v4中**QC**以及SAW中的**SAW count，** 才能获得最终Cellbin结果。
 
 以**ssDNA Demo：SS200000135TL\_D1** 为例：
 
@@ -44,7 +44,7 @@ CellBin的使用**需要分别执行**Stereomap v4中**QC**以及SAW中的**SAW 
 
 **QC输入：** 显微镜软件输出的大图，文件格式为TIFF (.tif、.tiff)、BigTIFF图像格式。
 
-若只使用Demo数据体验流程，可根据这份简易文档逐步操作：_[《stereomap4.0版本手动方案》](https://alidocs.dingtalk.com/i/nodes/QOG9lyrgJP3d2vbofrad092yVzN67Mw4?utm_scene=team_space)_；若想了解更详细的流程与信息，以下附上了执行QC和SAW的完整操作。
+若只使用Demo数据体验流程，可根据这份简易文档逐步操作：[《stereomap4.0版本手动方案》](stereomap4.0版本手动方案.md)；若想了解更详细的流程与信息，以下附上了执行QC和SAW的完整操作。
     
 
 *   **如何执行QC：**
@@ -52,10 +52,10 @@ CellBin的使用**需要分别执行**Stereomap v4中**QC**以及SAW中的**SAW 
 
 如何使用Stereomap 中的QC功能，可阅读操作文档：[https://stereotoolss-organization.gitbook.io/stereomap-user-manual/tutorials/navigation-for-tools/stereo-seq-image-qc](https://stereotoolss-organization.gitbook.io/stereomap-user-manual/tutorials/navigation-for-tools/stereo-seq-image-qc)
 
-如何使用Stereomap v4中的其他功能，可阅读操作文档：[https://stereotoolss-organization.gitbook.io/stereomap-user-manual/download](https://stereotoolss-organization.gitbook.io/stereomap-user-manual/download)
+如何使用Stereomap v4中的其他功能，可阅读操作文档：[https://stereotoolss-organization.gitbook.io/stereomap-user-manual/tutorials/navigation](https://stereotoolss-organization.gitbook.io/stereomap-user-manual/tutorials/navigation)
 
 
-_图像QC后，如果QC成功，在执行SAW count时需要在这个可选参数__**"--image-tar "**_ _输入QC后的tar.gz文件。若QC失败，则不使用该参数。QC成功和失败的情况可在_[《CellBin解决方案技术说明》](https://alidocs.dingtalk.com/i/nodes/2Amq4vjg89gGdom7FL6njLn7V3kdP0wQ?utm_scene=team_space&iframeQuery=anchorId%3Duu_lyxswww8i7ki45uluw)_查看。_
+_图像QC后，如果QC成功，在执行SAW count时需要在这个可选参数__**"--image-tar "** 输入QC后的tar.gz文件。若QC失败，则不使用该参数。QC成功和失败的情况可在下面 [**“怎么查看CellBin结果”**](#怎么查看cellbin结果) 查看。
 
 *   **如何执行SAW count：**
     
@@ -65,9 +65,9 @@ _图像QC后，如果QC成功，在执行SAW count时需要在这个可选参数
 如何使用SAW中的其他功能，可阅读详细操作文档：[https://stereotoolss-organization.gitbook.io/saw-user-manual-v8.0](https://stereotoolss-organization.gitbook.io/saw-user-manual-v8.0)
 
 
-**怎么查看CellBin结果**
+### **怎么查看CellBin结果**
 
-**QC情况**
+#### **QC情况**:
 
 **QC失败：** 在QC时如果软件界面出现以下情况 “The results of this image analysis evaluation are: FAIL”，则表示QC失败。
 
@@ -79,18 +79,18 @@ _图像QC后，如果QC成功，在执行SAW count时需要在这个可选参数
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/1X3lE63B7m04nJbv/img/51d6c550-ef6f-4f54-85b9-e23fc3bdb1ba.png)
 
-若图像QC成功，需要跑SAW count有图流程，即增加_**"--image-tar "**_ 参数。
+若图像QC成功，需要跑SAW count有图流程，即增加_**"--image-tar "** 参数。
 
 跑完SAW count后，流程结果如下：
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/1X3lE63B7m04nJbv/img/ad6b4e52-8ecd-4f72-918e-45c35eae7bfc.png)![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/1X3lE63B7m04nJbv/img/2581b561-2392-4518-8667-5de32716e13e.png)
 
-**如何看结果**
+#### **如何看结果**
 
 下载outs文件夹中的“SN.report.tar.gz”到本地解压打开。 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/1X3lE63B7m04nJbv/img/5f6c957e-e5ac-439b-8669-909e379e73de.png)
 
-文件夹中的“report.html”文件为本次流程结果的统计报告。打开报告后可以按照这份说明文档查看结果。[《 如何查看Cellbin指标》](https://alidocs.dingtalk.com/i/nodes/ZX6GRezwJl7doqRbHXdANOABVdqbropQ?utm_scene=team_space)
+文件夹中的“report.html”文件为本次流程结果的统计报告。打开报告后可以按照这份说明文档查看结果。[《 如何查看Cellbin指标》](如何查看Cellbin指标.md)
 
-**手动处理图像结果。**
+#### **手动处理图像结果。**
 
-如果在上述查看结果的问题遇到了QC失败，配准异常，组织分割异常，细胞分割异常等图像问题，可使用StereoMap中的手动处理工具进行修改，再次接回SAW流程，操作请看SOP：[《Cellbin流程手动操作》](https://alidocs.dingtalk.com/i/nodes/QG53mjyd80RbdBYktXMZoD1lV6zbX04v?utm_scene=team_space)
+如果在上述查看结果的问题遇到了QC失败，配准异常，组织分割异常，细胞分割异常等图像问题，可使用StereoMap中的手动处理工具进行修改，再次接回SAW流程，操作请看SOP：[《Cellbin流程手动操作》](Cellbin流程手动操作.md)
