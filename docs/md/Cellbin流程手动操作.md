@@ -30,7 +30,7 @@ species：mouse
 
 tissue：kidney
 
-chip size：1\*1
+chip size：1*1
 
 stain sype：HE
 ```
@@ -51,7 +51,7 @@ stain sype：HE
 3.  将待QC的芯片文件夹拖入界面，填写完毕后点击RUN开始QC
     
 
-\*文件路径需用英文命名，文件名为芯片号（例A03990A1，不能有\_或者数字）否则有可能影响QC结果
+* 文件路径需用英文命名，文件名为芯片号（例A03990A1，不能有\_或者数字）否则有可能影响QC结果
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/d56a61c1-17f5-40b9-b800-d047385ac888.png)
 
@@ -74,7 +74,7 @@ QC成功之后需要将.tar.gz文件接入SAW的count流程，才可以获得流
 
 **运行SAW count之前**
 
-[向右]根据 STOmics 产品线的不同，参数的使用也略有不同。在进行分析之前，请注意有关检测试剂盒版本的信息，选择合适的SAW版本
+根据 STOmics 产品线的不同，参数的使用也略有不同。在进行分析之前，请注意有关检测试剂盒版本的信息，选择合适的SAW版本
 
 
 要使用显微镜染色图像上的自动配准和组织检测从新鲜冷冻 （FF） 样品生成单个文库的空间特征计数，请使用以下参数运行
@@ -106,10 +106,10 @@ QC成功之后需要将.tar.gz文件接入SAW的count流程，才可以获得流
         #--adjusted-distance=10 \  ##default to 10 pixel
         --realigned-image-tar=/path/to/realigned/image/tar   ##realigned image .tar.gz from StereoMap
 
-\*更多信息请查看[手动处理教程](https://stereotoolss-organization.gitbook.io/saw-user-manual-v8.0/tutorials/with-manually-processed-files)
+* 更多信息请查看[手动处理教程](https://stereotoolss-organization.gitbook.io/saw-user-manual-v8.0/tutorials/with-manually-processed-files)
 
 
-[向右]以此芯片为例
+以此芯片为例
 
 ```
 **SN**：C0XXXXC1
@@ -237,7 +237,7 @@ QC成功之后需要将.tar.gz文件接入SAW的count流程，才可以获得流
 
 #### Step4: cell segmentation 细胞分割（可跳过）
 
-若需要修改，请查看下面介绍的细胞分割部分
+若需要修改，请查看下面介绍的[细胞分割部分](#step4-cell-segmentation-细胞分割)
 
 #### Step5: export 导出
 
@@ -255,7 +255,7 @@ QC成功之后需要将.tar.gz文件接入SAW的count流程，才可以获得流
 
 #### Step1：upload image 导入图片
 
-在step1中选择染色类型（ssDNA, DAPI, DAPI&mIF, H&E），选择完毕后可直接拖入visualization中的tar.gz; （导入图片支持的数据格式为：`.tar.gz``.stereo``.tif``.tiff`）﻿  
+在step1中选择染色类型（ssDNA, DAPI, DAPI&mIF, H&E），选择完毕后可直接拖入visualization中的tar.gz; （导入图片支持的数据格式为：`.tar.gz``.stereo``.tif``.tiff`）
 ![1718242973936_70A17E01-8C35-495b-BCDF-46FBC6D0F898.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/8K4nyR2g0z3jqLbj/img/55270990-3e09-4471-937d-5b23e362489f.png)
 
 #### Step2：image registration 图像配准
@@ -267,7 +267,7 @@ QC成功之后需要将.tar.gz文件接入SAW的count流程，才可以获得流
 
 #### Step3: tissue segmentation 组织分割（可跳过）
 
-若需要修改，请查看上面介绍的组织分割部分。
+若需要修改，请查看上面介绍的[组织分割部分](#step3-tissue-segmentation-组织分割)。
 
 
 #### Step4: cell segmentation 细胞分割
@@ -287,7 +287,7 @@ QC成功之后需要将.tar.gz文件接入SAW的count流程，才可以获得流
 
 在此提供一个外部工具Qupath生成细胞分割结果图像，可参考以下文档进行操作：
 
-[细胞分割解决方案（ssDNA,DAPI,H&E）——Qupath操作说明书](https://dcscode.genomics.cn/stomics/stalrnd/implab/stero-rnd/cellbin/workguide/-/blob/main/md/%E7%BB%86%E8%83%9E%E5%88%86%E5%89%B2%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.md?ref_type=heads)
+[细胞分割解决方案（ssDNA,DAPI,H&E）——Qupath操作说明书](Qupath部分操作SOP.md)
 
 
 4.  修改满意后点击next
@@ -362,7 +362,7 @@ species：mouse
 
 tissue：brain
 
-chip size：1\*1
+chip size：1*1
 
 stain sype：HE
 ```
