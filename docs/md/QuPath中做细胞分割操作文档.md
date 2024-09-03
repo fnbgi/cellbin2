@@ -134,18 +134,18 @@ H&E自动分割参数示例：
 
 <img src="../images/QuPath_cellbin_SOP/设置位深.png" alt="设置位深" style="zoom:80%;" />				
 
-* #### step2
-  点击Color>Merge Channels，将mask图与原图merge在一起
+* #### **step2**
+  **点击Color>Merge Channels，将mask图与原图merge在一起**
 
 <img src="../images/QuPath_cellbin_SOP/merge_mask.png" alt="merge_mask" style="zoom: 80%;" />		
 
-* #### step3
-  将mask图与原图选择合适的颜色，建议mask图选红色，原图选灰色。选择Keep source images会保留来源图片，点击OK，观察需要删除的区域
+* #### **step3**
+  **将mask图与原图选择合适的颜色，建议mask图选红色，原图选灰色。选择Keep source images会保留来源图片，点击OK，观察需要删除的区域**
 
 <img src="../images/QuPath_cellbin_SOP/设置merge颜色.png" alt="设置merge颜色" style="zoom:80%;" />			
 
-* #### step4
-  使用以下三种工具框出需要删除的部位，按键盘Delete进行删除
+* #### **step4**
+  **使用以下三种工具框出需要删除的部位，按键盘Delete进行删除**
 
   ![image-20240828100614970](../images/QuPath_cellbin_SOP/delete_useless.png)
 
@@ -153,13 +153,13 @@ H&E自动分割参数示例：
 
   <img src="../images/QuPath_cellbin_SOP/delete_after.png" alt="delete_after" style="zoom:50%;" />
 
-* #### step5
-  操作完成后，点击Image>Color>Split Channels将merge图分离
+* #### **step5**
+  **操作完成后，点击Image>Color>Split Channels将merge图分离**
   
   <img src="../images/QuPath_cellbin_SOP/split_channels.png" alt="split_channels" style="zoom:67%;" />
 
-* #### step6
-  将该图转回8bit图像并保存
+* #### **step6**
+  **将该图转回8bit图像并保存**
   
   <img src="../images/QuPath_cellbin_SOP/转为8位深.png" alt="转为8位深" style="zoom:50%;" />
 
@@ -168,20 +168,19 @@ H&E自动分割参数示例：
 [操作同ssDNA](#2)
 
 
-
 ## 手动分割
 
 ### 荧光染色：以ssDNA为例
 
-* #### <li id='3'>step1</li>
-  将图片导入到QuPath中，选择Fluorescence，点击Apply
+* #### **<li id='3'>step1</li>**
+  **将图片导入到QuPath中，选择Fluorescence，点击Apply**
 
-* #### step2
-  使用合适工具进行分割
+* #### **step2**
+  **使用合适工具进行分割**
 
 （1）使用笔刷工具
 
-<video src="../images/QuPath_cellbin_SOP/brushes.mp4" style="zoom:50%"></video>
+[视频链接](../images/QuPath_cellbin_SOP/brushes.mp4)
 
 按住鼠标左键扩大mask范围
 
@@ -189,7 +188,7 @@ H&E自动分割参数示例：
 
 （2）使用多边形工具
 
-<video src="../images/QuPath_cellbin_SOP/polygon.mp4" style="zoom:50%"></video>
+[视频链接](../images/QuPath_cellbin_SOP/polygon.mp4)
 
 鼠标左键点击生成节点，连接到最后一个节点双击即可完成框选
 
@@ -207,7 +206,7 @@ H&E自动分割参数示例：
 
 拖动节点修改mask
 
-<video src="../images/QuPath_cellbin_SOP/grag_node.mp4" style="zoom:50%"></video>
+[视频链接](../images/QuPath_cellbin_SOP/grag_node.mp4)
 
 #### 分割完成后接回[自动分割中的step6](#6)
 
