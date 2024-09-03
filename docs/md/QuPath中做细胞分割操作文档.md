@@ -8,7 +8,7 @@
 
 # 目的
 
-使用QuPath工具完整准确地分割出细胞形状,修正或是生成细胞分割结果。
+使用QuPath工具完整准确地分割出细胞形状，修正或是生成细胞分割结果。
 
 # 使用范围
 
@@ -27,7 +27,7 @@
 
 ## 自动分割
 
-### 荧光染色：以ssDNA为例
+### 1. 荧光染色：以ssDNA为例
 
 * #### <li id='1'>**step1**</li>
     **将图片拖入QuPath中，选择Fluorescence，点击Apply**
@@ -35,21 +35,21 @@
 <img src="../images/QuPath_cellbin_SOP/img1.png" alt="img1" style="zoom:80%;" />
 
 * #### **step2**
-    **使用矩阵框将图片全部框出**
+    **使用矩阵框将图片全部框出（也可以局部框选需要部分）**
 
-![image-20240826142100839](../images/QuPath_cellbin_SOP/img2.png)
+![img1](../images/QuPath_cellbin_SOP/img2.png)
 
 <img src="../images/QuPath_cellbin_SOP/框出图片.png" alt="框出图片" style="zoom:80%;" />
 
 * #### **step3**
     **点击Analyze>Cell detection>cell detection调整参数**
 
-  ![image-20240827170116720](../images/QuPath_cellbin_SOP/img3.png)
+  ![img3](../images/QuPath_cellbin_SOP/img3.png)
 
 * #### **step4**
     **调整合适的参数，使得细胞分割满足要求**
 
-![image-20240827170224090](../images/QuPath_cellbin_SOP/img4.png)
+![img4](../images/QuPath_cellbin_SOP/img4.png)
 
 （1）Requested pixel size：请求的像素大小。将其调大，每个像素代表的实际物理面积变大，图像的细节看起来更模糊，相当于以较低的分辨率查看图像。调小则每个像素代表的实际物理面积变小，图像的细节会更加清晰，相当于以较高的分辨率查看图像。
 
@@ -79,14 +79,14 @@
 * #### <li id='6'>**step6**</li>
     **将图片发送到ImageJ**
 
-![image-20240826174348648](../images/QuPath_cellbin_SOP/img5.png)
+![img5](../images/QuPath_cellbin_SOP/img5.png)
 
 
 
 * #### **step7**
     **取消第一项，点击OK**
 
-![image-20240830180032596](../images/QuPath_cellbin_SOP/cancel_first.png)
+![cancel_first](../images/QuPath_cellbin_SOP/cancel_first.png)
 
 * #### **step8**
     **点击Edit>Selection>Create Mask生成mask图**
@@ -111,26 +111,26 @@
 * #### **step10**
     **点击File>Save As>Tiff将mask保存为tiff格式**
 
-![image-20240828091435258](../images/QuPath_cellbin_SOP/save_image.png)
+![save_image](../images/QuPath_cellbin_SOP/save_image.png)
 
-### H&E染色
+### 2. H&E染色
 
-[与上述方法相同。](#1)第一步导入图片时选择H&E染色，点击Apply
+2.1 [与上述方法相同。](#1)第一步导入图片时选择H&E染色，点击Apply
 
 <img src="../images/QuPath_cellbin_SOP/HE导入.png" alt="HE导入" style="zoom:50%;" />
 
-H&E自动分割参数示例：
+2.2 H&E自动分割参数示例：
 
 <img src="../images/QuPath_cellbin_SOP/HE参数示例.png" alt="HE参数示例" style="zoom: 80%;" />
 
 ## 批量删除不需要的细胞分割mask
 
-### 荧光染色：以ssDNA为例修改mask
+### 1. 荧光染色：以ssDNA为例修改mask
 
 该方法用于只修改局部不满意的细胞分割结果，需要用到ImageJ。操作如下：
 
-* #### <li id='2'>step1</li>
-  将mask图与原图拖进ImageJ中，选中一张图片，点击Image>Type，确保两张图片的位深一致
+* #### **<li id='2'>step1</li>**
+  **将mask图与原图拖进ImageJ中，选中一张图片，点击Image>Type，确保两张图片的位深一致**
 
 <img src="../images/QuPath_cellbin_SOP/设置位深.png" alt="设置位深" style="zoom:80%;" />				
 
@@ -145,9 +145,9 @@ H&E自动分割参数示例：
 <img src="../images/QuPath_cellbin_SOP/设置merge颜色.png" alt="设置merge颜色" style="zoom:80%;" />			
 
 * #### **step4**
-  **使用以下三种工具框出需要删除的部位，按键盘Delete进行删除**
+  **使用合适工具框出需要删除的部位，按键盘Delete进行删除**
 
-  ![image-20240828100614970](../images/QuPath_cellbin_SOP/delete_useless.png)
+  ![delete_useless](../images/QuPath_cellbin_SOP/delete_useless.png)
 
   <img src="../images/QuPath_cellbin_SOP/delete_before.png" alt="delete_before" style="zoom: 50%;" />
 
@@ -163,14 +163,18 @@ H&E自动分割参数示例：
   
   <img src="../images/QuPath_cellbin_SOP/转为8位深.png" alt="转为8位深" style="zoom:50%;" />
 
+* #### **step7(optional)**
+  **保存QuPath中的geojson**
+该方法用于将修好后的的细胞分割结果转成geojson。使用上述 **“工具与脚本介绍”** 中提到 mask2geojson.py，修改脚本中的路径。
+生成geojson后，打开Qupath，依次将图像、geojson拖入画框中，按照上述[自动分割](#自动分割)的方法，使用Qupath补上新增的细胞分割最终生成符合预期的细胞分割mask图像。
 
-### H&E染色修改mask
+### 2. H&E染色修改mask
 [操作同ssDNA](#2)
 
 
 ## 手动分割
 
-### 荧光染色：以ssDNA为例
+### 1. 荧光染色：以ssDNA为例
 
 * #### **<li id='3'>step1</li>**
   **将图片导入到QuPath中，选择Fluorescence，点击Apply**
@@ -210,11 +214,6 @@ H&E自动分割参数示例：
 
 #### 分割完成后接回[自动分割中的step6](#6)
 
-### H&E染色
+### 2. H&E染色
 
 [操作与ssDNA相同](#3)
-
-## 保存QuPath中的geojson
-
-该方法用于将修好后的的细胞分割结果转成geojson。使用上述 **“工具与脚本介绍”** 中提到 mask2geojson.py，修改脚本中的路径。
-生成geojson后，打开Qupath，依次将图像、geojson拖入画框中，按照上述[自动分割](#自动分割)的方法，使用Qupath补上新增的细胞分割最终生成符合预期的细胞分割mask图像。
