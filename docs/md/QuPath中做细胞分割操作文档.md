@@ -164,8 +164,9 @@
   <img src="../images/QuPath_cellbin_SOP/转为8位深.png" alt="转为8位深" style="zoom:50%;" />
 
 * #### **step7(optional)**
-  **保存QuPath中的geojson**
-该方法用于将修好后的的细胞分割结果转成geojson。使用上述 **“工具与脚本介绍”** 中提到 mask2geojson.py，修改脚本中的路径。
+  **将保存后的mask图进一步修改**
+
+  该方法用于将修改后的细胞分割结果转成geojson，并在QuPath中补上新增的细胞分割。使用上述 **“工具与脚本介绍”** 中提到 mask2geojson.py，修改脚本中的路径。
 生成geojson后，打开Qupath，依次将图像、geojson拖入画框中，按照上述[自动分割](#自动分割)的方法，使用Qupath补上新增的细胞分割最终生成符合预期的细胞分割mask图像。
 
 ### 2. H&E染色修改mask
