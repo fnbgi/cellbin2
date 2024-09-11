@@ -1,6 +1,20 @@
 # stereomap4.0版本手动方案
 
-**SOP的用途**
+- [stereomap4.0版本手动方案](#stereomap40版本手动方案)
+    - [Pipeline介绍](#pipeline介绍)
+    - [saw软件手册（内附下载链接）](#saw软件手册内附下载链接)
+- [StereoMap 图像QC](#stereomap-图像qc)
+- [SAW count](#saw-count)
+- [StereoMap 可视化查看手动图像处理](#stereomap-可视化查看手动图像处理)
+  - [Step1：upload image 导入图片](#step1upload-image-导入图片)
+  - [Step2：image registration 图像配准](#step2image-registration-图像配准)
+  - [Step3: tissue segmentation 组织分割](#step3-tissue-segmentation-组织分割)
+  - [Step4: cell segmentation 细胞分割](#step4-cell-segmentation-细胞分割)
+  - [Step5: export 导出](#step5-export-导出)
+- [SAW realign](#saw-realign)
+      - [将tar.gz接回SAW流程，SAW convert 导出图像](#将targz接回saw流程saw-convert-导出图像)
+    - [任务投递](#任务投递)
+- [StereoMap 可视化查看](#stereomap-可视化查看)
 
 目的：当CellBin自动化结果不满足需求时，可使用手动方案来处理，以达到需求
 
