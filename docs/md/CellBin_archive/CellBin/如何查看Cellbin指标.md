@@ -58,7 +58,7 @@ Cellbin指标可在统计报告中的"Cell Bin"分页查看，如下所示：
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/meonaA4QW1PjnXxj/img/7ba1d1e4-e3c6-4851-b966-ca2c079cc3ba.png)
 
-该页面的指标展示的是**修正后的细胞分割**的基因统计结果。根据以下指标初步判断细胞分割是否符合逾期：
+该页面的指标展示的是**修正后的细胞分割**的基因统计结果。根据以下指标初步判断细胞分割是否符合预期：
 
 *   **Cell Count**
     
@@ -69,7 +69,7 @@ Cellbin指标可在统计报告中的"Cell Bin"分页查看，如下所示：
 
 cell area distribution可在"Cell Bin"分页查看，如下所示：
 
-![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/meonaA4QW1PjnXxj/img/e21fe9b6-d550-4bc4-be44-844b1d427a3d.png)![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/meonaA4QW1PjnXxj/img/13bf57c5-8ce1-4ff5-84ae-635151ac672d.png)
+![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/meonaA4QW1PjnXxj/img/e21fe9b6-d550-4bc4-be44-844b1d427a3d.png) ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/meonaA4QW1PjnXxj/img/13bf57c5-8ce1-4ff5-84ae-635151ac672d.png)
 
 用户基于组织的情况了解，对细胞数目，细胞的面积等初步判断是否符合预期。若有异常或不确认，则需进一步可视化查看。若无大异常，则可继续查看。
 
@@ -126,11 +126,11 @@ Cell total MID/tissue total MID = Cell Mean MID × Cell Count / Number of MID Un
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/meonaA4QW1PjnXxj/img/6ddccbca-7059-4060-806a-a91cfaf61374.png)
 
-如果黄色的点都落在了芯片的track点上，或者最远距离小于10pixels（可用模板旁边的尺子![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/meonaA4QW1PjnXxj/img/f6e5896a-8fb1-467c-a353-30d4f999a161.png)测量。对于5um，以鼠脑细胞为例，半个细胞），则配准达到细胞级别精度，否则需要手动重新配准。
+如果黄色的点都落在了芯片的track点上，或者最远距离小于10pixels（可用模板旁边的尺子![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/meonaA4QW1PjnXxj/img/f6e5896a-8fb1-467c-a353-30d4f999a161.png) 测量。对于5um，以鼠脑细胞为例，半个细胞），则配准达到细胞级别精度，否则需要手动重新配准。
 
 **2、组织分割是否符合要求：**
 
-打开Image，和TissueMask，如下所示。观察组织分割是否符合自己的逾期。
+打开Image，和TissueMask，如下所示。观察组织分割是否符合自己的预期。
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/meonaA4QW1PjnXxj/img/b9f99b7d-c9c9-4ea7-9365-7a7c5d3cb280.png)
 

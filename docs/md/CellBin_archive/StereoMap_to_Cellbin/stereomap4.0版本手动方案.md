@@ -238,9 +238,9 @@ saw说明手册链接：[https://stereotoolss-organization.gitbook.io/saw-user-m
 
 通过设置步长和平移四个方向来使用**“移动”面板**![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/e458a984-63a2-4021-b07d-954b999c674e.png)
 
-显微镜图像的尺寸可能与空间特征表达式图不同，您可以使用**比例工具**![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/ca901cc8-d9f6-4cf5-b6bd-e685a8cfe579.png)调整比例
+显微镜图像的尺寸可能与空间特征表达式图不同，您可以使用**比例工具**![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/ca901cc8-d9f6-4cf5-b6bd-e685a8cfe579.png) 调整比例
 
-[向右]您可以通过选中“芯片轨迹线”来对齐图像，以显示参考轨迹线模板，并让轨迹线直接重叠。此时，芯片轨迹线模板是矩阵的表示。如果轨道线变暗，则可以手动调整图像 的对比度![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/ef50bc5c-0e26-429e-b9e5-465c7b9f8207.png)、亮度![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/12ccdc77-2eb3-4ac2-a6ef-06dc7a863639.png)和不透明度![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/e1a11f41-b2fd-4b18-ab62-91d52ab782f1.png)
+[向右]您可以通过选中“芯片轨迹线”来对齐图像，以显示参考轨迹线模板，并让轨迹线直接重叠。此时，芯片轨迹线模板是矩阵的表示。如果轨道线变暗，则可以手动调整图像 的对比度![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/ef50bc5c-0e26-429e-b9e5-465c7b9f8207.png) 、亮度![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/12ccdc77-2eb3-4ac2-a6ef-06dc7a863639.png) 和不透明度![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/e1a11f41-b2fd-4b18-ab62-91d52ab782f1.png)
 
 3.  配准完毕后点击NEXT，确认
     
@@ -256,14 +256,14 @@ saw说明手册链接：[https://stereotoolss-organization.gitbook.io/saw-user-m
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/83628193-da40-479e-9f09-06021389118d.png) ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/03672f8b-2485-4f3b-9c1d-3fb46b9259c1.png)
 
-2.  要选择或编辑组织区域，请结合使用**套索**![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/883aea29-c74a-4629-a91d-d022832b491b.png)、**画笔** ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/dcd560e9-bb47-4346-8612-401c6b3916e2.png)和**橡皮擦**![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/a292b2e4-f1e8-422b-b45c-09c6a30f0a46.png)工具。**套索**通常用于选择或取消选择大区域，而**“画笔**”和**“橡皮擦**”工具更适合较小的区域，例如组织周围的区域或组织中的小孔。
+2.  要选择或编辑组织区域，请结合使用**套索**![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/883aea29-c74a-4629-a91d-d022832b491b.png) 、**画笔** ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/dcd560e9-bb47-4346-8612-401c6b3916e2.png) 和**橡皮擦**![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/a292b2e4-f1e8-422b-b45c-09c6a30f0a46.png) 工具。**套索**通常用于选择或取消选择大区域，而**“画笔**”和**“橡皮擦**”工具更适合较小的区域，例如组织周围的区域或组织中的小孔。
     
 
-[向右]**画笔** ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/dcd560e9-bb47-4346-8612-401c6b3916e2.png)填充区域
+[向右]**画笔** ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/dcd560e9-bb47-4346-8612-401c6b3916e2.png) 填充区域
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/dde3898d-2da3-45f0-82a4-949d53916401.png)
 
-[向右]**橡皮擦**![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/a292b2e4-f1e8-422b-b45c-09c6a30f0a46.png)消除区域
+[向右]**橡皮擦**![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/a292b2e4-f1e8-422b-b45c-09c6a30f0a46.png) 消除区域
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/f9bf7b38-7ce0-47e2-91ad-d1c0966478c9.png)
 
@@ -282,9 +282,9 @@ saw说明手册链接：[https://stereotoolss-organization.gitbook.io/saw-user-m
 1.  修改
     
 
-[向右]使用**套索**![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/5d63bae8-4d5e-4e01-98fa-a56e58814e0c.png)、**画笔** ![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/11db2b46-1453-47fb-9eff-83ac77784350.png)和**橡皮擦**![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/f932b18e-ef35-450d-b239-37aba923890e.png)工具选择或编辑单元格。**套索**最适合用于取消选择大区域（如背景），而**“画笔**”和**“橡皮擦**”工具更适合较小的区域，例如标记单元格或分离单元格簇。
+[向右]使用**套索**![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/5d63bae8-4d5e-4e01-98fa-a56e58814e0c.png) 、**画笔** ![image](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/11db2b46-1453-47fb-9eff-83ac77784350.png) 和**橡皮擦**![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/f932b18e-ef35-450d-b239-37aba923890e.png) 工具选择或编辑单元格。**套索**最适合用于取消选择大区域（如背景），而**“画笔**”和**“橡皮擦**”工具更适合较小的区域，例如标记单元格或分离单元格簇。
 
-[向右]建议导入一个`.tif`格式的cell mask文件。您可以通过单击 **Segmentation mask** 下拉列表，然后单击来访问您的文件系统![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/9a9363fc-8c51-4614-ad8d-32be2c66824a.png)来导入它。如果导入的结果不令人满意，可以通过单击![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/d584b570-922d-480a-a0c8-8126d45aa26a.png)导入新cell mask来替换它
+[向右]建议导入一个`.tif`格式的cell mask文件。您可以通过单击 **Segmentation mask** 下拉列表，然后单击来访问您的文件系统![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/9a9363fc-8c51-4614-ad8d-32be2c66824a.png) 来导入它。如果导入的结果不令人满意，可以通过单击![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/oJGq768aKdx2nAKe/img/d584b570-922d-480a-a0c8-8126d45aa26a.png) 导入新cell mask来替换它
 
 2.  修改完毕后点击NEXT，进入step5
     

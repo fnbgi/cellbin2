@@ -407,7 +407,7 @@ stain sype：HE
 
 **SAW count无图流程输出文件为：**
 
-![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/8K4nyR2g0z3jqLbj/img/0f84fce4-d19a-4866-804e-e9b5a1918a62.png)![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/8K4nyR2g0z3jqLbj/img/5246ab4f-f602-4fd5-aebd-45e634e1c738.png)
+![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/8K4nyR2g0z3jqLbj/img/5246ab4f-f602-4fd5-aebd-45e634e1c738.png)
 
 ### stereomap配准
 
