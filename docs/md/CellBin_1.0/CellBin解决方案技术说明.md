@@ -1,15 +1,5 @@
 # CellBin解决方案技术说明
 
-#目录
-  - [**引言**](#引言)
-  - [**CellBin**](#cellbin)
-    - [**CellBin介绍**](#CellBin介绍)
-    - [**CellBin框架说明**](#cellbin框架说明)
-    - [**CellBin自动化使用**](#cellbin自动化使用)
-    - [**如何查看CellBin结果**](#如何查看cellbin结果)
-    - [**手动处理方案**](#手动处理方案)
-  
-
 
 ## **引言**
 
@@ -18,7 +8,7 @@
 ## **CellBin**
 
 
-<details>
+<details open>
 <summary style="font-size: 15pt;">CellBin介绍</summary>
 
 
@@ -86,7 +76,7 @@ CellBin流程包含QC，拼接，配准，组织分割，细胞分割，细胞�
 
 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/1X3lE63B7m04nJbv/img/30b658a3-fca5-488e-b164-a692402f1eed.png)
 
-若图像QC失败，则只能执行SAW count无图流程，即不使用_**"--image-tar "**_ 参数。SAW流程结束后，若需要图像结果，可用Stereomap V4进行手动处理。详情请查看SOP：[《Cellbin流程手动操作》](Cellbin流程手动操作.md)-场景2:QC失败
+若图像QC失败，则只能执行SAW count无图流程，即不使用_**"--image-tar "**_ 参数。SAW流程结束后，若需要图像结果，可用Stereomap V4进行手动处理。详情请查看SOP：[《Cellbin流程手动操作》](../CellBin_archive/CellBin/Cellbin流程手动操作.md)-场景2:QC失败
 
 **QC成功：** 在QC时如果软件界面出现以下情况 “The results of this image analysis evaluation are: **PASS**”，则表示QC成功。
 
@@ -118,7 +108,7 @@ CellBin流程包含QC，拼接，配准，组织分割，细胞分割，细胞�
 
 下载outs文件夹中的“SN.report.tar.gz”到本地解压打开。 ![image.png](https://alidocs.oss-cn-zhangjiakou.aliyuncs.com/res/1X3lE63B7m04nJbv/img/5f6c957e-e5ac-439b-8669-909e379e73de.png)
 
-文件夹中的“report.html”文件为本次流程结果的统计报告，打开报告后可查看CellBin结果。 详情请查看此文档[《如何查看Cellbin指标》](如何查看Cellbin指标.md)
+文件夹中的“report.html”文件为本次流程结果的统计报告，打开报告后可查看CellBin结果。 详情请查看此文档[《如何查看Cellbin指标》](../CellBin_archive/CellBin/如何查看Cellbin指标.md)
 
 </details>
 
@@ -130,7 +120,7 @@ CellBin流程包含QC，拼接，配准，组织分割，细胞分割，细胞�
 
 了解CellBin指标后，如果在上述查看CellBin结果中遇到QC失败/配准异常/组织分割异常/细胞分割异常等图像问题，可使用StereoMap中的手动处理工具进行修改，再次接回SAW流程，得到符合预期的结果，具体操作请看SOP：[《Cellbin流程手动操作》](3.Cellbin流程手动操作.md)
 
-细胞分割模块也可使用第三方工具进行修改，再次接回SAW流程，得到符合预期的结果，具体操作请查看SOP：[《QuPath处理细胞分割操作说明》](QuPathQuPath处理细胞分割操作说明.md)
+细胞分割模块也可使用第三方工具进行修改，再次接回SAW流程，得到符合预期的结果，具体操作请查看SOP：[《QuPath处理细胞分割操作说明》](../CellBin_archive/QuPath_to_Cellbin/QuPath处理细胞分割操作说明.md)
 
 
 </details>
