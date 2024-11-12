@@ -16,7 +16,7 @@ We love your input! We want to make contributing to cellbin as easy and transpar
 Thank you to all our contributors!
 
 ## License and Citation <br>
-CellBin is released under the MIT license. Please cite SCellBin in your publications if it helps your research: <br>
+CellBin is released under the MIT license. Please cite CellBin in your publications if it helps your research: <br>
 ```text
 @article {Li2023.02.28.530414,
 	author = {Li, Mei and Liu, Huanlin and Li, Min and Fang, Shuangsang and Kang, Qiang},
