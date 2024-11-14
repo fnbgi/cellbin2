@@ -10,10 +10,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Initialize conda
-      run: |
-        conda init --all
-
     - name: Create or update conda environment
       run: |
         if conda info --envs | grep -q "myenv"; then
@@ -24,6 +20,8 @@ jobs:
 
     - name: Activate conda environment
       run: |
+        conda init bash
+        source ~/.bashrc
         conda activate myenv
 
     - name: Print Hello World
