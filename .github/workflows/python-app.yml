@@ -18,7 +18,7 @@ jobs:
       run: |
         if conda info --envs | grep -q "myenv"; then
           echo "Environment 'myenv' already exists. Removing and recreating."
-          conda env remove --name myenv --all
+          conda env remove --name myenv
         fi
         conda create --name myenv python=3.8 -y
 
