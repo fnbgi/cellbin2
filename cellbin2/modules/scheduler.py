@@ -236,6 +236,7 @@ class Scheduler(object):
             from_stitched=False
         )
         self._channel_images[g_name].update_registration(info)
+        self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
         temp_info.register_mat.write(os.path.join(self._output_path, f"{self._image_naming.sn}_chip_box_register.tif"))
         np.savetxt(os.path.join(self._output_path, f"{self._image_naming.sn}_chip_box_register.txt"), temp_info.offset)
 
