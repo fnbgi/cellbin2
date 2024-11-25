@@ -180,13 +180,13 @@ class cMatrix(object):
             height = max_y - min_y + 1
             return width, height
 
-    def detect_feature(self, ref: list):
+    def detect_feature(self, ref: list, chip_size: float):
         """ track lines 检测，矩阵数据：芯片区域识别，用于配准 """
         from cellbin2.matrix.box_detect import detect_chip_box
         from cellbin2.matrix.index_points_detect import detect_cross_points
 
         self._template = detect_cross_points(ref, self._gene_mat)
-        self._chip_box = detect_chip_box(self._gene_mat)
+        self._chip_box = detect_chip_box(self._gene_mat, chip_size)
 
     @property
     def template(self, ):

@@ -80,7 +80,8 @@ class MatrixBoxDetector(object):
 
             return x, y
 
-    def detect(self, matrix: np.ndarray):
+    def detect(self, matrix: np.ndarray, chip_size: float = 1.0):
+        gene_size = int(self.gene_base_size * chip_size)
         self.image = matrix
         gene_image = cv.filter2D(self.image, -1, np.ones((self.binsize, self.binsize), np.float32))
         _, gene_image = cv.threshold(gene_image, 0, 255, cv.THRESH_BINARY)
@@ -88,20 +89,20 @@ class MatrixBoxDetector(object):
         gene_image_s = cv.resize(gene_image,
                                  (gene_image.shape[1] // self.down_size, gene_image.shape[0] // self.down_size))
 
-        x, y = self.get_box4maximize_area(gene_image_s, box_size = self.gene_base_size // self.down_size)
-        x, y = map(lambda k: k * self.down_size + self.gene_base_size / 2, (x, y))
+        x, y = self.get_box4maximize_area(gene_image_s, box_size = gene_size // self.down_size)
+        x, y = map(lambda k: k * self.down_size + gene_size / 2, (x, y))
         center = [x, y]
 
-        new_box = [[center[0] + i * self.gene_base_size / 2, center[1] + j * self.gene_base_size / 2]
+        new_box = [[center[0] + i * gene_size / 2, center[1] + j * gene_size / 2]
                    for i in [-1, 1] for j in [-1, 1]]
         new_box = np.array(new_box)[(0, 1, 3, 2), :]
 
         return new_box
 
 
-def detect_chip_box(matrix: np.ndarray) -> ChipBoxInfo:
+def detect_chip_box(matrix: np.ndarray, chip_size: float = 1.0) -> ChipBoxInfo:
     mbd = MatrixBoxDetector()
-    box = mbd.detect(matrix)
+    box = mbd.detect(matrix, chip_size)
     cbi = ChipBoxInfo(LeftTop=box[0], LeftBottom=box[1],
                       RightBottom=box[2], RightTop=box[3])
 

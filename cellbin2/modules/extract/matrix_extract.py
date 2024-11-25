@@ -26,7 +26,8 @@ class MatrixFeatureExtract(FeatureExtract):
         cm = cMatrix()
         cm.read(file_path=Path(self._image_file.file_path))
         if detect_feature:
-            cm.detect_feature(ref=self._param_chip.fov_template)
+            cm.detect_feature(ref=self._param_chip.fov_template,
+                              chip_size = min(self._param_chip.chip_specif))
             self._template = cm.template
             self._chip_box = cm.chip_box
             np.savetxt(self._naming.matrix_template, self._template.template_points)
