@@ -20,12 +20,13 @@ jobs:
 
     - name: Activate conda environment
       run: |
+        conda init bash
+        source ~/.bashrc
         conda activate myenv
-
-    - name: Print Hello World
-      run: |
         which python
         python -c "print('Hello, World!')"
+
+        
 
 #    - name: Install requirements
 #      run: |
