@@ -8,7 +8,7 @@
 ## Installation
 Linux
 ```shell
-git clone -b dev https://dcscode.genomics.cn/stomics/stalrnd/implab/stero-rnd/cellbin/algorithms/cellbin2.git
+git clone https://github.com/STOmics/cellbin2
 conda create --name cellbin2 python=3.8
 python install.py
 ```
@@ -112,3 +112,4 @@ https://github.com/matejak/imreg_dft <br>
 https://github.com/rezazad68/BCDU-Net <br>
 https://github.com/libvips/pyvips <br>
 https://github.com/vanvalenlab/deepcell-tf <br>
+https://github.com/ultralytics/ultralytics <br>
