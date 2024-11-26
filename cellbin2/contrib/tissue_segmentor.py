@@ -1,5 +1,5 @@
 from typing import Union, Tuple, List, Any, Optional
-
+import cv2
 import tifffile
 from pydantic import BaseModel, Field
 import numpy.typing as npt
@@ -150,6 +150,10 @@ def segment4tissue(input_data: TissueSegInputInfo) -> TissueSegOutputInfo:
 
     # read user input image
     img = cbimread(input_path, only_np=True)
+    if len(img.shape) == 3 and s_type != TechType.HE:
+        clog.warning(
+            'the input image is an RGB image, bug the stain type is not HE,convert the RGB image to GRAY image')
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
     # initialize tissue segmentation model
     tissue_seg = TissueSegmentation(
