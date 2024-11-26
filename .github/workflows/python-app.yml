@@ -9,14 +9,13 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-
-    - name: Create or update conda environment
-      run: |
-        if conda info --envs | grep -q "myenv"; then
-          echo "Environment 'myenv' already exists. Removing and recreating."
-          conda env remove --name myenv
-        fi
-        conda create --name myenv python=3.8 -y
+#    - name: Create or update conda environment
+#      run: |
+#        if conda info --envs | grep -q "myenv"; then
+#          echo "Environment 'myenv' already exists. Removing and recreating."
+#          conda env remove --name myenv
+#        fi
+#        conda create --name myenv python=3.8 -y
 
     - name: Activate conda environment
       run: |
