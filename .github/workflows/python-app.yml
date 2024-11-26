@@ -20,8 +20,8 @@ jobs:
 
     - name: Activate conda environment
       run: |
-        conda init bash
-        source ~/.bashrc
+#        conda init bash
+#        source ~/.bashrc
         conda activate myenv
 
     - name: Print Hello World
