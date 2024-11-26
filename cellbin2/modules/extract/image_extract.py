@@ -3,6 +3,10 @@ from typing import List, Any, Tuple, Union
 import numpy as np
 import shutil
 
+from PIL import ImageFile, Image
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+Image.MAX_IMAGE_PIXELS = None
+
 from cellbin2.utils import clog
 from cellbin2.contrib.alignment.basic import transform_points
 from cellbin2.image import cbimwrite
@@ -92,10 +96,17 @@ class ImageFeatureExtract(FeatureExtract):
             offset: Tuple[float, float] = (0., 0.)
     ):
         # stitch
-        shutil.copy2(self._image_file.file_path,  self._naming.stitch_image)
-        transform_image = cbimread(self._image_file.file_path).trans_image(scale=scale, rotate=rotation, offset=offset)
-        cbimwrite(self._naming.transformed_image, transform_image)
-        self._channel_image.Stitch.TransformShape = transform_image.shape
+        if not os.path.exists(self._naming.stitch_image):
+            shutil.copy2(self._image_file.file_path,  self._naming.stitch_image)
+
+        if not os.path.exists(self._naming.transformed_image):
+            transform_image = cbimread(self._image_file.file_path).trans_image(scale=scale, rotate=rotation, offset=offset)
+            cbimwrite(self._naming.transformed_image, transform_image)
+            self._channel_image.Stitch.TransformShape = transform_image.shape
+        else:
+            transform_image = Image.open(self._naming.transformed_image)
+            self._channel_image.Stitch.TransformShape = transform_image.size[::-1]
+
         if self._image_file.registration.trackline:
             # transform
             info = self._channel_image.Stitch.ScopeStitch

@@ -47,7 +47,7 @@ class CBImage(object):
         Returns:
 
         """
-        if type(file) is str or type(file) is pathlib.PosixPath:
+        if isinstance(file, (str, pathlib.PosixPath, pathlib.WindowsPath)):
             assert os.path.isfile(file), "File not exists."
             suffix = os.path.splitext(file)[1]
             self._file_path = file

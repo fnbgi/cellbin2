@@ -21,6 +21,8 @@ class ChipAlignment(Alignment):
         self.rot90_flag = True
         self.no_trans_flag = False
 
+        self.max_length = 9996  # 图像降采样最大尺寸
+
     def registration_image(self,
                            file: Union[str, np.ndarray, CBImage]):
         """ 对待变换的图像，调用图像处理库按照对齐参数，返回变换后的图 """
@@ -107,18 +109,20 @@ class ChipAlignment(Alignment):
                                             shape = moving_image.mat.shape, flip=0)
             new_mi = np.fliplr(moving_image.mat.image)
 
+        down_size = max(fixed_image.mat.shape) // self.max_length
+
         register_info = dict()
         for index in range(range_num):
             register_image, M = self.get_matrix_by_points(
-                new_box[coord_index, :], fixed_image.chip_box.chip_box,
-                True, new_mi, fixed_image.mat.shape
+                new_box[coord_index, :] / down_size, fixed_image.chip_box.chip_box / down_size,
+                True, new_mi[::down_size, ::down_size], np.array(fixed_image.mat.shape) // down_size
             )
 
-            lu_x, lu_y = map(int, fixed_image.chip_box.chip_box[0])
-            rd_x, rd_y = map(int, fixed_image.chip_box.chip_box[2])
+            lu_x, lu_y = map(int, fixed_image.chip_box.chip_box[0] / down_size)
+            rd_x, rd_y = map(int, fixed_image.chip_box.chip_box[2] / down_size)
 
             _wsi_image = register_image[lu_y: rd_y, lu_x:rd_x]
-            _gene_image = fixed_image.mat.image[lu_y: rd_y, lu_x:rd_x]
+            _gene_image = fixed_image.mat.image[::down_size, ::down_size][lu_y: rd_y, lu_x:rd_x]
 
             ms = self.multiply_sum(_wsi_image, _gene_image)
             # _, res = self.dft_align(_gene_image, _wsi_image, method = "sim")
@@ -182,25 +186,25 @@ if __name__ == '__main__':
     # 移动图像信息
     moving_image = ChipFeature()
     moving_image.tech_type = TechType.DAPI
-    moving_mat = cbimread(r"E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_DAPI.tif")
+    moving_mat = cbimread(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_DAPI_stitch.tif")
     moving_image.set_mat(moving_mat)
 
     cfg = ChipParam(
-        **{"DAPI_stage1_weights_path":
-            r"E:/03.users/liuhuanlin/01.data/cellbin2/weights\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
-            "DAPI_stage2_weights_path":
-            r"E:/03.users/liuhuanlin/01.data/cellbin2/weights\chip_detect_yolo8m_1024_SD_202409_pytorch.onnx"})
+        **{"stage1_weights_path":
+            r"D:\01.code\cellbin2\weights\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
+            "stage2_weights_path":
+            r"D:\01.code\cellbin2\weights\chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx"})
 
     # file_path = r"E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_DAPI.tif"
-    m_info = detect_chip(moving_mat.image, cfg=cfg, stain_type=TechType.DAPI, actual_size=(19992, 19992))
+    m_info = detect_chip(moving_mat.image, cfg=cfg, stain_type=TechType.DAPI, actual_size=(19992 * 2, 19992 * 2))
     moving_image.set_chip_box(m_info)
 
     # 固定对象信息
     fixed_image = ChipFeature()
     fixed_image.tech_type = TechType.Transcriptomics
-    fixed_image.set_mat(r"E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_gene.tif")
+    fixed_image.set_mat(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_Transcriptomics.tif")
 
-    f_info = detect_chip_box(fixed_image.mat.image)
+    f_info = detect_chip_box(fixed_image.mat.image, chip_size = 2)
     fixed_image.set_chip_box(f_info)
 
     result = chip_align(moving_image, fixed_image)
