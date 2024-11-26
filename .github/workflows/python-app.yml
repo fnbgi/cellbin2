@@ -20,7 +20,6 @@ jobs:
           conda create --name myenv python=3.8 -y
         fi
         conda init bash
-        source ~/.bashrc
         conda activate myenv
         which python
         python -c "print('Hello, World!')"
