@@ -27,13 +27,3 @@ jobs:
         pip install pytest
         pip install pytest-html
         pytest test/test_cellbin_pipeline.py -v
-
-
-
-
-#    - name: Install requirements
-#      run: |
-#        python install.py
-#    - name: Run pytest
-#      run: |
-#        python test/test_cellbin_pipeline.py
