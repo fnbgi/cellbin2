@@ -14,6 +14,7 @@ jobs:
 
     - name: Demo test
       run: |
+        conda init bash
         echo $CONDA_PREFIX/bin >> $GITHUB_PATH
         if conda info --envs | grep -q "myenv"; then
           echo "Environment 'myenv' already exists. Skipping creation."
@@ -21,7 +22,6 @@ jobs:
           echo "Environment 'myenv' does not exist. Creating."
           conda create --name myenv python=3.8 -y
         fi
-        conda init bash
         conda activate myenv
         which python
         python -c "print('Hello, World!')"
