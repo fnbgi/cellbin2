@@ -9,6 +9,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
     - name: Create or update conda environment
       run: |
         if conda info --envs | grep -q "myenv"; then
@@ -24,7 +25,6 @@ jobs:
         conda activate myenv
         which python
         python -c "print('Hello, World!')"
-#        python install.py
         pip install pytest
         pip install pytest-html
         pytest test/test_cellbin_pipeline.py -v
