@@ -27,7 +27,8 @@ jobs:
         python -c "print('Hello, World!')"
         python install.py
         pip install pytest
-        python test/test_cellbin_pipeline.py
+        pip install pytest-html
+        pytest test/test_cellbin_pipeline.py -v
 
 
 
