@@ -6,6 +6,8 @@
 # @annotation    :
 
 from typing import Union
+
+import cv2
 import numpy as np
 import numpy.typing as npt
 
@@ -102,6 +104,11 @@ class TissueSegPreprocess:
         # 支持读图
         if isinstance(img, str):
             img = self.im_read(img)
+
+            if len(img.shape) == 3 and stain_type != TechType.HE:
+                clog.warning(
+                    'the input image is an RGB image, bug the stain type is not HE,convert the RGB image to GRAY image')
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
         # 基操
         img = np.squeeze(img)
