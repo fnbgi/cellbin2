@@ -214,6 +214,9 @@ def adjust_mask_shape(gef_path, mask_path):
 
 def save_cell_bin_data(src_path: str, dst_path: str, cell_mask: str):
     """ 获取：单细胞数据（mask可来自配准图像 or 矩阵自身 ） """
+    src_path = str(src_path)
+    dst_path = str(dst_path)
+    cell_mask = str(cell_mask)
     from gefpy import cgef_writer_cy
     if src_path.endswith(".gef"):
         cell_mask = adjust_mask_shape(gef_path=src_path, mask_path=cell_mask)
@@ -236,6 +239,9 @@ def generate_vis_gef(src_path: str, dst_path):
 
 def save_tissue_bin_data(src_path: str, dst_path: str, tissue_mask: str, bin_siz: int = 1):
     """ 获取：组织区域内BinN数据 """
+    src_path = str(src_path)
+    dst_path = str(dst_path)
+    tissue_mask = str(tissue_mask)
     from gefpy.bgef_creater_cy import BgefCreater
     if src_path.endswith(".gef"):
         tissue_mask = adjust_mask_shape(gef_path=src_path, mask_path=tissue_mask)
@@ -271,6 +277,7 @@ def get_bin_n_data(file_path: str, bin_siz: int = 1):
 
 
 def main():
+    from cellbin2.utils.common import TechType
     # import tifffile
     # import cv2 as cv
     #
@@ -290,14 +297,25 @@ def main():
     # src_file = "/media/Data/dzh/data/cellbin2/test/A03599D1_demo_1/A03599D1_Transcriptomics.tissue.gef"
     # dst_file = "/media/Data/dzh/data/cellbin2/test/A03599D1_demo_1/A03599D1_Transcriptomics.tissue.gef"
     # generate_vis_gef(src_path=src_file, dst_path=dst_file)
-    src_path: str = "/media/Data/dzh/data/cellbin2/demo_data/C04144D5/C04144D5.raw.gef"
+    _output_path = "/media/Data/dzh/data/cellbin2/demo_data/C03928D1"
+    sn = 'C03928D1'
+    p_naming = naming.DumpPipelineFileNaming(chip_no=sn, save_dir=_output_path)
+    m_naming = naming.DumpMatrixFileNaming(sn=sn, m_type=TechType.Transcriptomics, save_dir=_output_path)
+    src_path: str = "/media/Data/dzh/data/cellbin2/demo_data/C03928D1/C03928D1.gem.gz"
+    # ts_cut: str = "/media/Data/dzh/data/cellbin2/test/C04144D5_demo/C04144D5_ssDNA_tissue_cut.tif"
     # dst_path: str = "/media/Data/dzh/data/cellbin2/demo_data/C04144D5/C04144D522_Transcriptomics.cellbin.gef"
     # cell_mask: str = "/media/Data/dzh/data/cellbin2/test/C04144D5_demo/C04144D5_ssDNA_mask.tif"
     # save_cell_bin_data(src_path, dst_path, cell_mask)
-    save_tissue_bin_data(
+    # save_tissue_bin_data(
+    #     src_path,
+    #     str(m_naming.tissue_bin_matrix),
+    #     str(p_naming.final_tissue_mask)
+    # )
+
+    save_cell_bin_data(
         src_path,
-        "/media/Data/dzh/data/cellbin2/test/C04144D5_demo/C04144D5_Transcriptomics.tissue.gef",
-        tissue_mask="/media/Data/dzh/data/cellbin2/test/C04144D5_demo/C04144D5_ssDNA_tissue_cut.tif"
+        str(m_naming.cell_bin_matrix),
+        str(p_naming.final_nuclear_mask)
     )
     # generate_vis_gef(src_path,
     #                  "/media/Data/dzh/data/cellbin2/demo_data/C04144D5/C04144D5.gef")

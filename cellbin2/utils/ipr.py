@@ -72,7 +72,7 @@ class QCInfo(BaseIpr):
         self.Experimenter: str = sPlaceHolder
         self.GoodFovCount: int = iPlaceHolder
         self.ImageQCVersion: str = sPlaceHolder
-        self.QcPassFlag: int = iPlaceHolder
+        self.QCPassFlag: int = iPlaceHolder
         self.RemarkInfo: str = sPlaceHolder
         self.StainType: str = sPlaceHolder
         self.TemplateRecall: float = fPlaceHolder

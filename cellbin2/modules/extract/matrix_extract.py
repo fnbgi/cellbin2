@@ -49,12 +49,12 @@ class MatrixFeatureExtract(FeatureExtract):
             )
         if Path(cell_mask_path).exists():
             save_cell_bin_data(
-                self._image_file.file_path,
+                self._naming.tissue_bin_matrix,
                 str(self._naming.cell_bin_matrix),
                 cell_mask_path)
         if Path(cell_correct_mask_path).exists():
             save_cell_bin_data(
-                self._image_file.file_path,
+                self._naming.tissue_bin_matrix,
                 str(self._naming.cell_correct_bin_matrix),
                 cell_correct_mask_path
             )
