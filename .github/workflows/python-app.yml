@@ -27,3 +27,7 @@ jobs:
     - name: Print Hello World
       run: |
         python -c "print('Hello, World!')"
+
+    - name: Install requirements
+        run: |
+        python install.py
