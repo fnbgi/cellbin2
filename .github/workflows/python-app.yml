@@ -17,7 +17,6 @@ jobs:
           echo "Environment 'myenv' does not exist. Creating."
           conda create --name myenv python=3.8 -y
         fi
-
     - name: Activate conda environment
       run: |
         conda init bash
