@@ -203,27 +203,28 @@ class StereoChip(object):
 
     def set_chip_specif(self, ):
 
-        def suffix_parser(suffix):
+        def suffix_parser(suffix, name):
             if suffix[-2:] in ['11', '12', '13', '14']:
                 specif = [0.5, 0.5]
             else:
-                h = ord(suffix[-2]) - ord(suffix[-4])
-                w = ord(suffix[-1]) - ord(suffix[-3])
+                h = name.index(suffix[-2]) - name.index(suffix[-4])
+                w = int(suffix[-1]) - int(suffix[-3])
                 specif = [w + 1, h + 1]
             return specif
 
+        title_name = sorted(set([i[0] for i in list(self.chip_mask['T10_90_90_230508'].keys())]))
         name_len = len(self._name)
         if self.name_type == ChipNameType.SHORT:
             if name_len == 8:
                 self.chip_specif = [1, 1]
             else:
-                self.chip_specif = suffix_parser(self._name[-4:])
+                self.chip_specif = suffix_parser(self._name[-4:], title_name)
         elif self.name_type == ChipNameType.LONG:
             suffix = self._name.split('_')[-1]
             if len(suffix) == 2:
                 self.chip_specif = [1, 1]
             else:
-                self.chip_specif = suffix_parser(suffix)
+                self.chip_specif = suffix_parser(suffix, title_name)
 
     def is_after_230508(self, s13_min_num=395, s6_min_num=3205) -> bool:
         """  配准前置用该参数作为是否满足调用的条件，这是条件之一，还需要满足拍图时芯片放置角度Rot90=0
@@ -281,13 +282,15 @@ if __name__ == '__main__':
     # main()
     curr_path = os.path.dirname(os.path.realpath(__file__))
     sc = StereoChip(chip_mask_file = os.path.join(curr_path, r'../config/chip_mask.json'))
-    word = 'ACDEFGHJKLMNP'
-    num = '123456789ACDE'
-    for i in range(13):
-        for j in range(13):
-            sc.parse_info(chip_no='Y03950' + word[i] + num[j])
-            # zz = sc.zero_zero_point
-            # print(zz)
-            print("***************")
-            print(np.array(sc.zero_zero_chip_point))
-            print(2940 - np.array(sc.zero_zero_chip_point))
+    sc.parse_info(chip_no = 'B03612A4C6')
+    print(1)
+    # word = 'ACDEFGHJKLMNP'
+    # num = '123456789ACDE'
+    # for i in range(13):
+    #     for j in range(13):
+    #         sc.parse_info(chip_no='Y03950' + word[i] + num[j])
+    #         # zz = sc.zero_zero_point
+    #         # print(zz)
+    #         print("***************")
+    #         print(np.array(sc.zero_zero_chip_point))
+    #         print(2940 - np.array(sc.zero_zero_chip_point))
