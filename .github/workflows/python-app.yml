@@ -28,6 +28,6 @@ jobs:
         python -c "print('Hello, World!')"
         pip install pytest
         pip install pytest-html
-        echo "REPORT_FILE_PATH=/media/Data1/user/dengzhonghan/data/cellbin2/auto_test_report/${git_commit}.html"
+        echo "REPORT_FILE_PATH=/media/Data1/user/dengzhonghan/data/cellbin2/auto_test_report/${GITHUB_SHA}.html"
         echo $REPORT_FILE_PATH
         pytest test/test_cellbin_pipeline.py --html=$REPORT_FILE_PATH --self-contained-html
