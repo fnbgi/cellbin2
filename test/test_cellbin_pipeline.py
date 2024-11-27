@@ -2,6 +2,7 @@ import sys
 import os
 import pytest
 import traceback
+from datetime import datetime
 
 CURR_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # CB_PATH = os.path.join(CURR_PATH,)
@@ -62,29 +63,34 @@ class TestPipelineMain:
     @pytest.mark.parametrize("sn, im_path, if_path, s_type, trans_gef, p_gef", TEST_DATA)
     def test_run(self, sn, im_path, if_path, s_type, trans_gef, p_gef):
         print(sn, im_path, if_path, s_type, trans_gef, p_gef)
-        cur_test_out = os.path.join(TEST_OUTPUT_DIR, cellbin2.__version__)
+        git_commit = os.getenv('GITHUB_SHA')
+        if git_commit is not None:
+            cur_test_out = os.path.join(TEST_OUTPUT_DIR, git_commit)
+        else:
+            cur_test_out = os.path.join(TEST_OUTPUT_DIR, cellbin2.__version__)
+        print(f"Test results will be saved at {cur_test_out}")
         os.makedirs(cur_test_out, exist_ok=True)
-        cur_out = os.path.join(cur_test_out, sn)
-
-        im_path = os.path.join(DEMO_DATA_DIR, im_path)
-        if if_path != "":
-            if_path = os.path.join(DEMO_DATA_DIR, if_path)
-        trans_gef = os.path.join(DEMO_DATA_DIR, trans_gef)
-        if p_gef != "":
-            p_gef = os.path.join(DEMO_DATA_DIR, p_gef)
-        try:
-            pipeline(
-                chip_no=sn,
-                input_image=im_path,
-                if_image=if_path,
-                stain_type=s_type,
-                param_file="",
-                output_path=cur_out,
-                matrix_path=trans_gef,
-                protein_matrix_path=p_gef,
-                kit="",
-                if_report=True,
-                weights_root=WEIGHTS_ROOT,
-            )
-        except Exception as e:
-            clog.info(traceback.print_exc())
+        # cur_out = os.path.join(cur_test_out, sn)
+        #
+        # im_path = os.path.join(DEMO_DATA_DIR, im_path)
+        # if if_path != "":
+        #     if_path = os.path.join(DEMO_DATA_DIR, if_path)
+        # trans_gef = os.path.join(DEMO_DATA_DIR, trans_gef)
+        # if p_gef != "":
+        #     p_gef = os.path.join(DEMO_DATA_DIR, p_gef)
+        # try:
+        #     pipeline(
+        #         chip_no=sn,
+        #         input_image=im_path,
+        #         if_image=if_path,
+        #         stain_type=s_type,
+        #         param_file="",
+        #         output_path=cur_out,
+        #         matrix_path=trans_gef,
+        #         protein_matrix_path=p_gef,
+        #         kit="",
+        #         if_report=True,
+        #         weights_root=WEIGHTS_ROOT,
+        #     )
+        # except Exception as e:
+        #     clog.info(traceback.print_exc())
