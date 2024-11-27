@@ -28,7 +28,4 @@ jobs:
         python -c "print('Hello, World!')"
         pip install pytest
         pip install pytest-html
-        echo "REPORT_FILE_PATH=/media/Data1/user/dengzhonghan/data/cellbin2/auto_test_report/${GITHUB_SHA}.html"
-        echo $REPORT_FILE_PATH
-        pytest test/test_cellbin_pipeline.py --html=$REPORT_FILE_PATH --self-contained-html
-        python /media/Data1/user/dengzhonghan/code/email_send/send_email.py -s 'CellBin Research Group' -t 'GitHub Auto Test Report' -r dengzhonghan@genomics.cn -a $REPORT_FILE_PATH -m 'CellBin report'
+        pytest test/test_cellbin_pipeline.py --html=/media/Data1/user/dengzhonghan/data/cellbin2/auto_test_report/${GITHUB_SHA}.html --self-contained-html
