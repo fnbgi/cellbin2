@@ -1,4 +1,4 @@
-name: Create and Test Conda Environment
+name: CellBin Main Test
 
 on: [push]
 

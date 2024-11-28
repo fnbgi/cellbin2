@@ -487,7 +487,7 @@ def calculate(param: FileSource, output_path: str):
     # TODO: zhangying
     mcs = Metrics(param, output_path=output_path)
     mcs.set_report_para()
-    mcs.save_json_file(os.path.join(mcs.output_path, mcs.pipe_naming.metrics))  # 命名统一管理
+    mcs.save_json_file(os.path.join(mcs.pipe_naming.metrics))  # 命名统一管理
 
 
 def main():
