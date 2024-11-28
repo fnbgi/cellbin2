@@ -26,3 +26,6 @@ fPlaceHolder = -999.999
 iPlaceHolder = -999
 sPlaceHolder = '-'
 
+
+class ErrorCode(Enum):
+    qcFail = 1  # image qc failed, return code 1

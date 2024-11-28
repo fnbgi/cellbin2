@@ -21,6 +21,7 @@ from cellbin2.modules.extract.matrix_extract import MatrixFeatureExtract
 from cellbin2.contrib.mask_manager import merge_cell_mask, BestTissueCellMask
 from cellbin2.contrib.fast_correct import run_fast_correct
 from cellbin2.utils.pro_monitor import process_decorator
+from cellbin2.utils.common import ErrorCode
 
 
 class Scheduler(object):
@@ -297,7 +298,7 @@ class Scheduler(object):
 
                 if not f.tech == TechType.IF and self._channel_images[f.tech.name].QCInfo.QcPassFlag != 1:  # 现有条件下无法配准
                     clog.warning('Image QC not pass, cannot deal this pipeline')
-                    continue
+                    sys.exit(ErrorCode.qcFail.value)
 
                 s, r, offset = self._read_transform(f)
                 # Transform 操作：Transform > segmentation > mask merge & expand
