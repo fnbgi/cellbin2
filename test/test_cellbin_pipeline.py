@@ -2,7 +2,6 @@ import sys
 import os
 import pytest
 import traceback
-from datetime import datetime
 
 CURR_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # CB_PATH = os.path.join(CURR_PATH,)
@@ -10,7 +9,6 @@ print(CURR_PATH)
 sys.path.append(CURR_PATH)
 from cellbin2.cellbin_pipeline import pipeline
 import cellbin2
-from cellbin2.utils import clog
 
 WEIGHTS_ROOT = "/media/Data1/user/dengzhonghan/data/cellbin2/weights"
 TEST_OUTPUT_DIR = "/media/Data1/user/dengzhonghan/data/cellbin2/auto_test"
