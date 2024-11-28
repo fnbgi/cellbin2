@@ -27,7 +27,7 @@ class TissueSegParam(BaseModel, BaseModule):
                                               description="name of the transcriptomics model")
     Protein_weights_path: str = Field(r"tissueseg_bcdu_rna_220909_tf.onnx",
                                       description="name of the Protein model")
-    IF_weights_path: Optional[str] = Field('if', description='IF 使用传统算法，没有相应的模型')
+    IF_weights_path: Optional[str] = Field('-', description='IF 使用传统算法，没有相应的模型')
     GPU: int = Field(-1, description='gpu编号，默认为-1，使用cpu')
     num_threads: int = Field(1, description="name of the model")
 
@@ -49,9 +49,9 @@ class TissueSegParam(BaseModel, BaseModule):
 
 
 class TissueSegInputInfo(BaseModel):
-    weight_path_cfg: TissueSegParam = Field(None, description='组织分割不同染色权重配置文件，需要权重的绝对路径')
-    input_path: Union[str, Path] = Field(None, description='输入图像')
-    stain_type: TechType = Field(None, description='输入图像的染色类型')
+    weight_path_cfg: TissueSegParam = Field(..., description='组织分割不同染色权重配置文件，需要权重的绝对路径')
+    input_path: Union[str, Path] = Field(..., description='输入图像')
+    stain_type: TechType = Field(..., description='输入图像的染色类型')
     threshold_list: Any = Field(None, description='输入阈值的下限和上限，仅针对IF图像')
 
 
