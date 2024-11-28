@@ -112,6 +112,9 @@ class AlignByTrack:
 
         """
 
+        if image.ndim == 3:
+            image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+
         M = cv.moments(image)
         cx_cv = round(M['m10'] / M['m00'])
         cy_cv = round(M['m01'] / M['m00'])
@@ -383,6 +386,9 @@ class AlignByTrack:
         self.new_method = new_method
         self.transformed_shape = transformed_image.shape
         self.vision_shape = vision_img.shape
+
+        if transformed_image.ndim == 3:
+            transformed_image = cv.cvtColor(transformed_image, cv.COLOR_BGR2GRAY)
 
         if flip:
             self.transformed_image = np.fliplr(transformed_image)
