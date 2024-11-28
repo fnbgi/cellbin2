@@ -150,7 +150,7 @@ class Scheduler(object):
         s = (1., 1.)  # default
         r = 0.  # default
         if image_file.tech != TechType.IF:
-            if self._channel_images[c_name].QCInfo.QcPassFlag == 1:  # 现有条件下无法标准化，保持原样
+            if self.qc_flag == 1:  # 现有条件下无法标准化，保持原样
                 # 获取配准参数
                 if self._channel_images[c_name].QCInfo.TrackCrossQCPassFlag:
                     s = (1 / self._channel_images[c_name].Register.ScaleX,
@@ -296,9 +296,16 @@ class Scheduler(object):
                 else:
                     file_tag = f.tech.name
 
-                if not f.tech == TechType.IF and self._channel_images[f.tech.name].QCInfo.QcPassFlag != 1:  # 现有条件下无法配准
-                    clog.warning('Image QC not pass, cannot deal this pipeline')
-                    sys.exit(ErrorCode.qcFail.value)
+                if not f.tech == TechType.IF:
+                    # TODO: deal with two versions of ipr
+                    qc_ = self._channel_images[g_name].QCInfo
+                    if hasattr(qc_, 'QcPassFlag'):
+                        self.qc_flag = getattr(qc_, 'QcPassFlag')
+                    else:
+                        self.qc_flag = getattr(qc_, 'QCPassFlag')
+                    if self.qc_flag != 1:  # 现有条件下无法配准
+                        clog.warning('Image QC not pass, cannot deal this pipeline')
+                        sys.exit(ErrorCode.qcFail.value)
 
                 s, r, offset = self._read_transform(f)
                 # Transform 操作：Transform > segmentation > mask merge & expand

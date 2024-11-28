@@ -41,7 +41,7 @@ class ImageInfo(BaseIpr):
         self.Gain: str = sPlaceHolder
         self.Gamma: float = fPlaceHolder
         self.GammaShift: bool = bPlaceHolder
-        self.Iilluminance: str = sPlaceHolder
+        self.Illuminance: str = sPlaceHolder
         self.Manufacturer: str = sPlaceHolder
         self.Model: str = sPlaceHolder
         self.Overlap: float = fPlaceHolder
@@ -50,7 +50,7 @@ class ImageInfo(BaseIpr):
         self.PixelSizeY: float = fPlaceHolder
         self.QCResultFile: str = sPlaceHolder  # optional
         self.RegisterVersion: str = sPlaceHolder
-        self.RgbScale: np.ndarray = np.array([iPlaceHolder, iPlaceHolder, iPlaceHolder], dtype=np.uint8)
+        self.RGBScale: np.ndarray = np.array([iPlaceHolder, iPlaceHolder, iPlaceHolder], dtype=np.uint8)
         self.STOmicsChipSN: str = sPlaceHolder
         self.ScanChannel: str = sPlaceHolder
         self.ScanCols: int = iPlaceHolder
@@ -60,6 +60,8 @@ class ImageInfo(BaseIpr):
         self.Sharpness: float = fPlaceHolder
         self.StitchedImage: bool = bPlaceHolder
         self.WhiteBalance: str = sPlaceHolder
+        self.STOmicsChipFovCol: str = sPlaceHolder
+        self.STOmicsChipFovRow: str = sPlaceHolder
 
 
 class QCInfo(BaseIpr):
@@ -108,15 +110,6 @@ class ChipBBox(object):
     def update(self, box: param.ChipBoxInfo):
         for k, v in box.model_dump().items():
             setattr(self, k, v)
-        # self.LeftTop = box.left_top
-        # self.LeftBottom = box.left_bottom
-        # self.RightTop = box.right_top
-        # self.RightBottom = box.right_bottom
-        # self.ScaleX = box.scale_x
-        # self.ScaleY = box.scale_y
-        # self.ChipSize = box.chip_size
-        # self.Rotation = box.rotation
-        # self.IsAvailable = box.is_available
 
     def get(self):
         info = param.ChipBoxInfo(**self.__dict__)
@@ -377,12 +370,12 @@ def write(file_path, ipr: ImageProcessRecord, extra_images: dict = None):
     return 0
 
 
-def read(file_path: str) -> Tuple[Type[ImageProcessRecord], Dict[Any, Type[Union[IFChannel, ImageChannel]]]]:
+def read(file_path: str) -> Tuple[ImageProcessRecord, Dict[str, Union[IFChannel, ImageChannel]]]:
     dct = {}
     with h5py.File(file_path, 'r') as fd:
         h52dict(fd, dct)
     ipr_dct = {}
-    image_dct: Dict[Any, Type[Union[IFChannel, ImageChannel]]] = {}
+    image_dct: Dict[str, Union[IFChannel, ImageChannel]] = {}
 
     for k, v in dct.items():
         if k in ['IPRVersion', 'ManualState', 'Preview', 'StereoResepSwitch']:

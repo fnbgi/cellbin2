@@ -220,7 +220,8 @@ class ImageFeatureExtract(FeatureExtract):
                 clog.info('Using the image chip box, calculate scale == {}'.format(scale))
                 cut_siz = (int(self._fov_wh[0] * scale), int(self._fov_wh[1] * scale))
                 clog.info('Estimate2 FOV-WH from {} to {}'.format(self._fov_wh, cut_siz))
-
+        self._channel_image.ImageInfo.FOVHeight = cut_siz[1]
+        self._channel_image.ImageInfo.FOVWidth = cut_siz[0]
         if self._image_file.quality_control:
             self._clarity()
 
@@ -236,11 +237,11 @@ class ImageFeatureExtract(FeatureExtract):
                 clog.info('The chip-data meets the pre-registration conditions')
                 self._pre_registration()
 
-        self._channel_image.QCInfo.QcPassFlag = (
+        self._channel_image.QCInfo.QCPassFlag = (
                 self._channel_image.QCInfo.ChipDetectQCPassFlag | self._channel_image.QCInfo.TrackCrossQCPassFlag
         )
 
-        clog.info('ImageQC result is {}'.format(self._channel_image.QCInfo.QcPassFlag))
+        clog.info('ImageQC result is {}'.format(self._channel_image.QCInfo.QCPassFlag))
 
     @process_decorator('GiB')
     def _pre_registration(self, ):
