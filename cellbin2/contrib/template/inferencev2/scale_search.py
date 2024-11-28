@@ -220,7 +220,9 @@ class ScaleSearch:
 
         scale_cp = [i[0] for i in cp_info]
         scale = max(scale_cp, key=scale_cp.count)
-        best_point = [i[2] for i in cp_info if i[0] == scale][0] + _min_points
+        _bp = [i[2] for i in cp_info if i[0] == scale][0]
+        if len(_bp) == 0: best_point = None
+        else: best_point = _bp + _min_points
 
         return scale, best_point
 
