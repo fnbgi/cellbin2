@@ -1,3 +1,4 @@
+import shutil
 import sys
 import os
 import pytest
@@ -91,3 +92,4 @@ class TestPipelineMain:
             )
         except Exception as e:
             print(traceback.print_exc())
+        shutil.rmtree(cur_test_out)
