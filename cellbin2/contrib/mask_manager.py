@@ -140,10 +140,12 @@ class BestTissueCellMask:
 
         if method == 1 and stain_type == TechType.DAPI:
             clog.error(f"stain type: {stain_type} do not support method: {method}")
-            clog.info(f"return input tissue mask and cell mask")
+            clog.info(f"execute method 0 and return input tissue mask and best cell mask")
             output_data.best_tissue_mask = tissue_mask
-            output_data.best_cell_mask = cell_mask
+            # output_data.best_cell_mask = cell_mask
+            output_data.best_cell_mask = cls.best_cell_mask(tissue_mask=tissue_mask, cell_mask=cell_mask)
             return output_data
+
 
         if stain_type == TechType.HE:
             kernel_size = 250
@@ -270,7 +272,7 @@ if __name__ == '__main__':
         'left_bottom': [2181, 22214]
     }
     stain_type = TechType.DAPI
-    method = 0
+    method = 1
 
     # # ssDNA测试数据细胞分割mask和组织分割mask路径
     # cell_mask_path = r"F:\01.users\hedongdong\cellbin2_test\cell_mask\A04535A4C6_fov_stitched_v3_mask.tif"
@@ -284,11 +286,11 @@ if __name__ == '__main__':
     # }
     # stain_type = TechType.ssDNA
 
-    chip_box.is_available = False
-    chip_box.left_top = chip_point['left_top']
-    chip_box.right_top = chip_point['right_top']
-    chip_box.right_bottom = chip_point['right_bottom']
-    chip_box.left_bottom = chip_point['left_bottom']
+    chip_box.IsAvailable = False
+    chip_box.LeftTop = chip_point['left_top']
+    chip_box.RightTop = chip_point['right_top']
+    chip_box.RightBottom = chip_point['right_bottom']
+    chip_box.LeftBottom = chip_point['left_bottom']
 
     cell_mask = cbimread(cell_mask_path, only_np=True)
     tissue_mask = cbimread(tissue_mask_path, only_np=True)
