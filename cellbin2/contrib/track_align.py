@@ -383,12 +383,12 @@ class AlignByTrack:
         Returns:
 
         """
+        if transformed_image.ndim == 3:
+            transformed_image = cv.cvtColor(transformed_image, cv.COLOR_BGR2GRAY)
+
         self.new_method = new_method
         self.transformed_shape = transformed_image.shape
         self.vision_shape = vision_img.shape
-
-        if transformed_image.ndim == 3:
-            transformed_image = cv.cvtColor(transformed_image, cv.COLOR_BGR2GRAY)
 
         if flip:
             self.transformed_image = np.fliplr(transformed_image)

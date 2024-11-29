@@ -207,7 +207,11 @@ class StereoChip(object):
             if suffix[-2:] in ['11', '12', '13', '14']:
                 specif = [0.5, 0.5]
             else:
-                h = name.index(suffix[-2]) - name.index(suffix[-4])
+                if suffix[-2] not in name or suffix[-4] not in name:
+                    h = ord(suffix[-2]) - ord(suffix[-4])
+                else:
+                    h = name.index(suffix[-2]) - name.index(suffix[-4])
+
                 w = int(suffix[-1]) - int(suffix[-3])
                 specif = [w + 1, h + 1]
             return specif
@@ -226,13 +230,24 @@ class StereoChip(object):
             else:
                 self.chip_specif = suffix_parser(suffix, title_name)
 
-    def is_after_230508(self, s13_min_num=395, s6_min_num=3205) -> bool:
+    def is_after_230508(
+            self,
+            s13_min_num=395,
+            s6_min_num=3205,
+            deprecated_word = ["B", "I", "O"]
+    ) -> bool:
         """  配准前置用该参数作为是否满足调用的条件，这是条件之一，还需要满足拍图时芯片放置角度Rot90=0
         :param s13_min_num:
         :param s6_min_num:
+        :param deprecated_word:
         :return: True表示该芯片产自230508后
         """
         if self.name_type is ChipNameType.SHORT:
+
+            for _w in deprecated_word:
+                if _w in self.chip_name[-4:]:
+                    return False
+
             if self.is_from_S13:
                 if int(self.chip_name[1: 1 + 5]) > s13_min_num:
                     return True
