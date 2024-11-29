@@ -23,6 +23,7 @@ from cellbin2.contrib.param import ChipBoxInfo
 from cellbin2.contrib.tissue_segmentor import TissueSegInputInfo
 from cellbin2.utils.pro_monitor import process_decorator
 from cellbin2.image import CBImage, cbimread
+from cellbin2.utils.common import iPlaceHolder
 
 
 class ImageFeatureExtract(FeatureExtract):
@@ -236,10 +237,9 @@ class ImageFeatureExtract(FeatureExtract):
             if chip_info.IsAvailable and img_tpl.trackcross_qc_pass_flag:
                 clog.info('The chip-data meets the pre-registration conditions')
                 self._pre_registration()
-
-        self._channel_image.QCInfo.QCPassFlag = (
-                self._channel_image.QCInfo.ChipDetectQCPassFlag | self._channel_image.QCInfo.TrackCrossQCPassFlag
-        )
+        cpf = True if self._channel_image.QCInfo.ChipDetectQCPassFlag == 1 else False
+        tcf = True if self._channel_image.QCInfo.TrackCrossQCPassFlag == 1 else False
+        self._channel_image.QCInfo.QCPassFlag = (cpf or tcf)
 
         clog.info('ImageQC result is {}'.format(self._channel_image.QCInfo.QCPassFlag))
 
