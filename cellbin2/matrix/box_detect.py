@@ -124,18 +124,23 @@ class MatrixBoxDetector(object):
 
 def detect_chip_box(
         matrix: np.ndarray,
-        chip_size: Union[float, list, tuple] = 1.0
+        chip_size: Union[int, float, list, tuple] = 1.0
 ) -> ChipBoxInfo:
     """
 
     Args:
         matrix:
-        chip_size:
+        chip_size: "A1C3" == 3 * 2
 
     Returns:
 
     """
     mbd = MatrixBoxDetector()
+
+    # need chip size, "A1C3" == 2 * 3
+    if isinstance(chip_size, (list, tuple)):
+        chip_size = chip_size[::-1]
+
     box = mbd.detect(matrix, chip_size)
     cbi = ChipBoxInfo(LeftTop=box[0], LeftBottom=box[1],
                       RightBottom=box[2], RightTop=box[3])
