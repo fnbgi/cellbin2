@@ -85,6 +85,23 @@ class ChipDetector(object):
         self.rough_corner_points = None
         self.finetune_corner_points = None
 
+        self.set_points_flag = False
+
+    def set_corner_points(self, points: np.ndarray):
+        """
+
+        Args:
+            points:
+
+        Returns:
+
+        """
+        if isinstance(points, np.ndarray):
+            if points.shape == (4, 2):
+                self.finetune_corner_points = points
+                self.set_points_flag = True
+                clog.info(f"Set corner points done.")
+
     def control(
             self,
             threshold_length_rate: float = 0.05,
@@ -117,8 +134,13 @@ class ChipDetector(object):
                   for i in range(fcp.shape[0])]
         r_list = list(map(lambda x: np.degrees(np.arctan(x)), k_list))
 
-        included_angle = [np.abs(180 * (i % 2) - (r_list[(i + 1) % len(r_list)] - r_list[i]))
-                          for i in range(len(r_list))]
+        included_angle = list()
+        for i in range(len(r_list)):
+            _r = r_list[(i + 1) % len(r_list)] - r_list[i]
+            if _r < 0: _r = 180 + _r
+            included_angle.append(_r)
+        # included_angle = [np.abs(180 * (i % 2) - (r_list[(i + 1) % len(r_list)] - r_list[i]))
+        #                   for i in range(len(r_list))]
         clog.info(f"Chip detector -> included angle == {list(map(lambda x: np.round(x, 5), included_angle))}")
 
         included_angle = np.abs(np.array(list(map(lambda x: 90 - x, included_angle))))
@@ -137,8 +159,10 @@ class ChipDetector(object):
 
         """
         self.parse_image(file_path, actual_size)
-        self.stage_rough()
-        self.stage_finetune()
+
+        if not self.set_points_flag:
+            self.stage_rough()
+            self.stage_finetune()
 
         self.parse_info()
         self.control()
