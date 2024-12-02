@@ -1,6 +1,9 @@
 name: CellBin Main Test
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
