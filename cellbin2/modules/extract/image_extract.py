@@ -264,7 +264,12 @@ class ImageFeatureExtract(FeatureExtract):
 
     @process_decorator('GiB')
     def _estimate_fov_size(self, ):
+        # TODO 此处为西南分院专属改动，因其图像特征为以下：
+        #  ·图像倍率过高，接近30X
+        #  ·图像视野面较小，因此此处尺寸估计需设高
+
         scale = self._scale_estimate()  # 尺度估计
+        scale *= 2  #
         clog.info('Using the image and chip prior size, calculate scale == {}'.format(scale))
         wh = (int(self._fov_wh[0] * scale), int(self._fov_wh[1] * scale))
         clog.info('Estimate1 FOV-WH from {} to {}'.format(self._fov_wh, wh))

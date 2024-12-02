@@ -7,7 +7,7 @@ trackPoints:
   second_level_thr: 20  # [th2  # inf) -> track_point_score = 2
   good_thresh: 5  # 大于该阈值的被计数为good_fov
   process: 10  # 点检测推理进程数设置"
-  conf_filter: 0.5  # 依据此数值对检测结果进行置信度过滤，若值小于0就不做过滤")  # 全局模板设置只要0.5以上的点
+  conf_filter: 0.0  # 依据此数值对检测结果进行置信度过滤，若值小于0就不做过滤")  # 全局模板设置只要0.5以上的点
   high_freq_angle_thr: 0.05  # 
   DEFAULT_STAIN_TYPE: 1  # ssDNA染色
   SUPPORTED_STAIN_TYPE: [1, 2, 3]  # ssDAN染色, DAPI染色，HE染色
@@ -44,8 +44,8 @@ chipDetector:
   num_threads: 0
 
 templateReferenceV1:
-  pair_points_thr: 10
-  pair_points_qc_thr: 5
+  pair_points_thr: 20
+  pair_points_qc_thr: 10
   range_image_size_thr: 5000
   pair_correct_thr: 20
   cluster_num_thr: 10
