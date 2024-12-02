@@ -5,6 +5,8 @@ import h5py
 import cv2 as cv
 import numpy as np
 from typing import Union
+
+import tifffile
 from scipy.spatial.distance import cdist
 
 from cellbin2.image import CBImage, cbimread
@@ -135,6 +137,9 @@ def template_painting(
 
     """
     image = cbimread(image_data)
+    if image_type in ['DAPI', 'ssDNA']:
+        image = image.to_gray()
+
     tissue_image = cbimread(tissue_seg_data)
 
     _temp, _track = TemplateReferenceV1.pair_to_template(
@@ -261,14 +266,14 @@ def chip_box_painting(
 
 
 def get_view_image(
-        image: np.ndarray,
+        image: Union[np.ndarray, str],
         points: np.ndarray,
         is_matrix: bool = False,
         output_path: str = "",
         size: int = 500,
         color: tuple = (0, 0, 255),
         radius: int = 10,
-        thickness: int = 2
+        thickness: int = 1
 ):
     """
 
@@ -285,6 +290,11 @@ def get_view_image(
     Returns:
 
     """
+    if isinstance(image, str):
+        image = tifffile.imread(image)
+
+    image = f_ij_16_to_8(image)
+
     if is_matrix:
         size *= 2
         radius *= 2
@@ -303,16 +313,19 @@ def get_view_image(
             y = size
 
         if x > image.shape[1] - size:
-            _x = image.shape[1] - x
+            _x = 2 * size + x - image.shape[1]
             x = image.shape[1] - size
 
         if y > image.shape[0] - size:
-            _y = image.shape[0] - y
+            _y = 2 * size + y - image.shape[0]
             y = image.shape[0] - size
 
         _image = image[y - size: y + size, x - size: x + size]
         if not is_matrix:
-            _image = cv.cvtColor(cv.equalizeHist(_image), cv.COLOR_GRAY2BGR)
+            if _image.ndim == 3:
+                _image = cv.cvtColor(cv.bitwise_not(cv.cvtColor(_image, cv.COLOR_BGR2GRAY)), cv.COLOR_GRAY2BGR)
+            else:
+                _image = cv.cvtColor(cv.equalizeHist(_image), cv.COLOR_GRAY2BGR)
         else:
             _image = cv.filter2D(_image, -1, np.ones((21, 21), np.float32))
             _image = (_image > 0).astype(np.uint8) * 255
@@ -320,6 +333,8 @@ def get_view_image(
 
         line1 = np.array([[_x, _y - radius], [_x, _y + radius]], np.int32).reshape((-1, 1, 2))
         line2 = np.array([[_x - radius, _y], [_x + radius, _y]], np.int32).reshape((-1, 1, 2))
+
+        cv.circle(_image, [_x, _y], radius // 2, color[::-1], thickness)
 
         cv.polylines(_image, pts=[line1, line2], isClosed=False,
                      color=color, thickness=thickness, lineType=cv.LINE_8)
@@ -338,16 +353,20 @@ if __name__ == '__main__':
     import h5py
     from cellbin2.image import cbimwrite
 
-    register_img = "/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1_ssDNA_regist.tif"
-    tissue_cut = "/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1_ssDNA_tissue_cut.tif"
-    with h5py.File("/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1.ipr", "r") as f:
-        template_points = f["ssDNA"]["Register"]["RegisterTemplate"][...]
-        track_points = f["ssDNA"]["Register"]["RegisterTrackTemplate"][...]
-    _image, cp_image_list, tissue_image_list = template_painting(
-        image_data=register_img,
-        tissue_seg_data=tissue_cut,
-        image_type="ssDNA",
-        qc_points=track_points,
-        template_points=template_points,
-    )
-    cbimwrite("/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/assets/image/ssDNA_trackpoint.png", _image)
+    get_view_image(image = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\A00792D3\A00792D3_DAPI_stitch.tif",
+                   points = np.loadtxt(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\A00792D3\A00792D3_DAPI_stitch.txt"),
+                   output_path = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\A00792D3")
+
+    # register_img = "/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1_ssDNA_regist.tif"
+    # tissue_cut = "/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1_ssDNA_tissue_cut.tif"
+    # with h5py.File("/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1.ipr", "r") as f:
+    #     template_points = f["ssDNA"]["Register"]["RegisterTemplate"][...]
+    #     track_points = f["ssDNA"]["Register"]["RegisterTrackTemplate"][...]
+    # _image, cp_image_list, tissue_image_list = template_painting(
+    #     image_data=register_img,
+    #     tissue_seg_data=tissue_cut,
+    #     image_type="ssDNA",
+    #     qc_points=track_points,
+    #     template_points=template_points,
+    # )
+    # cbimwrite("/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/assets/image/ssDNA_trackpoint.png", _image)
