@@ -26,7 +26,7 @@ class Fast:
         super().__init__()
         self.processes = process
         self.distance = distance
-        self.mask = mask
+        self.mask = mask.copy()
 
     @staticmethod
     def getNeighborLabels8(label, x, y, width, height):
