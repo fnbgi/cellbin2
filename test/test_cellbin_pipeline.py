@@ -92,4 +92,4 @@ class TestPipelineMain:
             )
         except Exception as e:
             print(traceback.print_exc())
-        shutil.rmtree(cur_test_out)
+        # shutil.rmtree(cur_test_out)
