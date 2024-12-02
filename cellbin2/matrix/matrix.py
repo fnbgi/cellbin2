@@ -212,12 +212,29 @@ def adjust_mask_shape(gef_path, mask_path):
     return new_path
 
 
+def gem_to_gef(gem_path, gef_path):
+    from gefpy.bgef_writer_cy import generate_bgef
+    generate_bgef(input_file=gem_path,
+                  bgef_file=gef_path,
+                  stromics="Transcriptomics",
+                  n_thread=8,
+                  bin_sizes=[1],
+                  )
+
+
 def save_cell_bin_data(src_path: str, dst_path: str, cell_mask: str):
     """ 获取：单细胞数据（mask可来自配准图像 or 矩阵自身 ） """
     src_path = str(src_path)
     dst_path = str(dst_path)
     cell_mask = str(cell_mask)
     from gefpy import cgef_writer_cy
+    if src_path.endswith(".gem.gz"):
+        gef_path = os.path.join(os.path.dirname(dst_path), os.path.basename(src_path).replace(".gem.gz", ".raw.gef"))
+        if os.path.exists(gef_path):
+            src_path = gef_path
+        else:
+            gem_to_gef(src_path, gef_path)
+            src_path = gef_path
     if src_path.endswith(".gef"):
         cell_mask = adjust_mask_shape(gef_path=src_path, mask_path=cell_mask)
     cgef_writer_cy.generate_cgef(dst_path, src_path, cell_mask, [256, 256])

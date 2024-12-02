@@ -154,41 +154,47 @@ class ImageFeatureExtract(FeatureExtract):
                 trans_chip_box_info.ScaleX, trans_chip_box_info.ScaleY = 1.0, 1.0
                 trans_chip_box_info.Rotation = 0.0
                 self._channel_image.Stitch.TransformChipBBox.update(trans_chip_box_info)
-
-        if self._image_file.tissue_segmentation and not self._naming.transform_tissue_mask_raw.exists():
-            tissue_mask = self._tissue_segmentation(
-                image_path=self._naming.transformed_image,
-                res_path=self._naming.transform_tissue_mask_raw
-            )
-        if self._image_file.cell_segmentation and not self._naming.transform_cell_mask_raw.exists():
-            cell_mask = self._cell_segmentation(
-                image_path=self._naming.transformed_image,
-                res_path=self._naming.transform_cell_mask_raw
-            )
+        final_tissue_mask = None
+        final_cell_mask = None
+        tissue_mask = None
+        cell_mask = None
         if self._image_file.tissue_segmentation:
-            if 'tissue_mask' not in locals():
-                tissue_mask_p = self._naming.transform_tissue_mask_raw
-                tissue_mask = cbimread(tissue_mask_p, only_np=True)
-            if self._image_file.cell_segmentation:
-                if 'cell_mask' not in locals():
-                    cell_mask_p = self._naming.transform_cell_mask_raw
-                    cell_mask = cbimread(cell_mask_p, only_np=True)
-                input_data = MaskManagerInfo(
-                    tissue_mask=tissue_mask,
-                    cell_mask=cell_mask,
-                    chip_box=self._channel_image.Stitch.TransformChipBBox.get(),
-                    method=1,
-                    stain_type=self._image_file.tech
-                )
-                btcm = BestTissueCellMask.get_best_tissue_cell_mask(input_data=input_data)
-                final_tissue_mask = btcm.best_tissue_mask
-                final_cell_mask = btcm.best_cell_mask
-                cbimwrite(
-                    output_path=self._naming.transform_cell_mask,
-                    files=final_cell_mask
+            if not self._naming.transform_tissue_mask_raw.exists():
+                tissue_mask = self._tissue_segmentation(
+                    image_path=self._naming.transformed_image,
+                    res_path=self._naming.transform_tissue_mask_raw
                 )
             else:
-                final_tissue_mask = tissue_mask
+                tissue_mask_p = self._naming.transform_tissue_mask_raw
+                tissue_mask = cbimread(tissue_mask_p, only_np=True)
+            final_tissue_mask = tissue_mask
+        if self._image_file.cell_segmentation:
+            if not self._naming.transform_cell_mask_raw.exists():
+                cell_mask = self._cell_segmentation(
+                    image_path=self._naming.transformed_image,
+                    res_path=self._naming.transform_cell_mask_raw
+                )
+            else:
+                cell_mask_p = self._naming.transform_cell_mask_raw
+                cell_mask = cbimread(cell_mask_p, only_np=True)
+            final_cell_mask = cell_mask
+        if tissue_mask is not None and cell_mask is not None:
+            input_data = MaskManagerInfo(
+                tissue_mask=tissue_mask,
+                cell_mask=cell_mask,
+                chip_box=self._channel_image.Stitch.TransformChipBBox.get(),
+                method=1,
+                stain_type=self._image_file.tech
+            )
+            btcm = BestTissueCellMask.get_best_tissue_cell_mask(input_data=input_data)
+            final_tissue_mask = btcm.best_tissue_mask
+            final_cell_mask = btcm.best_cell_mask
+        if final_cell_mask is not None:
+            cbimwrite(
+                output_path=self._naming.transform_cell_mask,
+                files=final_cell_mask
+            )
+        if final_tissue_mask is not None:
             cbimwrite(
                 output_path=self._naming.transform_tissue_mask,
                 files=final_tissue_mask

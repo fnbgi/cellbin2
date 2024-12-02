@@ -41,20 +41,24 @@ class MatrixFeatureExtract(FeatureExtract):
         cell_mask_path = m_naming.final_nuclear_mask
         tissue_mask_path = m_naming.final_tissue_mask
         cell_correct_mask_path = m_naming.final_cell_mask
+        c_inp = None
         if Path(tissue_mask_path).exists():
             save_tissue_bin_data(
                 self._image_file.file_path,
                 str(self._naming.tissue_bin_matrix),
                 tissue_mask_path,
             )
+            c_inp = self._naming.tissue_bin_matrix
+        if c_inp is None:
+            c_inp = self._image_file.file_path
         if Path(cell_mask_path).exists():
             save_cell_bin_data(
-                self._naming.tissue_bin_matrix,
+                c_inp,
                 str(self._naming.cell_bin_matrix),
                 cell_mask_path)
         if Path(cell_correct_mask_path).exists():
             save_cell_bin_data(
-                self._naming.tissue_bin_matrix,
+                c_inp,
                 str(self._naming.cell_correct_bin_matrix),
                 cell_correct_mask_path
             )
