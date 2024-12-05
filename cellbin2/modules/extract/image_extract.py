@@ -257,6 +257,7 @@ class ImageFeatureExtract(FeatureExtract):
         moving_image.set_template(self._channel_image.stitched_template_info)
         moving_image.set_chip_box(self._channel_image.box_info)
         moving_image.set_point00(self._param_chip.zero_zero_point)
+        moving_image.set_anchor_point(tuple(self._param_chip.zero_zero_chip_point))
 
         res = template_00pt.template_00pt_align(moving_image=moving_image,
                                                 ref=self._param_chip.fov_template,
@@ -265,6 +266,8 @@ class ImageFeatureExtract(FeatureExtract):
         # TODO 临时测试用
         with open(os.path.join(self.output_path, 'register_00pt.txt'), 'w') as f:
             f.writelines(f"offset: {res.offset} \n")
+
+        # res.register_mat.write(os.path.join(self.output_path, "register_00pt.tif"))
 
         # self._channel_image.update_registration(res)
 

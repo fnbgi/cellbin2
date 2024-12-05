@@ -148,8 +148,8 @@ class StereoChip(object):
                            points_finish.transpose(1, 0).tolist())
         _x = np.array(x_set)[1:] - np.array(x_set)[:-1]
         _y = np.array(y_set)[1:] - np.array(y_set)[:-1]
-        zero_x = x_set[np.where(_x == self.fov_template[0][0])[0][0] + 2]
-        zero_y = y_set[np.where(_y == self.fov_template[0][0])[0][0] + 2]
+        zero_x = x_set[np.where(_x == max(self.fov_template[0]))[0][0] + 1]
+        zero_y = x_set[np.where(_x == max(self.fov_template[0]))[0][0] + 1]
 
         # 补充00点距芯片角距离
         index = np.where(((points_finish[:, 0] == zero_x) & (points_finish[:, 1] == zero_y)) == True)[0][0]

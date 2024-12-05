@@ -16,6 +16,7 @@ class ChipFeature(object):
         self._point00: Tuple[int, int] = (0, 0)  # xy,相对于芯片而不是矩阵的位置坐标
         self._mat: Union[str, np.ndarray, CBImage] = ''
         # self.ref: List[List, List] = [[]]
+        self._anchor_point: Tuple[int, int] = (0, 0)  # xy, 用于配准前置的辅助锚点
 
     @property
     def chip_box(self, ):
@@ -27,6 +28,14 @@ class ChipFeature(object):
     def set_point00(self, points):
         if isinstance(points, tuple) and len(points) == 2:
             self._point00 = points
+
+    def set_anchor_point(self, points):
+        if isinstance(points, tuple) and len(points) == 2:
+            self._anchor_point = points
+
+    @property
+    def anchor_point(self, ):
+        return self._anchor_point
 
     @property
     def point00(self, ):
