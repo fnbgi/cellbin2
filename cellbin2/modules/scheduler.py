@@ -234,14 +234,23 @@ class Scheduler(object):
             moving_image=moving_image,
             fixed_image=fixed_image,
             ref=self.param_chip.fov_template,
-            from_stitched=False
+            from_stitched=False,
+            qc_info = (param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag)
         )
-        self._channel_images[g_name].update_registration(info)
-        self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
-        temp_info.register_mat.write(os.path.join(self._output_path, f"{self._image_naming.sn}_chip_box_register.tif"))
-        np.savetxt(os.path.join(self._output_path, f"{self._image_naming.sn}_chip_box_register.txt"), temp_info.offset)
+        if info is not None:
+            self._channel_images[g_name].update_registration(info)
 
-        return info
+        self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
+
+        if temp_info is not None:
+            temp_info.register_mat.write(
+                os.path.join(self._output_path, f"{self._image_naming.sn}_chip_box_register.tif")
+            )
+            np.savetxt(os.path.join(
+                self._output_path, f"{self._image_naming.sn}_chip_box_register.txt"), temp_info.offset
+            )
+
+        return info if info is not None else temp_info
 
     def run(self, chip_no: str, input_image: str,
             stain_type: str, param_file: str,
