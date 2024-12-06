@@ -74,7 +74,7 @@ class TemplateCentroid(Alignment):
             np.array(fixed_image.template.template_points),
             np.array(moving_image.template.template_points),
             self.hflip,
-            new_method=True if self._moving_image.tech_type == TechType.HE else False
+            new_method=True if moving_image.tech_type == TechType.HE else False
         )
 
 
