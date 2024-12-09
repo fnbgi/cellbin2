@@ -27,18 +27,12 @@ class RegistrationOutput(BaseModel):
     dst_shape: Tuple[int, int] = Field((0, 0), description='')
 
 
-def registration(
-        moving_image: ChipFeature,
-        fixed_image: ChipFeature,
-        ref: Tuple[List, List],
-        from_stitched: bool = True
-) -> Tuple[RegistrationOutput, RegistrationOutput]:
 def registration(moving_image: ChipFeature,
                  fixed_image: ChipFeature,
                  ref: Tuple[List, List],
                  from_stitched: bool = True,
                  qc_info: tuple = (0, 0)
-                 ) -> (RegistrationInfo, RegistrationInfo):
+                 ) -> (RegistrationOutput, RegistrationOutput):
     """
     :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
     :param fixed_image: 固定图，通常是矩阵，支持TIF/GEM/GEF及数组
@@ -62,13 +56,15 @@ def registration(moving_image: ChipFeature,
         res_template = centroid(
             moving_image=moving_image, fixed_image=fixed_image, ref=ref, from_stitched=from_stitched
         )
-    else: res_template = None
+    else:
+        res_template = None
 
     if qc_info[1]:
         res_chip_box = chip_align(
             moving_image=moving_image, fixed_image=fixed_image, from_stitched=from_stitched
         )
-    else: res_chip_box = None
+    else:
+        res_chip_box = None
 
     return RegistrationOutput(**res_template), RegistrationOutput(**res_chip_box)
 
@@ -132,4 +128,3 @@ if __name__ == '__main__':
         info = registration(moving_image=moving_image, fixed_image=fixed_image,
                             ref=template_ref, mode=AlignMode.TemplateCentroid)
         print(m, info)
-
