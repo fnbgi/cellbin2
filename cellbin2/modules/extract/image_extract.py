@@ -216,7 +216,7 @@ class ImageFeatureExtract(FeatureExtract):
         )
 
         # 估计 & 第一次更新裁图尺寸
-        cut_siz = self._estimate_fov_size()
+        cut_siz, est_scale = self._estimate_fov_size()
 
         if self._image_file.chip_detect:
             chip_info: ChipBoxInfo = self._detect_chip()
@@ -233,7 +233,7 @@ class ImageFeatureExtract(FeatureExtract):
             self._clarity()
 
         if self._image_file.registration.trackline:
-            img_tpl = self._inference_template(cut_siz=cut_siz)
+            img_tpl = self._inference_template(cut_siz=cut_siz, est_scale=est_scale)
             if img_tpl.trackcross_qc_pass_flag:
                 self._channel_image.QCInfo.TrackCrossQCPassFlag = 1
                 clog.info('Template Scale is {}, rotation is {}'.format(
@@ -277,13 +277,13 @@ class ImageFeatureExtract(FeatureExtract):
         clog.info('Using the image and chip prior size, calculate scale == {}'.format(scale))
         wh = (int(self._fov_wh[0] * scale), int(self._fov_wh[1] * scale))
         clog.info('Estimate1 FOV-WH from {} to {}'.format(self._fov_wh, wh))
-        return wh
+        return wh, scale
 
     def _scale_estimate(self, ):
         image = cbimread(self._image_file.file_path)
-        w = image.width / self._param_chip.width
-        h = image.height / self._param_chip.height
-        return (w + h) / 2
+        mx = max(image.width, image.height) / max(self._param_chip.width, self._param_chip.height)
+        my = min(image.width, image.height) / min(self._param_chip.width, self._param_chip.height)
+        return (mx + my) / 2
 
     @process_decorator('GiB')
     def _detect_chip(self, ) -> ChipBoxInfo:
@@ -299,7 +299,7 @@ class ImageFeatureExtract(FeatureExtract):
         return info
 
     @process_decorator('GiB')
-    def _inference_template(self, cut_siz: Tuple[int, int], overlap=0.0):
+    def _inference_template(self, cut_siz: Tuple[int, int], est_scale: float, overlap=0.0):
         from cellbin2.contrib import inference
 
         points_info, template_info = inference.template_inference(
@@ -311,6 +311,7 @@ class ImageFeatureExtract(FeatureExtract):
             file_path=self._image_file.file_path,
             stain_type=self._image_file.tech,
             fov_wh=cut_siz,
+            est_scale=est_scale,
             overlap=overlap)
         self._channel_image.update_template_points(points_info=points_info, template_info=template_info)
         # np.savetxt(os.path.join(self.output_path, 'stitched.txt'), img_tpl.template_points)

@@ -33,6 +33,7 @@ class TemplateReference(object):
         self.fov_w: int = 0
         self.fov_h: int = 0
         self.overlap: float = 0
+        self.est_scale: float = 1.0
 
         # output
         # self.points_info: TrackPointsInfo
@@ -144,6 +145,7 @@ class TemplateReference(object):
         if rotate is not None:
             tr.set_rotate(rotate)
 
+        tr.set_threshold_v2(scale_range = self.est_scale)
         tr.set_chipno(self.ref)
         tr.set_fov_location(self.points_info.fov_location)
         tr.set_qc_points(self.points_info.track_points)
@@ -153,10 +155,11 @@ class TemplateReference(object):
 
         return self._get_template_info(tr)
 
-    def inference(self, file_path: str, fov_wh: list, overlap: float):
+    def inference(self, file_path: str, fov_wh: list, est_scale: float, overlap: float):
         self.file_path = file_path
         self.fov_w, self.fov_h = fov_wh
         self.overlap = overlap
+        self.est_scale = est_scale
 
         # 步骤1：点检测
         self._detect_track_points()
@@ -200,6 +203,7 @@ def template_inference(file_path: str,
                        template_v2_config: TemplateReferenceV2Param,
                        overlap: float = 0.0,
                        fov_wh=[2000, 2000],
+                       est_scale=1.0
                        ):
     clog.info('Next execute Template, it include module [Points detect, line detect, inference]')
     tr = TemplateReference(stain_type=stain_type,
@@ -210,7 +214,7 @@ def template_inference(file_path: str,
                            template_v2_config=template_v2_config)
 
     points_info, template_info = \
-        tr.inference(file_path=file_path, fov_wh=fov_wh, overlap=overlap)
+        tr.inference(file_path=file_path, fov_wh=fov_wh, est_scale=est_scale, overlap=overlap)
 
     return points_info, template_info
 
