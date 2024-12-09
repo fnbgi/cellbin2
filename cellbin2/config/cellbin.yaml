@@ -53,7 +53,7 @@ templateReferenceV1:
 templateReferenceV2:
   v2_ssDNA_pass_thr: 0.1
   v2_HE_pass_thr: 0.01
-  v2_scale_range_thr: [0.3, 1.7]
+  v2_scale_range_thr: [2, 3]
   v2_rotate_range_thr: 35
   v2_search_range_thr: 500
   v2_rotate_fov_min_thr: 7
