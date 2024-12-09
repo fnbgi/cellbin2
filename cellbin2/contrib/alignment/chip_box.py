@@ -3,10 +3,9 @@ import cv2 as cv
 import numpy as np
 from typing import Union
 
-from cellbin2.contrib.alignment.basic import Alignment, AlignMode, ChipFeature, ChipBoxInfo
 from cellbin2.utils.common import TechType
-from cellbin2.contrib.param import ChipFeature
-from cellbin2.contrib.alignment.basic import Alignment, RegistrationInfo, AlignMode
+from cellbin2.contrib.alignment import ChipFeature
+from cellbin2.contrib.alignment.basic import Alignment, AlignMode, ChipBoxInfo
 from cellbin2.utils import clog
 from cellbin2.image import CBImage
 
