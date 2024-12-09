@@ -248,23 +248,29 @@ class Scheduler(object):
                 # fixed_image.set_chip_box(param2.box_info)
                 raise Exception("Not supported yet")
 
-            info, temp_info = registration(
-                moving_image=moving_image,
-                fixed_image=fixed_image,
-                ref=self.param_chip.fov_template,
-                from_stitched=False
-            )
+        # TODO 临时兼容性改动
+        #  11/22 by lizepeng
+        info, temp_info = registration(
+            moving_image=moving_image,
+            fixed_image=fixed_image,
+            ref=self.param_chip.fov_template,
+            from_stitched=False,
+            qc_info = (param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag)
+        )
+        if info is not None:
             self._channel_images[g_name].update_registration(info)
-            self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
+
+        self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
+
+        if temp_info is not None:
             temp_info.register_mat.write(
-                os.path.join(self._output_path, f"{cur_f_name.sn}_chip_box_register.tif")
+                os.path.join(self._output_path, f"{self._image_naming.sn}_chip_box_register.tif")
             )
-            np.savetxt(
-                os.path.join(self._output_path, f"{cur_f_name.sn}_chip_box_register.txt"),
-                temp_info.offset
+            np.savetxt(os.path.join(
+                self._output_path, f"{self._image_naming.sn}_chip_box_register.txt"), temp_info.offset
             )
 
-            return info
+        return info if info is not None else temp_info
 
     def run(self, chip_no: str, input_image: str,
             stain_type: str, param_file: str,
@@ -285,7 +291,7 @@ class Scheduler(object):
         pp.print_files_info(self._files, mode='Scheduler')
 
         # 数据校验失败则退出
-        flag1 = 0
+        flag1 = self._data_check()
         if flag1 not in [0, 2]:
             return 1
         if flag1 == 0:

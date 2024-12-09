@@ -43,7 +43,7 @@ class Template00PtAlignment(Alignment):
 
         result = image.trans_image(
             scale=[1 / self._scale_x, 1 / self._scale_y],
-            rotate=-self._rotation,
+            rotate=self._rotation,
             rot90=self.rot90,
             offset=self.offset,
             dst_size=self._register_shape,
@@ -86,6 +86,7 @@ class Template00PtAlignment(Alignment):
         )
 
         transformed_feature.set_point00(moving_image.point00)
+        transformed_feature.set_anchor_point(moving_image.anchor_point)
         transformed_feature.chip_box.set_chip_box(chip_points)
         transformed_feature.set_template(
             np.concatenate(
@@ -125,7 +126,10 @@ class Template00PtAlignment(Alignment):
         _points = self.get_lt_zero_point(_points)
         _points = _points[(_points[:, 0] > 0) & (_points[:, 1] > 0)]
 
-        px, py = sorted(_points.tolist(), key=lambda x: x[0] + x[1])[0] + chip_box_points[0]
+        px, py = sorted(
+            _points.tolist(),
+            key=lambda x: np.abs(x[0] - moving_image.anchor_point[0]) + np.abs(x[1] - moving_image.anchor_point[1])
+        )[0] + chip_box_points[0]
 
         self._offset = [moving_image.point00[0] - px, moving_image.point00[1] - py]
 

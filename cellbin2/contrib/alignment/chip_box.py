@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+import cv2 as cv
 import numpy as np
 from typing import Union
 
 from cellbin2.contrib.alignment.basic import Alignment, AlignMode, ChipFeature, ChipBoxInfo
+from cellbin2.utils.common import TechType
+from cellbin2.contrib.param import ChipFeature
+from cellbin2.contrib.alignment.basic import Alignment, RegistrationInfo, AlignMode
 from cellbin2.utils import clog
 from cellbin2.image import CBImage
 
@@ -22,6 +26,32 @@ class ChipAlignment(Alignment):
         self.no_trans_flag = False
 
         self.max_length = 9996  # 图像降采样最大尺寸
+
+    @staticmethod
+    def _fill_image(
+            image: np.ndarray,
+            chip_box: np.ndarray
+    ):
+        """
+
+        Args:
+            image:
+            chip_box:
+
+        Returns:
+
+        """
+        contours = list()
+        _temp = np.zeros_like(image, dtype = image.dtype)
+
+        _chip_box = np.int_(chip_box)
+        contours.append(_chip_box.reshape(_chip_box.shape[0], 1, -1))
+        contours = tuple(contours)
+
+        _temp = cv.drawContours(_temp, contours, -1, 1, cv.FILLED)
+        image = image * _temp
+
+        return image
 
     def registration_image(self,
                            file: Union[str, np.ndarray, CBImage]):
@@ -100,6 +130,10 @@ class ChipAlignment(Alignment):
 
         """
         self._fixed_image = fixed_image
+        moving_image.set_mat(
+            self._fill_image(moving_image.mat.image, moving_image.chip_box.chip_box)
+        )
+
         coord_index = [0, 1, 2, 3]
         if self.rot90_flag:
             range_num = 4
@@ -164,6 +198,9 @@ def chip_align(
 
     """
     ca = ChipAlignment()
+    if moving_image.tech_type is TechType.HE:
+        from cellbin2.image.augmentation import f_rgb2hsv
+        moving_image.set_mat(mat=f_rgb2hsv(moving_image.mat.image, channel=1, need_not=False))
     if from_stitched: ca.align_stitched(fixed_image=fixed_image, moving_image=moving_image)
     else: ca.align_transformed(fixed_image=fixed_image, moving_image=moving_image)
 
@@ -173,6 +210,7 @@ def chip_align(
             'flip': ca.hflip,
             'register_score': ca.score,
             'register_mat': ca.registration_image(moving_image.mat),
+            'dst_shape': (fixed_image.mat.shape[0], fixed_image.mat.shape[1]),
             'method': AlignMode.TemplateCentroid
         }
 
@@ -222,48 +260,49 @@ def manual_chip_box_register(
 if __name__ == '__main__':
     from cellbin2.image import cbimread, cbimwrite
     from cellbin2.contrib.param import TemplateInfo
-    from cellbin2.utils.common import TechType
     from cellbin2.contrib.chip_detector import ChipParam, detect_chip
     from cellbin2.matrix.box_detect import detect_chip_box
 
-    #
-    # # 移动图像信息
-    # moving_image = ChipFeature()
-    # moving_image.tech_type = TechType.DAPI
-    # moving_mat = cbimread(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_DAPI_stitch.tif")
-    # moving_image.set_mat(moving_mat)
+
+    # 移动图像信息
+    moving_image = ChipFeature()
+    moving_image.tech_type = TechType.DAPI
+    moving_mat = cbimread(r"D:\02.data\temp\temp_cellbin2_test\register\D04499F1F2\D04499F1F2_ssDNA_stitch.tif")
+    moving_image.set_mat(moving_mat)
     #
     cfg = ChipParam(
         **{"stage1_weights_path":
-               r"D:\01.code\cellbin2\weights\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
-           "stage2_weights_path":
-               r"D:\01.code\cellbin2\weights\chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx"})
+            r"D:\01.code\cellbin2\weights\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
+            "stage2_weights_path":
+            r"D:\01.code\cellbin2\weights\chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx"})
 
-    imp = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_DAPI_stitch.tif"
-    gmp = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_Transcriptomics.tif"
 
-    imc = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_DAPI_stitch.txt"
-    gmc = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\gene_filter.txt"
+    # imp = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_DAPI_stitch.tif"
+    # gmp = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_Transcriptomics.tif"
+    #
+    # imc = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_DAPI_stitch.txt"
+    # gmc = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\gene_filter.txt"
+    #
+    # imcp = np.loadtxt(imc)
+    # gmcp = np.loadtxt(gmc)
+    # gmcp = gmcp + np.array([[10, 10], [10, -10], [-10, -10], [-10, 10]])
+    #
+    # manual_chip_box_register(imp, imcp, gmp, gmcp)
 
-    imcp = np.loadtxt(imc)
-    gmcp = np.loadtxt(gmc)
-    gmcp = gmcp + np.array([[10, 10], [10, -10], [-10, -10], [-10, 10]])
-
-    manual_chip_box_register(imp, imcp, gmp, gmcp)
 
     #
-    # # file_path = r"E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_DAPI.tif"
-    # m_info = detect_chip(moving_mat.image, cfg=cfg, stain_type=TechType.DAPI, actual_size=(19992 * 2, 19992 * 2))
-    # moving_image.set_chip_box(m_info)
-    #
-    # # 固定对象信息
-    # fixed_image = ChipFeature()
-    # fixed_image.tech_type = TechType.Transcriptomics
-    # fixed_image.set_mat(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_Transcriptomics.tif")
-    #
-    # f_info = detect_chip_box(fixed_image.mat.image, chip_size = 2)
-    # fixed_image.set_chip_box(f_info)
-    #
-    # result = chip_align(moving_image, fixed_image)
-    # print(result)
-    # cbimwrite(r'E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_DAPI_registbox.tif', result.register_mat)
+    file_path = r"E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_DAPI.tif"
+    m_info = detect_chip(moving_mat.image, cfg=cfg, stain_type=TechType.DAPI, actual_size=(19992, 19992 * 2))
+    moving_image.set_chip_box(m_info)
+
+    # 固定对象信息
+    fixed_image = ChipFeature()
+    fixed_image.tech_type = TechType.Transcriptomics
+    fixed_image.set_mat(r"D:\02.data\temp\temp_cellbin2_test\register\D04499F1F2\D04499F1F2_Transcriptomics.tif")
+
+    f_info = detect_chip_box(fixed_image.mat.image, chip_size = (2, 1))
+    fixed_image.set_chip_box(f_info)
+
+    result = chip_align(moving_image, fixed_image)
+    print(result)
+    cbimwrite(r'E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_DAPI_registbox.tif', result.register_mat)

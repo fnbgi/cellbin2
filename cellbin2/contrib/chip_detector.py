@@ -61,7 +61,9 @@ class ChipDetector(object):
             clog.info(f"Track detect only support {[i.name for i in SUPPORTED_STAIN_TYPE]}, fail to initialize")
             return
         # 初始化
-        self.cfg: ChipParam = cfg
+        if cfg is not None: self.cfg: ChipParam = cfg
+        else: self.cfg = ChipParam()
+
         self.stain_type = stain_type
         self.chip_actual_size = (None, None)
 
@@ -123,7 +125,12 @@ class ChipDetector(object):
         clog.info(f"Chip detector -> length-to-width ratio == "
                   f"max: {np.round(np.max(dist_rate), 5)}  min: {np.round(np.min(dist_rate), 5)}")
 
-        if np.any(np.abs(dist_rate - 1) > threshold_length_rate):
+        _dr = (self.chip_actual_size[0] / self.chip_actual_size[1],
+               self.chip_actual_size[1] / self.chip_actual_size[0])
+
+        # if np.any(np.abs(dist_rate - 1) > threshold_length_rate):
+        if np.abs(np.max(dist_rate) - np.max(_dr)) > threshold_length_rate or \
+                np.abs(np.min(dist_rate) - np.min(_dr)) > threshold_length_rate:
             self.is_available = False
 
         # 内角关系判断
@@ -381,4 +388,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    points = np.loadtxt(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\B03025E4\B03025E4_DAPI_stitch.txt")
+
+    cd = ChipDetector(cfg = None, stain_type = "DAPI")
+    cd.set_corner_points(points)
+    cd.detect(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\A00792D3\label.tif", (19992, 19992))
