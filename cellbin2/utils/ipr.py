@@ -2,14 +2,18 @@ import json
 import os
 import re
 from typing import List, Dict, Tuple, Any, Type, Union
-from cellbin2.utils import HDF5
-from cellbin2.contrib import param
-from cellbin2.contrib import alignment
 import numpy as np
 from objtyping import objtyping
 import h5py
+
 from cellbin2.utils import h52dict
 from cellbin2.utils.common import bPlaceHolder, fPlaceHolder, iPlaceHolder, sPlaceHolder
+from cellbin2.utils import HDF5
+from cellbin2.contrib import param
+from cellbin2.contrib import alignment
+from cellbin2.contrib.alignment.basic import ChipBoxInfo
+from cellbin2.contrib.template.inference import TemplateInfo
+from cellbin2.contrib.alignment import RegistrationOutput
 
 IPR_VERSION = '0.3.0'
 ALLOWED = [int, str, float, bool, list, np.int64, np.int32, np.float64, np.ndarray, np.bool_, tuple]
@@ -107,12 +111,12 @@ class ChipBBox(object):
         self.Rotation: float = fPlaceHolder
         self.IsAvailable: bool = bPlaceHolder
 
-    def update(self, box: param.ChipBoxInfo):
+    def update(self, box: ChipBoxInfo):
         for k, v in box.model_dump().items():
             setattr(self, k, v)
 
     def get(self):
-        info = param.ChipBoxInfo(**self.__dict__)
+        info = ChipBoxInfo(**self.__dict__)
         return info
 
 
@@ -254,7 +258,7 @@ class ImageChannel(HDF5):
         self.Stitch = Stitch()
         self.TissueSeg = TissueSeg()
 
-    def update_template_points(self, points_info: param.TrackPointsInfo, template_info: param.TemplateInfo):
+    def update_template_points(self, points_info: param.TrackPointsInfo, template_info: TemplateInfo):
         self.QCInfo.CrossPoints.add_points(points_info.track_points)
         self.QCInfo.GoodFovCount = points_info.good_fov_count
         self.QCInfo.TrackLineScore = points_info.score
@@ -269,7 +273,7 @@ class ImageChannel(HDF5):
         self.Register.ScaleY = template_info.scale_y
         self.Stitch.TemplatePoint = np.array(template_info.template_points)
 
-    def update_registration(self, info: alignment.RegistrationInfo):
+    def update_registration(self, info: RegistrationOutput):
         self.Register.OffsetX, self.Register.OffsetY = info.offset
         self.Register.Flip = info.flip
         self.Register.RegisterScore = info.register_score
@@ -277,8 +281,8 @@ class ImageChannel(HDF5):
         self.Register.CounterRot90 = info.counter_rot90
         self.Register.MatrixShape = info.dst_shape
 
-    def get_registration(self, ) -> alignment.RegistrationInfo:
-        r = alignment.RegistrationInfo(
+    def get_registration(self, ) -> RegistrationOutput:
+        r = RegistrationOutput(
             counter_rot90=self.Register.CounterRot90, flip=self.Register.Flip,
             register_score=self.Register.RegisterScore,
             offset=(self.Register.OffsetX, self.Register.OffsetY), dst_shape=self.Register.MatrixShape,
@@ -306,7 +310,6 @@ class ImageChannel(HDF5):
 
     @property
     def stitched_template_info(self, ):
-        from cellbin2.contrib.param import TemplateInfo
 
         ti = TemplateInfo(template_recall=self.QCInfo.TemplateRecall,
                           template_valid_area=self.QCInfo.TemplateValidArea,
@@ -320,7 +323,6 @@ class ImageChannel(HDF5):
 
     @property
     def transform_template_info(self, ):
-        from cellbin2.contrib.param import TemplateInfo
 
         ti = TemplateInfo(template_recall=1,
                           template_valid_area=1,

@@ -19,7 +19,7 @@ from cellbin2.utils.plot_funcs import template_painting, chip_box_painting
 from cellbin2.utils import dict2json
 from cellbin2.utils.common import TechType
 from cellbin2.modules.naming import DumpPipelineFileNaming
-from cellbin2.contrib.param import ChipBoxInfo
+from cellbin2.contrib.alignment.basic import ChipBoxInfo
 
 
 # 这里定义metrics所需要的所有入参，后面再加也需要用这个方式

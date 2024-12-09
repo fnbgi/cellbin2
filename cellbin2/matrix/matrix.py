@@ -9,7 +9,7 @@ from pathlib import Path
 
 from numba import njit, prange
 from cellbin2.utils import clog
-from cellbin2.contrib.param import TemplateInfo, ChipBoxInfo
+from cellbin2.contrib.alignment.basic import TemplateInfo, ChipBoxInfo
 from cellbin2.image import cbimread, cbimwrite
 from cellbin2.modules import naming
 from cellbin2.utils.cell_shape import f_main

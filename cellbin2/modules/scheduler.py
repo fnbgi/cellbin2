@@ -10,7 +10,7 @@ import numpy as np
 from cellbin2.image import cbimread, CBImage
 from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.utils import ipr, rpi
-from cellbin2.contrib.alignment import AlignMode
+
 from cellbin2.utils.weights_manager import WeightDownloader
 from typing import List, Dict, Any, Tuple, Union
 from cellbin2.image import cbimwrite
@@ -18,10 +18,12 @@ from cellbin2.modules import naming, run_state
 from cellbin2.modules.metadata import ProcParam, ProcFile, default_image, read_param_file
 from cellbin2.modules.extract.image_extract import ImageFeatureExtract
 from cellbin2.modules.extract.matrix_extract import MatrixFeatureExtract
-from cellbin2.contrib.mask_manager import merge_cell_mask, BestTissueCellMask
+from cellbin2.contrib.alignment import AlignMode, registration, RegistrationOutput
+from cellbin2.contrib.alignment.basic import ChipFeature
 from cellbin2.contrib.fast_correct import run_fast_correct
 from cellbin2.utils.pro_monitor import process_decorator
 from cellbin2.utils.common import ErrorCode
+from cellbin2.modules.extract.register import run_register, RegisterInput, RegisterOutput
 
 
 class Scheduler(object):
@@ -173,75 +175,96 @@ class Scheduler(object):
         return s, r, offset
 
     @process_decorator('GiB')
-    def _registration(self, image_file: ProcFile):
+    def _registration(self, image_file: ProcFile, cur_f_name: naming.DumpImageFileNaming) -> RegistrationOutput:
         """
-        完成对校准图及非校准图的配准: transform图是起点
-        :param image_file:
-        :return:
+        这里有以下几种情况：
+        1. if图，返回reuse图的配准参数
+        2. 影像图+矩阵：前置配准、重心法、芯片框配准
+        3. 影像图+影像图：暂不支持
+
+        返回（RegisterOutput）：配准参数
         """
-        from cellbin2.contrib.alignment import registration
-        from cellbin2.contrib.param import ChipFeature
-
-        fixed = self._files[image_file.registration.fixed_image]
-        # 动图参数构建
-        g_name = image_file.get_group_name(sn=self.param_chip.chip_name)
-        param1 = self._channel_images[g_name]
-
-        moving_image = ChipFeature()
-        moving_image.tech_type = image_file.tech
-        moving_image.set_mat(self._image_naming.transformed_image)
-        # 这里建议不要去ipr读，而是
-        if param1.QCInfo.TrackCrossQCPassFlag:
-            moving_image.set_template(np.loadtxt(self._image_naming.transformed_template))  # param1.transform_template_info
-        if param1.QCInfo.ChipDetectQCPassFlag:
-            moving_image.set_chip_box(param1.Stitch.TransformChipBBox.get())
-
-        # 静图参数构建
-        if fixed.tech in (TechType.Protein, TechType.Transcriptomics):
-            # 场景1：静图是矩阵
-            mfe = MatrixFeatureExtract(
-                output_path=self._output_path,
-                image_file=fixed,
-                m_naming=naming.DumpMatrixFileNaming(
-                    sn=self.param_chip.chip_name,
-                    m_type=fixed.tech.name,
-                    save_dir=self._output_path
-                )
-            )
-            mfe.set_chip_param(self.param_chip)
-            mfe.set_config(self.config)
-            mfe.extract4stitched()
-
-            fixed_image = ChipFeature()
-            fixed_image.tech_type = fixed.tech
-            fixed_image.set_mat(mfe.mat)
-            fixed_image.set_template(mfe.template)
-            fixed_image.set_chip_box(mfe.chip_box)
-            self._channel_images[g_name].Register.MatrixTemplate = mfe.template.template_points
-
+        if image_file.registration.reuse != -1:
+            f_name = self._files[image_file.registration.reuse].get_group_name(sn=self.param_chip.chip_name)
+            info = self._channel_images[f_name].get_registration()
+            clog.info('Get registration param from ipr')
+            return info
         else:
-            # 场景2：静图是染色图
-            fixed_image = ChipFeature()
-            fixed_image.tech_type = fixed.tech
-            fixed_image.set_mat(fixed.file_path)
-            param2 = self._channel_images[fixed.tag]
-            fixed_image.set_template(param2.transform_template_info)
-            fixed_image.set_chip_box(param2.box_info)
+            # TODO 配准前置暂关
+            #  11/22 by lizepeng
+            # if self._channel_images[file_tag].Register.Method == AlignMode.Template00Pt.name:  # 先前做了前置配准
+            #     # 从ipr获取配准参数
+            #     info = self._channel_images[file_tag].get_registration()
+            #     clog.info('Get registration param from ipr')
+            # else:
+            fixed = self._files[image_file.registration.fixed_image]
+            # 动图参数构建
+            g_name = image_file.get_group_name(sn=self.param_chip.chip_name)
+            param1 = self._channel_images[g_name]
 
-        # TODO 临时兼容性改动
-        #  11/22 by lizepeng
-        info, temp_info = registration(
-            moving_image=moving_image,
-            fixed_image=fixed_image,
-            ref=self.param_chip.fov_template,
-            from_stitched=False
-        )
-        self._channel_images[g_name].update_registration(info)
-        self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
-        temp_info.register_mat.write(os.path.join(self._output_path, f"{self._image_naming.sn}_chip_box_register.tif"))
-        np.savetxt(os.path.join(self._output_path, f"{self._image_naming.sn}_chip_box_register.txt"), temp_info.offset)
+            moving_image = ChipFeature(
+                tech_type=image_file.tech,
+            )
+            moving_image.tech_type = image_file.tech
+            moving_image.set_mat(cur_f_name.transformed_image)
+            # 这里建议不要去ipr读，而是
+            if param1.QCInfo.TrackCrossQCPassFlag:
+                moving_image.set_template(
+                    np.loadtxt(cur_f_name.transformed_template))  # param1.transform_template_info
+            if param1.QCInfo.ChipDetectQCPassFlag:
+                moving_image.set_chip_box(param1.Stitch.TransformChipBBox.get())
 
-        return info
+            # 静图参数构建
+            if fixed.is_matrix:
+                # 场景1：静图是矩阵
+                mfe = MatrixFeatureExtract(
+                    output_path=self._output_path,
+                    image_file=fixed,
+                    m_naming=naming.DumpMatrixFileNaming(
+                        sn=self.param_chip.chip_name,
+                        m_type=fixed.tech.name,
+                        save_dir=self._output_path
+                    )
+                )
+                mfe.set_chip_param(self.param_chip)
+                mfe.set_config(self.config)
+                mfe.extract4stitched()
+
+                fixed_image = ChipFeature(
+                    tech_type=fixed.tech,
+                    template=mfe.template,
+                    chip_box=mfe.chip_box,
+                )
+                fixed_image.set_mat(mfe.mat)
+                self._channel_images[g_name].Register.MatrixTemplate = mfe.template.template_points
+                self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
+            else:
+                # 场景2：静图是染色图
+                # fixed_image = ChipFeature()
+                # fixed_image.tech_type = fixed.tech
+                # fixed_image.set_mat(fixed.file_path)
+                # param2 = self._channel_images[fixed.tag]
+                # fixed_image.set_template(param2.transform_template_info)
+                # fixed_image.set_chip_box(param2.box_info)
+                raise Exception("Not supported yet")
+
+            info, temp_info = registration(
+                moving_image=moving_image,
+                fixed_image=fixed_image,
+                ref=self.param_chip.fov_template,
+                from_stitched=False
+            )
+            self._channel_images[g_name].update_registration(info)
+            self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
+            temp_info.register_mat.write(
+                os.path.join(self._output_path, f"{cur_f_name.sn}_chip_box_register.tif")
+            )
+            np.savetxt(
+                os.path.join(self._output_path, f"{cur_f_name.sn}_chip_box_register.txt"),
+                temp_info.offset
+            )
+
+            return info
 
     def run(self, chip_no: str, input_image: str,
             stain_type: str, param_file: str,
@@ -252,25 +275,17 @@ class Scheduler(object):
         self.param_chip.parse_info(chip_no)
         self.p_naming = naming.DumpPipelineFileNaming(chip_no=chip_no, save_dir=self._output_path)
         # 数据加载
-        if os.path.exists(param_file):  # 参数文件图加入计算列表
-            pp = read_param_file(
-                file_path=param_file,
-                cfg=self.config,
-                out_path=self.p_naming.input_json
-            )
-        else:
-            pp = ProcParam()
-        # 命令行图加入计算列表
-        # if input_image != '':
-        #     pp.add_image(file_path=input_image, stain_type=stain_type, clarity=self.config.default_image.clarity)
-        # if matrix_path != '':
-        #     pp.add_matrix(file_path=matrix_path, tech_type=kit, stain_type=stain_type)
+        pp = read_param_file(
+            file_path=param_file,
+            cfg=self.config,
+            out_path=self.p_naming.input_json
+        )
 
         self._files = pp.get_image_files(do_image_qc=False, do_scheduler=True, cheek_exists=True)
         pp.print_files_info(self._files, mode='Scheduler')
 
         # 数据校验失败则退出
-        flag1 = self._data_check()
+        flag1 = 0
         if flag1 not in [0, 2]:
             return 1
         if flag1 == 0:
@@ -281,21 +296,11 @@ class Scheduler(object):
         if flag2 != 0:
             sys.exit(1)
 
-        # 遍历图像，执行分析过程
+        # 遍历单张图像，执行单张图的模块
         for idx, f in self._files.items():
             clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
             if f.is_image:
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
-                self._image_naming = naming.DumpImageFileNaming(
-                    sn=self.param_chip.chip_name, stain_type=g_name,
-                    save_dir=self._output_path
-                )
-
-                if f.channel_align != -1:  # 如果该图是校准图，则先切换到其对齐图上
-                    file_tag = self._files[f.channel_align].tech.name
-                else:
-                    file_tag = f.tech.name
-
                 if not f.tech == TechType.IF:
                     # TODO: deal with two versions of ipr
                     qc_ = self._channel_images[g_name].QCInfo
@@ -306,14 +311,13 @@ class Scheduler(object):
                     if self.qc_flag != 1:  # 现有条件下无法配准
                         clog.warning('Image QC not pass, cannot deal this pipeline')
                         sys.exit(ErrorCode.qcFail.value)
-
                 s, r, offset = self._read_transform(f)
                 # Transform 操作：Transform > segmentation > mask merge & expand
                 cur_f_name = naming.DumpImageFileNaming(
-                        sn=self.param_chip.chip_name,
-                        stain_type=g_name,
-                        save_dir=self._output_path
-                    )
+                    sn=self.param_chip.chip_name,
+                    stain_type=g_name,
+                    save_dir=self._output_path
+                )
                 ife = ImageFeatureExtract(
                     output_path=output_path,
                     image_file=f,
@@ -326,27 +330,6 @@ class Scheduler(object):
                 if 1:  # TODO: 先不跳过这一步了
                     ife.extract4transform(scale=s, rotation=r, offset=offset)
                     self._channel_images[g_name] = ife.channel_image
-
-                # if not image_state.registration_image:
-                if file_tag != g_name:
-                    info = self._channel_images[file_tag].get_registration()
-                    clog.info('Get registration param from ipr')
-                else:
-                    # if not os.path.exists(self._files[f.registration.fixed_image].file_path):
-                    #     clog.warning('Miss fixed image, {}'.format(self._files[f.registration.fixed_image].file_path))
-                    #     continue
-                    # 没有配准 & 固定图存在
-
-                    # TODO 配准前置暂关
-                    #  11/22 by lizepeng
-                    # if self._channel_images[file_tag].Register.Method == AlignMode.Template00Pt.name:  # 先前做了前置配准
-                    #     # 从ipr获取配准参数
-                    #     info = self._channel_images[file_tag].get_registration()
-                    #     clog.info('Get registration param from ipr')
-                    # else:
-                    info = self._registration(f)
-
-                ife.transform2regist(info)
             else:
                 mfe = MatrixFeatureExtract(
                     output_path=self._output_path,
@@ -364,6 +347,49 @@ class Scheduler(object):
                     mfe.tissue_segmentation()
                 if f.cell_segmentation:
                     mfe.cell_segmentation()
+
+        # 这里涉及多张图的配合，因为是配准。所以默认但张图的处理都结束了
+        for idx, f in self._files.items():
+            clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
+            if f.is_image:
+                g_name = f.get_group_name(sn=self.param_chip.chip_name)
+                cur_f_name = naming.DumpImageFileNaming(
+                    sn=self.param_chip.chip_name,
+                    stain_type=g_name,
+                    save_dir=self._output_path
+                )
+                # info = self._registration(
+                #     image_file=f,
+                #     cur_f_name=cur_f_name,
+                # )
+                reg_in = {
+                    'image_file': f,
+                    'cur_f_name': cur_f_name,
+                    'files': self._files,
+                    'channel_images': self._channel_images,
+                    'output_path': self._output_path,
+                    'param_chip': self.param_chip,
+                    'config': self.config
+                }
+                info: RegisterOutput = run_register(
+                    RegisterInput(**reg_in)
+                )
+                self._channel_images[g_name].update_registration(info.info)
+                if info.MatrixTemplate is not None:
+                    self._channel_images[g_name].Register.MatrixTemplate = info.MatrixTemplate
+                if info.gene_chip_box is not None:
+                    self._channel_images[g_name].Register.GeneChipBBox.update(info.gene_chip_box)
+                ife = ImageFeatureExtract(
+                    output_path=output_path,
+                    image_file=f,
+                    sn=self.param_chip.chip_name,
+                    im_naming=cur_f_name,
+                )
+                ife.set_chip_param(self.param_chip)
+                ife.set_config(self.config)
+                ife.set_channel_image(self._channel_images[g_name])
+                ife.transform2regist(info.info)
+
         if flag1 == 0:
             self._dump_ipr(self.p_naming.ipr)
         molecular_classify_files = pp.get_molecular_classify()
@@ -414,22 +440,6 @@ class Scheduler(object):
                     cbimwrite(final_cell_mask_path, fast_mask)
         if flag1 == 0:
             self._dump_rpi(self.p_naming.rpi)
-        for idx, m in molecular_classify_files.items():
-            if m.exp_matrix == -1:
-                continue
-            matrix = self._files[m.exp_matrix]
-            mfe = MatrixFeatureExtract(
-                output_path=self._output_path,
-                image_file=matrix,
-                m_naming=naming.DumpMatrixFileNaming(
-                    sn=self.param_chip.chip_name,
-                    m_type=matrix.tech.name,
-                    save_dir=self._output_path
-                )
-            )
-            mfe.set_chip_param(self.param_chip)
-            mfe.set_config(self.config)
-            mfe.extract4matrix(m_naming=self.p_naming)
 
 
 def scheduler_pipeline(weights_root: str, chip_no: str, input_image: str, stain_type: str,

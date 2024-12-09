@@ -246,18 +246,6 @@ class CBImage(object):
                   "Errors on writing image with compression, try without compression.")
             tifffile.imwrite(output_path, image)
 
-    def to_gray(self) -> 'CBImage':
-        """
-
-        Returns:
-
-        """
-        if self._ndim == 3:
-            image = cv.cvtColor(self._image, cv.COLOR_RGB2GRAY)
-            return CBImage(image)
-
-        return self
-
     @property
     def shape(self, ):
         return self._height, self._width

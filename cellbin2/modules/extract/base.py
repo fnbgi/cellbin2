@@ -1,7 +1,7 @@
 from typing import Union
 from cellbin2.image import CBImage
 import numpy as np
-from cellbin2.contrib.param import ChipBoxInfo, TemplateInfo
+from cellbin2.contrib.alignment.basic import ChipBoxInfo, TemplateInfo
 from cellbin2.utils.config import Config
 from cellbin2.modules.metadata import ProcFile
 from cellbin2.utils.stereo_chip import StereoChip
@@ -12,8 +12,8 @@ class FeatureExtract(object):
         self._image_file = image_file
         self._param_chip = StereoChip()
         self._config: Config
-        self._chip_box: ChipBoxInfo = ChipBoxInfo()
-        self._template: TemplateInfo = TemplateInfo()
+        self._chip_box: ChipBoxInfo
+        self._template: TemplateInfo
         self._mat: Union[str, np.ndarray, CBImage] = ''
         self.output_path: str = output_path
 

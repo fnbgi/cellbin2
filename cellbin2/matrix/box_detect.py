@@ -5,7 +5,7 @@ import numpy as np
 import cv2 as cv
 
 from typing import Union
-from cellbin2.contrib.param import ChipBoxInfo
+from cellbin2.contrib.alignment.basic import ChipBoxInfo
 
 
 class MatrixBoxDetector(object):

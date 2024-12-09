@@ -11,13 +11,16 @@ from cellbin2.modules.metadata import read_param_file, ProcParam
 from cellbin2.utils.config import Config
 from cellbin2.modules.metrics import ImageSource
 from cellbin2.utils import dict2json
-from cellbin2.utils.common import KIT_VERSIONS
+from cellbin2.utils.common import KIT_VERSIONS, sPlaceHolder, bPlaceHolder
 from cellbin2.utils.pro_monitor import process_decorator
 
 CURR_PATH = os.path.dirname(os.path.realpath(__file__))
-CONFIG_FILE = os.path.join(CURR_PATH, r'config/cellbin.yaml')
-CHIP_MASK_FILE = os.path.join(CURR_PATH, r'config/chip_mask.json')
-DEFAULT_PARAM_FILE = os.path.join(CURR_PATH, r'config/default_param.json')
+CONFIG_PATH = os.path.join(CURR_PATH, 'config')
+DEFAULT_WEIGHTS_DIR = os.path.join(CURR_PATH, "weights")
+
+CONFIG_FILE = os.path.join(CONFIG_PATH, 'cellbin.yaml')
+CHIP_MASK_FILE = os.path.join(CONFIG_PATH, 'chip_mask.json')
+DEFAULT_PARAM_FILE = os.path.join(CONFIG_PATH, 'default_param.json')
 SUPPORTED_STAINED_TYPES = [TechType.ssDNA.name, TechType.DAPI.name, TechType.HE.name]
 
 
@@ -42,41 +45,68 @@ class CellBinPipeline(object):
         self._naming: naming.DumpPipelineFileNaming
 
         # 内部需要的
-        self.pp: ProcParam = ProcParam()
+        self.pp: ProcParam
         self.config: Config
 
     def image_quality_control(self, ):
         """ 完成图像 QC 流程 """
-        from cellbin2.modules import image_qc
-        if self._naming.ipr.exists():
-            clog.info('Image QC has been done')
-            return 0
-        s_code = image_qc.image_quality_control(
-            weights_root=self._weights_root,
-            chip_no=self._chip_no,
-            input_image=self._input_image,
-            stain_type=self._stain_type,
-            param_file=self._param_file,
-            output_path=self._output_path
-        )
-        if s_code != 0:
-            sys.exit(1)
+        if self.pp.run.qc:
+            from cellbin2.modules import image_qc
+            if self._naming.ipr.exists():
+                clog.info('Image QC has been done')
+                return 0
+            s_code = image_qc.image_quality_control(
+                weights_root=self._weights_root,
+                chip_no=self._chip_no,
+                input_image=self._input_image,
+                stain_type=self._stain_type,
+                param_file=self._param_file,
+                output_path=self._output_path
+            )
+            if s_code != 0:
+                sys.exit(1)
 
     def image_analysis(self, ):
         """ 完成图像、配准、校准、分割、矩阵提取等分析流程 """
-        from cellbin2.modules import scheduler
-        if self._naming.rpi.exists():
-            clog.info('scheduler has been done')
-            return 0
-        scheduler.scheduler_pipeline(weights_root=self._weights_root, chip_no=self._chip_no,
-                                     input_image=self._input_image, stain_type=self._stain_type,
-                                     param_file=self._param_file, output_path=self._output_path,
-                                     matrix_path=self._matrix_path,
-                                     ipr_path=self._naming.ipr, kit=self._kit)
+        if self.pp.run.alignment:
+            from cellbin2.modules import scheduler
+            if self._naming.rpi.exists():
+                clog.info('scheduler has been done')
+                return 0
+            scheduler.scheduler_pipeline(weights_root=self._weights_root, chip_no=self._chip_no,
+                                         input_image=self._input_image, stain_type=self._stain_type,
+                                         param_file=self._param_file, output_path=self._output_path,
+                                         matrix_path=self._matrix_path,
+                                         ipr_path=self._naming.ipr, kit=self._kit)
+
+    def matrix_extract(self):
+        if self.pp.run.matrix_extract:
+            from cellbin2.modules.extract.matrix_extract import MatrixFeatureExtract
+            from cellbin2.utils.stereo_chip import StereoChip
+            mcf = self.pp.get_molecular_classify()
+            files = self.pp.get_image_files(do_image_qc=False, do_scheduler=True, cheek_exists=True)
+            param_chip = StereoChip(self._chip_mask_file)
+            p_naming = naming.DumpPipelineFileNaming(chip_no=self._chip_no, save_dir=self._output_path)
+            for idx, m in mcf.items():
+                if m.exp_matrix == -1:
+                    continue
+                matrix = files[m.exp_matrix]
+                mfe = MatrixFeatureExtract(
+                    output_path=self._output_path,
+                    image_file=matrix,
+                    m_naming=naming.DumpMatrixFileNaming(
+                        sn=param_chip.chip_name,
+                        m_type=matrix.tech.name,
+                        save_dir=self._output_path
+                    )
+                )
+                mfe.set_chip_param(param_chip)
+                mfe.set_config(self.config)
+                mfe.extract4matrix(m_naming=p_naming)
 
     def metrics(self, ):
         """ 计算指标 """
-        if self.pp.analysis.report:
+        if self.pp.run.report:
             from cellbin2.modules import metrics
             if self._naming.metrics.exists():
                 clog.info('Metrics step has been done')
@@ -127,7 +157,7 @@ class CellBinPipeline(object):
             clog.info("Metrics generated")
 
     def export_report(self, ):
-        if self.pp.analysis.report:
+        if self.pp.run.report:
             """ 生成及导出报告 """
             from cellbin2.modules import report_m
 
@@ -135,12 +165,17 @@ class CellBinPipeline(object):
             report_m.creat_report(matric_json=src_file_path, save_path=self._output_path)
 
     def usr_inp_to_param(self):
-        if self._param_file == "":
-            if self._input_image == "":
-                raise Exception(f"the input image can not be empty if param file is empty")
-            self.config = Config(self._config_file, self._weights_root)
-            pp = read_param_file(file_path=DEFAULT_PARAM_FILE, cfg=self.config)
-            new_pp = ProcParam()
+        self.config = Config(self._config_file, self._weights_root)
+        if self._param_file is None:
+            if self._input_image is None:
+                raise Exception(f"the input image can not be empty if param file is not provided")
+            if self._kit is None:
+                param_file = DEFAULT_PARAM_FILE
+            else:
+                tech, version = self._kit.split("V")
+                param_file = os.path.join(CONFIG_PATH, tech.strip(" ") + ".json")
+            pp = read_param_file(file_path=param_file, cfg=self.config)
+            new_pp = ProcParam(run=pp.run)
             # track image (ssDNA, HE, DAPI)
             im_count = 0
             trans_exp_idx = -1
@@ -154,22 +189,23 @@ class CellBinPipeline(object):
             im_count += 1
 
             # 转录组矩阵
-            trans_tp = pp.image_process[TechType.Transcriptomics.name]
-            trans_tp.file_path = self._matrix_path
-            new_pp.image_process[str(im_count)] = trans_tp
-            trans_exp_idx = im_count
-            im_count += 1
+            if self._matrix_path is not None:
+                trans_tp = pp.image_process[TechType.Transcriptomics.name]
+                trans_tp.file_path = self._matrix_path
+                new_pp.image_process[str(im_count)] = trans_tp
+                trans_exp_idx = im_count
+                im_count += 1
 
             # IF image if exists
-            if self._if_image != "":
+            if self._if_image is not None:
                 if_im_paths = self._if_image.split(",")
                 for idx, i_path in enumerate(if_im_paths):
                     if_template = deepcopy(pp.image_process[TechType.IF.name])
                     if_template.file_path = i_path
-                    new_pp.image_process[str(idx + im_count)] = if_template
+                    new_pp.image_process[str(im_count)] = if_template
                     im_count += 1
 
-            if self._protein_matrix_path != "":
+            if self._protein_matrix_path is not None:
                 protein_tp = pp.image_process[TechType.Protein.name]
                 protein_tp.file_path = self._protein_matrix_path
                 new_pp.image_process[str(im_count)] = protein_tp
@@ -178,21 +214,27 @@ class CellBinPipeline(object):
             # end of image part info parsing
 
             # 矩阵提取
-            trans_m_tp = pp.molecular_classify[TechType.Transcriptomics.name]
-            trans_m_tp.exp_matrix = trans_exp_idx
-            trans_m_tp.cell_mask = [nuclear_cell_idx]
-            new_pp.molecular_classify['0'] = trans_m_tp
+            if trans_exp_idx != -1:
+                trans_m_tp = pp.molecular_classify[TechType.Transcriptomics.name]
+                trans_m_tp.exp_matrix = trans_exp_idx
+                trans_m_tp.cell_mask = [nuclear_cell_idx]
+                new_pp.molecular_classify['0'] = trans_m_tp
 
             if protein_exp_idx != -1:
                 protein_m_tp = pp.molecular_classify[TechType.Protein.name]
                 protein_m_tp.exp_matrix = protein_exp_idx
                 protein_m_tp.cell_mask = [nuclear_cell_idx]
                 new_pp.molecular_classify['1'] = protein_m_tp
-            new_pp.analysis.report = True if self._if_report else False
+            new_pp.run.report = True if self._if_report else False
             param_f_p = self._naming.input_json
             dict2json(new_pp.dict(), json_path=param_f_p)
             self._param_file = param_f_p
             self.pp = new_pp
+        else:
+            self.pp = read_param_file(
+                file_path=self._param_file,
+                cfg=self.config
+            )
 
     def run(self, chip_no: str, input_image: str, if_image: str,
             stain_type: str, param_file: str,
@@ -235,15 +277,17 @@ def pipeline(
     os.makedirs(output_path, exist_ok=True)
     clog.log2file(output_path)
     clog.info(f"CellBin Version: {cellbin2.__version__}")
-    stain_support = ('ssDNA', 'DAPI', 'HE', 'IF', 'Null')
-    assert stain_type in stain_support, 'Parameter [stain_type] should in {}'.format(stain_support)
 
-    if not os.path.isdir(weights_root):
-        weights_root = os.path.join(CURR_PATH, 'weights')
+    if weights_root is None:
+        # if user does not provide weight path, use default
+        weights_root = DEFAULT_WEIGHTS_DIR
     else:
-        weights_root = weights_root
+        if not os.path.isdir(weights_root):
+            weights_root = os.path.join(CURR_PATH, 'weights')
+        else:
+            weights_root = weights_root
 
-    cbp = CellBinPipeline(config_file=CONFIG_FILE, chip_mask_file=CONFIG_FILE, weights_root=weights_root)
+    cbp = CellBinPipeline(config_file=CONFIG_FILE, chip_mask_file=CHIP_MASK_FILE, weights_root=weights_root)
     cbp.run(
         chip_no=chip_no,
         input_image=input_image,
@@ -319,26 +363,25 @@ if __name__ == '__main__':  # main()
     parser.add_argument("-v", "--version", action="version", version=_VERSION_)
     parser.add_argument("-c", "--chip_no", action="store", type=str, required=True,
                         help="The SN of chip.")
-    parser.add_argument("-i", "--input_image", action="store", type=str, default='',
+    parser.add_argument("-i", "--input_image", action="store", type=str,
                         help=f"The path of {{{','.join(SUPPORTED_STAINED_TYPES)}}} input file.")
     parser.add_argument("-s", "--stain_type", action="store", type=str,
                         choices=SUPPORTED_STAINED_TYPES,
                         help=f"The stain type of input image, choices are {{{','.join(SUPPORTED_STAINED_TYPES)}}}.")
-    parser.add_argument("-if", "--input_image_if", action="store", type=str, default='',
+    parser.add_argument("-if", "--input_image_if", action="store", type=str,
                         help="The path of IF input file.")
     parser.add_argument("-m", "--matrix_file", action="store", type=str,
                         help="The path of transcriptomics matrix file.")
-    parser.add_argument("-pr", "--protein_matrix_file", action="store", type=str, default="",
+    parser.add_argument("-pr", "--protein_matrix_file", action="store", type=str,
                         help="The path of protein matrix file.")
     parser.add_argument("-k", "--kit", action="store", type=str, choices=KIT_VERSIONS, help="Kit Type")
     parser.add_argument("-r", "--report", action="store_true", help="If run report.")
-    parser.add_argument("-p", "--param_file", action="store", type=str,
-                        default='', help="The path of input param file.")
-    parser.add_argument("-w", "--weights_root", action="store", type=str, default="",
+    parser.add_argument("-p", "--param_file", action="store", type=str, help="The path of input param file.")
+    parser.add_argument("-w", "--weights_root", action="store", type=str,
                         help="The weights root folder.")
     parser.add_argument("-o", "--output_path", action="store", type=str, required=True,
                         help="The results output folder.")
-    parser.add_argument("-d", "--debug", action="store_true", default=True, help="Debug mode")
+    parser.add_argument("-d", "--debug", action="store_true", default=bPlaceHolder, help="Debug mode")
 
     parser.set_defaults(func=main)
     (para, args) = parser.parse_known_args()

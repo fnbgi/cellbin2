@@ -1,9 +1,7 @@
 import numpy as np
-from cellbin2.contrib.alignment.basic import Alignment, AlignMode
-from cellbin2.contrib.param import ChipFeature
+from cellbin2.contrib.alignment.basic import Alignment, AlignMode, ChipFeature
 from cellbin2.utils.common import TechType
 from cellbin2.contrib.track_align import AlignByTrack
-from cellbin2.contrib.alignment import RegistrationInfo
 from typing import List, Tuple
 
 
@@ -74,13 +72,13 @@ class TemplateCentroid(Alignment):
             np.array(fixed_image.template.template_points),
             np.array(moving_image.template.template_points),
             self.hflip,
-            new_method=True if self._moving_image.tech_type == TechType.HE else False
+            new_method=True if moving_image.tech_type == TechType.HE else False
         )
 
 
 def centroid(moving_image: ChipFeature,
              fixed_image: ChipFeature,
-             ref: Tuple[List, List], from_stitched: bool = True) -> RegistrationInfo:
+             ref: Tuple[List, List], from_stitched: bool = True):
     """
     :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
     :param fixed_image: 固定图，通常是矩阵，支持TIF/GEM/GEF及数组
@@ -97,7 +95,7 @@ def centroid(moving_image: ChipFeature,
     else:
         ta.align_transformed(fixed_image=fixed_image, moving_image=moving_image)
 
-    info = RegistrationInfo(**{
+    info = {
             'offset': tuple(list(ta.offset)),
             'counter_rot90': ta.rot90,
             'flip': ta.hflip,
@@ -105,7 +103,7 @@ def centroid(moving_image: ChipFeature,
             'dst_shape': (fixed_image.mat.shape[0], fixed_image.mat.shape[1]),
             'method': AlignMode.TemplateCentroid
         }
-    )
+
 
     return info
 

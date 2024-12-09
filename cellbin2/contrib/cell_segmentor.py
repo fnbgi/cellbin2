@@ -314,7 +314,7 @@ def segment4cell(
         s_type: TechType,
         gpu: int,
         fast: bool
-) -> npt.NDArray[np.uint8]:
+) -> Tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]:
 
     # read user input image
     img = cbimread(input_path, only_np=True)
@@ -336,7 +336,7 @@ def segment4cell(
         fast_mask = CellSegmentation.run_fast(mask=mask, distance=10, process=5)
         return mask, fast_mask
 
-    return mask
+    return mask, fast_mask
 
 
 if __name__ == '__main__':

@@ -3,9 +3,8 @@ import numpy as np
 from typing import List, Tuple, Union
 
 from cellbin2.contrib.track_align import AlignByTrack
-from cellbin2.contrib.alignment.basic import Alignment
-from cellbin2.contrib.alignment import AlignMode, RegistrationInfo
-from cellbin2.contrib.param import ChipFeature
+from cellbin2.contrib.alignment.basic import Alignment, ChipFeature
+from cellbin2.contrib.alignment import AlignMode
 from cellbin2.image import CBImage, cbimread
 
 
@@ -150,13 +149,13 @@ def template_00pt_align(
         ref: Tuple[List, List],
         dst_shape: Tuple[int, int],
         from_stitched: bool = True
-) -> RegistrationInfo:
+):
     """
     :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
     :param ref: 模板周期，仅在模板相关配准方法下用到
     :param dst_shape: 配准图理论尺寸
     :param from_stitched
-    :return: RegistrationInfo
+    :return: dict
     """
     tpa = Template00PtAlignment(ref=ref, shape=dst_shape)
     if from_stitched:
@@ -164,7 +163,7 @@ def template_00pt_align(
     else:
         tpa.align_transformed(moving_image=moving_image)
 
-    info = RegistrationInfo(**{
+    info = {
         'offset': tuple(list(tpa.offset)),
         'flip': tpa.hflip,
         'register_score': tpa.score,
@@ -172,7 +171,6 @@ def template_00pt_align(
         'method': AlignMode.Template00Pt,
         'dst_shape': dst_shape
     }
-                            )
 
     return info
 

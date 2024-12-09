@@ -87,7 +87,7 @@ class MatrixFeatureExtract(FeatureExtract):
         p = self._naming.cell_mask
         if os.path.exists(p): return
         image_path = self._naming.heatmap
-        cell_mask = segment4cell(input_path=image_path,
+        cell_mask, fast_mask = segment4cell(input_path=image_path,
                                  cfg=self._config.cell_segmentation,
                                  s_type=self._image_file.tech,
                                  fast=False, gpu=0)

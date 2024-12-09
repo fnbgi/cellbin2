@@ -12,7 +12,7 @@ from scipy.spatial.distance import cdist
 from cellbin2.image import CBImage, cbimread
 from cellbin2.contrib.alignment.basic import transform_points
 from cellbin2.image.augmentation import f_ij_16_to_8, dapi_enhance, he_enhance
-from cellbin2.contrib.param import TrackPointsInfo, TemplateInfo, ChipBoxInfo
+from cellbin2.contrib.alignment.basic import TemplateInfo, ChipBoxInfo
 from cellbin2.contrib.template.inferencev1 import TemplateReferenceV1
 
 pt_enhance_method = {

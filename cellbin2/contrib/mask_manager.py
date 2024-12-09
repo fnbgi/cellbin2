@@ -8,7 +8,7 @@ from skimage.measure import label
 from skimage.morphology import remove_small_objects
 
 from cellbin2.image import CBImage
-from cellbin2.contrib.param import ChipBoxInfo
+from cellbin2.contrib.alignment.basic import ChipBoxInfo
 from cellbin2.modules.metadata import TechType
 from cellbin2.contrib.tissue_segmentor import TissueSegParam
 from cellbin2.utils import clog

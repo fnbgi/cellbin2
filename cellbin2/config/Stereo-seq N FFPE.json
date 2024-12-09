@@ -4,7 +4,7 @@
       "file_path": "/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_fov_stitched.tif",
       "tech_type": "DAPI",
       "chip_detect": true,
-      "quality_control": true,
+      "quality_control": false,
       "registration": {
         "fixed_image": 1,
         "trackline": true,
@@ -52,11 +52,10 @@
       "quality_control": false,
       "registration": {
         "fixed_image": 1,
-        "trackline": true,
-        "reuse": -1
+        "trackline": true
       },
       "tissue_segmentation": true,
-      "cell_segmentation": true,
+      "cell_segmentation": false,
       "correct_r": 10,
       "channel_align": -1
     },
@@ -64,7 +63,7 @@
       "file_path": "/media/Data/dzh/data/cellbin2/demo_data/SS200000135TL_D1/SS200000135TL_D1_fov_stitched_ssDNA.tif",
       "tech_type": "ssDNA",
       "chip_detect": true,
-      "quality_control": true,
+      "quality_control": false,
       "registration": {
         "fixed_image": 1,
         "trackline": true,
@@ -73,21 +72,6 @@
       "tissue_segmentation": true,
       "cell_segmentation": true,
       "correct_r": 10,
-      "channel_align": -1
-    },
-    "Protein": {
-      "file_path": "/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5.raw.gef",
-      "tech_type": "Protein",
-      "chip_detect": false,
-      "quality_control": false,
-      "registration": {
-        "fixed_image": -1,
-        "trackline": true,
-        "reuse": -1
-      },
-      "tissue_segmentation": true,
-      "cell_segmentation": false,
-      "correct_r": 0,
       "channel_align": -1
     }
   },
@@ -98,19 +82,9 @@
         0
       ],
       "extra_method": ""
-    },
-    "Protein": {
-      "exp_matrix": 1,
-      "cell_mask": [
-        0
-      ],
-      "extra_method": ""
     }
   },
-  "run": {
-    "qc": true,
-    "register": true,
-    "matrix_extract": true,
+  "analysis": {
     "report": true,
     "annotation": false
   }

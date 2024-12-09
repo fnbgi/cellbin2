@@ -107,10 +107,7 @@
       "extra_method": ""
     }
   },
-  "run": {
-    "qc": true,
-    "register": true,
-    "matrix_extract": true,
+  "analysis": {
     "report": true,
     "annotation": false
   }

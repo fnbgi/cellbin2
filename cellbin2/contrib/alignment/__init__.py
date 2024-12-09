@@ -1,17 +1,38 @@
-from cellbin2.contrib.param import ChipFeature
 import numpy as np
-from typing import List, Tuple
-from cellbin2.contrib.alignment.basic import RegistrationInfo, AlignMode
+from pydantic import BaseModel, Field
+from typing import Tuple, Union, List, Any, Optional
+
+from cellbin2.contrib.alignment.basic import AlignMode, ChipFeature, ChipBoxInfo
 from cellbin2.contrib.alignment.chip_box import chip_align
 from cellbin2.contrib.alignment.template_centroid import centroid
 from cellbin2.contrib.alignment.template_00pt import template_00pt_align
 from cellbin2.utils import clog
 
 
-def registration(moving_image: ChipFeature,
-                 fixed_image: ChipFeature,
-                 ref: Tuple[List, List],
-                 from_stitched: bool = True) -> (RegistrationInfo, RegistrationInfo):
+class RegistrationInput(BaseModel):
+    moving_image: ChipFeature
+    fixed_image: Optional[ChipFeature] = None
+    ref: Tuple[List, List] = Field(..., description="模板周期，仅在模板相关配准方法下用到")
+    dst_shape: Optional[Tuple[int, int]] = Field(None, description="the shape of fixed image ")
+    from_stitched: bool
+
+
+class RegistrationOutput(BaseModel):
+    counter_rot90: int = Field(0, description='')
+    flip: bool = Field(True, description='')
+    register_score: int = Field(-999, description='')
+    offset: Tuple[float, float] = Field((0., 0.), description='')
+    register_mat: Any = Field(None, description='')
+    method: AlignMode = Field(AlignMode.TemplateCentroid, description='')
+    dst_shape: Tuple[int, int] = Field((0, 0), description='')
+
+
+def registration(
+        moving_image: ChipFeature,
+        fixed_image: ChipFeature,
+        ref: Tuple[List, List],
+        from_stitched: bool = True
+) -> Tuple[RegistrationOutput, RegistrationOutput]:
     """
     :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
     :param fixed_image: 固定图，通常是矩阵，支持TIF/GEM/GEF及数组
@@ -34,7 +55,18 @@ def registration(moving_image: ChipFeature,
 
     res_chip_box = chip_align(moving_image=moving_image, fixed_image=fixed_image, from_stitched=from_stitched)
 
-    return res_template, res_chip_box
+    return RegistrationOutput(**res_template), RegistrationOutput(**res_chip_box)
+
+
+def get_alignment_00(re_input: RegistrationInput) -> RegistrationOutput:
+    res = template_00pt.template_00pt_align(
+        moving_image=re_input.moving_image,
+        ref=re_input.ref,
+        dst_shape=re_input.dst_shape,
+        from_stitched=re_input.from_stitched
+    )
+    reg_o = RegistrationOutput(**res)
+    return reg_o
 
 
 if __name__ == '__main__':
@@ -76,8 +108,8 @@ if __name__ == '__main__':
                               template_points=np.loadtxt(
                                   r"E:/03.users/liuhuanlin/01.data/cellbin2/stitch/A03599D1_gene.txt"))
     fixed_image.set_template(np.array(matrix_tpl))
-    matrix_box = ChipBoxInfo(left_top=[124.,  1604.], left_bottom=[124., 21596.],
-                             right_bottom=[20116., 21596.], right_top=[20116.,  1604.])
+    matrix_box = ChipBoxInfo(left_top=[124., 1604.], left_bottom=[124., 21596.],
+                             right_bottom=[20116., 21596.], right_top=[20116., 1604.])
 
     # 多种方案的测试
     methods = [AlignMode.TemplateCentroid, AlignMode.Template00Pt, AlignMode.ChipBox, AlignMode.Voting]
@@ -85,4 +117,3 @@ if __name__ == '__main__':
         info = registration(moving_image=moving_image, fixed_image=fixed_image,
                             ref=template_ref, mode=AlignMode.TemplateCentroid)
         print(m, info)
-

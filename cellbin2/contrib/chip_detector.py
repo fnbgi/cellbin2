@@ -11,10 +11,9 @@ import cellbin2.image as cbi
 from cellbin2.image.augmentation import f_ij_16_to_8
 from cellbin2.dnn.detector import OBB8Detector, Yolo8Detector
 from cellbin2.utils.common import TechType
-from cellbin2.contrib.param import ChipBoxInfo
 from typing import Union
 from cellbin2.image import CBImage
-from cellbin2.contrib.alignment.basic import transform_points
+from cellbin2.contrib.alignment.basic import transform_points, ChipBoxInfo
 from cellbin2.contrib.base_module import BaseModule
 
 SUPPORTED_STAIN_TYPE = (TechType.ssDNA, TechType.DAPI, TechType.HE)

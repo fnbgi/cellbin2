@@ -11,18 +11,17 @@ from cellbin2.utils import clog
 from cellbin2.contrib.alignment.basic import transform_points
 from cellbin2.image import cbimwrite
 from cellbin2.utils.common import TechType
-from cellbin2.contrib.param import ChipFeature
+from cellbin2.contrib.alignment import ChipFeature, RegistrationInput, get_alignment_00, ChipBoxInfo, RegistrationOutput
 from cellbin2.modules.metadata import ProcFile
 from cellbin2.modules import naming, run_state
-from cellbin2.contrib.alignment import template_00pt
-from cellbin2.contrib.alignment.basic import RegistrationInfo
+
 from cellbin2.utils import ipr
 from cellbin2.modules.extract.base import FeatureExtract
 from cellbin2.contrib.mask_manager import BestTissueCellMask, MaskManagerInfo
-from cellbin2.contrib.param import ChipBoxInfo
 from cellbin2.contrib.tissue_segmentor import TissueSegInputInfo
 from cellbin2.utils.pro_monitor import process_decorator
 from cellbin2.image import CBImage, cbimread
+from cellbin2.modules.extract.transform import run_transform, TransformInput
 from cellbin2.utils.common import iPlaceHolder
 
 
@@ -40,7 +39,7 @@ class ImageFeatureExtract(FeatureExtract):
     def set_channel_image(self, ci: Union[ipr.ImageChannel, ipr.IFChannel]):
         self._channel_image = ci
 
-    def transform2regist(self, info: RegistrationInfo):
+    def transform2regist(self, info: RegistrationOutput):
         """
         将transform图（染色图/mask）变成配准图:模板变成regist模板
         """
@@ -100,60 +99,28 @@ class ImageFeatureExtract(FeatureExtract):
         if not os.path.exists(self._naming.stitch_image):
             shutil.copy2(self._image_file.file_path,  self._naming.stitch_image)
 
-        if not os.path.exists(self._naming.transformed_image):
-            transform_image = cbimread(self._image_file.file_path).trans_image(scale=scale, rotate=rotation, offset=offset)
-            cbimwrite(self._naming.transformed_image, transform_image)
-            self._channel_image.Stitch.TransformShape = transform_image.shape
-        else:
-            transform_image = Image.open(self._naming.transformed_image)
-            self._channel_image.Stitch.TransformShape = transform_image.size[::-1]
+        # transform in & out
+        t_i = TransformInput(
+            stitch_image=self._image_file.file_path,
+            image_info=self._channel_image,
+            scale=scale,
+            rotation=rotation,
+            offset=offset,
+            if_track=self._image_file.registration.trackline
+        )
+        t_o = run_transform(t_i)
+        t_o.transform_image.write(file_path=self._naming.transformed_image)
+        self._channel_image.Stitch.TransformShape = t_o.TransformShape
+        if t_i.if_track:
+            self._channel_image.Stitch.TrackPoint = t_o.TrackPoint
+            self._channel_image.Stitch.TransformTemplate = t_o.TransformTemplate
+            self._channel_image.Stitch.TransformTrackPoint = t_o.TransformTrackPoint
+            # 输出：参数写入ipr、txt、tif
+            np.savetxt(self._naming.transformed_template, self._channel_image.Stitch.TransformTemplate)
+            np.savetxt(self._naming.transformed_track_template, self._channel_image.Stitch.TransformTrackPoint)
+            self._channel_image.Stitch.TransformChipBBox.update(t_o.chip_box_info)
 
-        if self._image_file.registration.trackline:
-            # transform
-            info = self._channel_image.Stitch.ScopeStitch
-
-            if self._channel_image.QCInfo.TrackCrossQCPassFlag:
-                stitch_template = self._channel_image.Stitch.TemplatePoint
-                qc_template = self._channel_image.QCInfo.CrossPoints.stack_points
-                self._channel_image.Stitch.TrackPoint = qc_template
-
-                stitch_trans_template, _ = transform_points(
-                    src_shape=(info.GlobalHeight, info.GlobalWidth),
-                    scale=scale, rotation=-rotation,
-                    points=stitch_template,
-                    offset=offset
-                )
-
-                qc_trans_template, _ = transform_points(
-                    src_shape=(info.GlobalHeight, info.GlobalWidth),
-                    scale=scale, rotation=-rotation,
-                    points=qc_template,
-                    offset=offset
-                )
-
-                self._channel_image.Stitch.TrackPoint = qc_template
-                self._channel_image.Stitch.TransformTemplate = stitch_trans_template
-                self._channel_image.Stitch.TransformTrackPoint = qc_trans_template
-                # 输出：参数写入ipr、txt、tif
-                np.savetxt(self._naming.transformed_template, stitch_trans_template)
-                np.savetxt(self._naming.transformed_track_template, qc_trans_template)
-
-            if self._channel_image.QCInfo.ChipDetectQCPassFlag:
-                # stitch chip box -> transform chip box
-                stitch_chip_box = self._channel_image.QCInfo.ChipBBox.get().chip_box
-                trans_chip_box, _ = transform_points(
-                    src_shape=(info.GlobalHeight, info.GlobalWidth),
-                    scale=(1 / self._channel_image.QCInfo.ChipBBox.ScaleX,
-                           1 / self._channel_image.QCInfo.ChipBBox.ScaleY),
-                    rotation=-self._channel_image.QCInfo.ChipBBox.Rotation,
-                    points=stitch_chip_box,
-                    offset=offset
-                )
-                trans_chip_box_info = ChipBoxInfo()
-                trans_chip_box_info.set_chip_box(trans_chip_box)
-                trans_chip_box_info.ScaleX, trans_chip_box_info.ScaleY = 1.0, 1.0
-                trans_chip_box_info.Rotation = 0.0
-                self._channel_image.Stitch.TransformChipBBox.update(trans_chip_box_info)
+        # tissue & cell seg
         final_tissue_mask = None
         final_cell_mask = None
         tissue_mask = None
@@ -251,20 +218,24 @@ class ImageFeatureExtract(FeatureExtract):
 
     @process_decorator('GiB')
     def _pre_registration(self, ):
-        moving_image = ChipFeature()
-        moving_image.tech_type = self._image_file.tech_type
-        moving_image.set_mat(cbimread(self._image_file.file_path))
-        moving_image.set_template(self._channel_image.stitched_template_info)
-        moving_image.set_chip_box(self._channel_image.box_info)
-        moving_image.set_point00(self._param_chip.zero_zero_point)
-
-        res = template_00pt.template_00pt_align(moving_image=moving_image,
-                                                ref=self._param_chip.fov_template,
-                                                dst_shape=(self._param_chip.height, self._param_chip.width))
+        moving_image = ChipFeature(
+            tech_type=self._image_file.tech,
+            chip_box=self._channel_image.box_info,
+            template=self._channel_image.stitched_template_info,
+            point00=self._param_chip.zero_zero_point,
+            mat=cbimread(self._image_file.file_path)
+        )
+        re_input = RegistrationInput(
+            moving_image=moving_image,
+            ref=self._param_chip.fov_template,
+            dst_shape=(self._param_chip.height, self._param_chip.width),
+            from_stitched=True
+        )
+        re_out = get_alignment_00(re_input=re_input)
 
         # TODO 临时测试用
         with open(os.path.join(self.output_path, 'register_00pt.txt'), 'w') as f:
-            f.writelines(f"offset: {res.offset} \n")
+            f.writelines(f"offset: {re_out.offset} \n")
 
         # self._channel_image.update_registration(res)
 
@@ -351,7 +322,7 @@ class ImageFeatureExtract(FeatureExtract):
         else:
             from cellbin2.contrib import cell_segmentor
 
-            cell_mask = cell_segmentor.segment4cell(
+            cell_mask, fast_mask = cell_segmentor.segment4cell(
                 input_path=image_path,
                 cfg=self._config.cell_segmentation,
                 s_type=self._image_file.tech,

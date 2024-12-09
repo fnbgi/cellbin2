@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from typing import List
-from cellbin2.contrib.param import TemplateInfo
+from cellbin2.contrib.alignment.basic import TemplateInfo
 
 
 class IndexPointsDetector(object):

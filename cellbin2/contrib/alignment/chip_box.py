@@ -2,8 +2,7 @@
 import numpy as np
 from typing import Union
 
-from cellbin2.contrib.param import ChipFeature
-from cellbin2.contrib.alignment.basic import Alignment, RegistrationInfo, AlignMode
+from cellbin2.contrib.alignment.basic import Alignment, AlignMode, ChipFeature, ChipBoxInfo
 from cellbin2.utils import clog
 from cellbin2.image import CBImage
 
@@ -12,7 +11,8 @@ class ChipAlignment(Alignment):
     """
     满足TissueBin需求：利用2模态芯片角为特征点，计算变换参数，实现配准。误差约100pix
     """
-    def __init__(self,):
+
+    def __init__(self, ):
         super(ChipAlignment, self).__init__()
 
         self.register_matrix: np.matrix = None
@@ -101,12 +101,14 @@ class ChipAlignment(Alignment):
         """
         self._fixed_image = fixed_image
         coord_index = [0, 1, 2, 3]
-        if self.rot90_flag: range_num = 4
-        else: range_num = 1
+        if self.rot90_flag:
+            range_num = 4
+        else:
+            range_num = 1
 
         if self.hflip:
-            new_box = self.transform_points(points = moving_image.chip_box.chip_box,
-                                            shape = moving_image.mat.shape, flip=0)
+            new_box = self.transform_points(points=moving_image.chip_box.chip_box,
+                                            shape=moving_image.mat.shape, flip=0)
             new_mi = np.fliplr(moving_image.mat.image)
 
             if new_mi.ndim == 3: new_mi = new_mi[:, :, 0]
@@ -134,7 +136,7 @@ class ChipAlignment(Alignment):
 
             coord_index.append(coord_index.pop(0))
 
-        best_info = sorted(register_info.items(), key = lambda x: x[1]["score"], reverse = True)[0]
+        best_info = sorted(register_info.items(), key=lambda x: x[1]["score"], reverse=True)[0]
         if self.rot90_flag: self._rot90 = range_num - best_info[0]
         _mat = self.get_coordinate_transformation_matrix(
             moving_image.mat.shape, [1, 1], 90 * best_info[0]
@@ -152,7 +154,7 @@ def chip_align(
         moving_image: ChipFeature,
         fixed_image: ChipFeature,
         from_stitched: bool = True
-) -> RegistrationInfo:
+):
     """
     :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
     :param fixed_image: 固定图
@@ -165,7 +167,7 @@ def chip_align(
     if from_stitched: ca.align_stitched(fixed_image=fixed_image, moving_image=moving_image)
     else: ca.align_transformed(fixed_image=fixed_image, moving_image=moving_image)
 
-    info = RegistrationInfo(**{
+    info = {
             'offset': tuple(list(ca.offset)),
             'counter_rot90': ca.rot90,
             'flip': ca.hflip,
@@ -173,7 +175,6 @@ def chip_align(
             'register_mat': ca.registration_image(moving_image.mat),
             'method': AlignMode.TemplateCentroid
         }
-    )
 
     return info
 
@@ -185,7 +186,6 @@ def manual_chip_box_register(
         gene_points: np.ndarray
 ):
     from cellbin2.contrib.chip_detector import ChipDetector
-    from cellbin2.contrib.param import ChipBoxInfo
     from cellbin2.matrix.box_detect import MatrixBoxDetector
 
     moving_image = ChipFeature()
@@ -211,8 +211,8 @@ def manual_chip_box_register(
     fixed_image.set_mat(gene_path)
 
     mbd = MatrixBoxDetector()
-    cbi = ChipBoxInfo(LeftTop = gene_points[0], LeftBottom = gene_points[1],
-                      RightBottom = gene_points[2], RightTop = gene_points[3])
+    cbi = ChipBoxInfo(LeftTop=gene_points[0], LeftBottom=gene_points[1],
+                      RightBottom=gene_points[2], RightTop=gene_points[3])
 
     fixed_image.set_chip_box(cbi)
 
@@ -226,7 +226,6 @@ if __name__ == '__main__':
     from cellbin2.contrib.chip_detector import ChipParam, detect_chip
     from cellbin2.matrix.box_detect import detect_chip_box
 
-
     #
     # # 移动图像信息
     # moving_image = ChipFeature()
@@ -236,9 +235,9 @@ if __name__ == '__main__':
     #
     cfg = ChipParam(
         **{"stage1_weights_path":
-            r"D:\01.code\cellbin2\weights\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
-            "stage2_weights_path":
-            r"D:\01.code\cellbin2\weights\chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx"})
+               r"D:\01.code\cellbin2\weights\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
+           "stage2_weights_path":
+               r"D:\01.code\cellbin2\weights\chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx"})
 
     imp = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_DAPI_stitch.tif"
     gmp = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\D04911A1C2\D04911A1C2_Transcriptomics.tif"

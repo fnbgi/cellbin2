@@ -28,21 +28,21 @@ def map_kit2type(kit_name: str):
 
 
 class ProcRegistration(BaseModel):
-    fixed_image: int = 1
-    trackline: bool = True
-    reuse: int = -1
+    fixed_image: int
+    trackline: bool
+    reuse: int
 
 
 class ProcFile(BaseModel):
     file_path: str
     tech_type: str
-    chip_detect: bool = True
-    quality_control: bool = True
-    tissue_segmentation: bool = True
-    cell_segmentation: bool = True
-    correct_r: int = 10
-    channel_align: int = 0
-    registration: ProcRegistration = ProcRegistration()
+    chip_detect: bool
+    quality_control: bool
+    tissue_segmentation: bool
+    cell_segmentation: bool
+    correct_r: int
+    channel_align: int
+    registration: ProcRegistration
     _supported_matrix = ['.gef', '.gem.gz']
     _supported_image = ['.tif', '.tiff', '.TIF', '.TIFF']
 
@@ -170,15 +170,18 @@ class ProcMolecularFile(BaseModel):
     extra_method: str = ''  # 额外的分子归类方法，当前没有
 
 
-class ProcAnalysisParam(BaseModel):
-    report: bool = True
-    annotation: bool = False
+class Run(BaseModel):
+    qc: bool
+    alignment: bool
+    matrix_extract: bool
+    report: bool
+    annotation: bool
 
 
 class ProcParam(BaseModel):
     image_process: Dict[str, ProcFile] = {}
     molecular_classify: Dict[str, ProcMolecularFile] = {}
-    analysis: ProcAnalysisParam = ProcAnalysisParam()
+    run: Run
 
     @staticmethod
     def print_files_info(files: dict, mode: str = 'imageQC'):

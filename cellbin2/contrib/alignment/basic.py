@@ -10,8 +10,8 @@ from pydantic import BaseModel, Field
 
 from cellbin2.image import CBImage
 from cellbin2.image import cbimread
-from cellbin2.contrib.param import ChipFeature
-from cellbin2.utils.common import iPlaceHolder
+from cellbin2.utils.common import iPlaceHolder, TechType, fPlaceHolder, bPlaceHolder
+from cellbin2.contrib.template.inference import TemplateInfo
 
 
 class AlignMode(Enum):
@@ -20,14 +20,80 @@ class AlignMode(Enum):
     ChipBox = 3
 
 
-class RegistrationInfo(BaseModel):
-    counter_rot90: int = Field(0, description='')
-    flip: bool = Field(True, description='')
-    register_score: int = Field(-999, description='')
-    offset: Tuple[float, float] = Field((0., 0.), description='')
-    register_mat: Any = Field(None, description='')
-    method: AlignMode = Field(AlignMode.TemplateCentroid, description='')
-    dst_shape: Tuple[int, int] = Field((0, 0), description='')
+class ChipBoxInfo(BaseModel):
+    LeftTop: List[float] = Field([fPlaceHolder, fPlaceHolder], description='左上角XY')
+    LeftBottom: List[float] = Field([fPlaceHolder, fPlaceHolder], description='左下角XY')
+    RightTop: List[float] = Field([fPlaceHolder, fPlaceHolder], description='右上角XY')
+    RightBottom: List[float] = Field([fPlaceHolder, fPlaceHolder], description='右下角XY')
+    ScaleX: float = Field(fPlaceHolder, description='相对固定图的X尺度')
+    ScaleY: float = Field(fPlaceHolder, description='相对固定图的Y尺度')
+    ChipSize: Tuple[float, float] = Field((fPlaceHolder, fPlaceHolder), description='芯片宽高')
+    Rotation: float = Field(fPlaceHolder, description='芯片放置角度')
+    IsAvailable: bool = Field(bPlaceHolder, description='是否建议下游流程使用该参数')
+
+    @property
+    def chip_box(self) -> np.ndarray:
+        """以左上 左下 右下 右上排布
+
+        Returns:
+
+        """
+        points = np.array([self.LeftTop,
+                           self.LeftBottom,
+                           self.RightBottom,
+                           self.RightTop])
+        return points
+
+    def set_chip_box(
+            self, cb: np.ndarray
+    ) -> None:
+        self.LeftTop, self.LeftBottom, self.RightBottom, self.RightTop = \
+            [list(i) for i in cb]
+
+
+class ChipFeature(BaseModel):
+    tech_type: TechType = TechType.ssDNA
+    chip_box: ChipBoxInfo = ChipBoxInfo()
+    template: TemplateInfo = TemplateInfo()
+    point00: Tuple[int, int] = (0, 0)  # xy,相对于芯片而不是矩阵的位置坐标
+    mat: Union[str, CBImage] = ''
+
+    class Config:
+        arbitrary_types_allowed = True
+    # @property
+    # def chip_box(self, ):
+    #     return self._chip_box
+
+    def set_chip_box(self, chip_box):
+        self.chip_box = chip_box
+
+    def set_point00(self, points):
+        if isinstance(points, tuple) and len(points) == 2:
+            self.point00 = points
+
+    # @property
+    # def point00(self, ):
+    #     return self._point00
+
+    # @property
+    # def mat(self, ):
+    #     return self._mat
+
+    def set_mat(self, mat):
+        if not isinstance(mat, CBImage):
+            self.mat = cbimread(mat)
+        else:
+            self.mat = mat
+
+    # @property
+    # def template(self, ):
+    #     return self._template
+
+    def set_template(self, template):
+        if not isinstance(template, TemplateInfo):
+            self.template.template_points = template
+        else:
+            self.template = template
 
 
 class Alignment(object):
@@ -48,8 +114,8 @@ class Alignment(object):
         self._score: int = iPlaceHolder
 
         # self.registration_image: CBImage
-        self._fixed_image: ChipFeature = ChipFeature()
-        self._moving_image: ChipFeature = ChipFeature()
+        self._fixed_image: ChipFeature
+        self._moving_image: ChipFeature
 
     @property
     def offset(self, ) -> Tuple[float, float]:
@@ -223,7 +289,7 @@ class Alignment(object):
 
     @staticmethod
     def get_matrix_by_points(points_src, points_dst,
-                             need_image = False,
+                             need_image=False,
                              src: Union[CBImage, np.ndarray] = None,
                              dst_shape: tuple = None
                              ):
@@ -328,7 +394,7 @@ class Alignment(object):
         if not isinstance(file, np.ndarray): return None
         assert file.shape == (4, 2), "Array shape error."
 
-        file = file[np.argsort(np.mean(file, axis = 1)), :]
+        file = file[np.argsort(np.mean(file, axis=1)), :]
         if file[1, 0] > file[2, 0]:
             file = file[(0, 2, 1, 3), :]
 
@@ -376,9 +442,12 @@ def transform_points(
     align = Alignment()
 
     mat = align.get_coordinate_transformation_matrix(shape=src_shape, scale=scale, rotate=rotation)
-    if flip == 0: points[:, 0] = src_shape[1] - points[:, 0]
-    elif flip == 1: points[:, 1] = src_shape[0] - points[:, 1]
-    else: pass
+    if flip == 0:
+        points[:, 0] = src_shape[1] - points[:, 0]
+    elif flip == 1:
+        points[:, 1] = src_shape[0] - points[:, 1]
+    else:
+        pass
 
     new_points = align.get_points_by_matrix(points, mat)
 
@@ -402,4 +471,3 @@ if __name__ == "__main__":
                                   offset=(10, 10),
                                   flip=0)
     print(dst_points)
-

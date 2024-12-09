@@ -1,16 +1,30 @@
 import os.path
 import numpy as np
+from pydantic import BaseModel, Field
 
 from cellbin2.contrib.template.point_detector import TrackPointsParam
 from cellbin2.contrib.template.inferencev1.track_line import TrackLinesParam
 from cellbin2.contrib.template.inferencev1.inference_v1 import TemplateReferenceV1Param
 from cellbin2.contrib.template.inferencev2.inference_v2 import TemplateReferenceV2Param
-
+from cellbin2.utils.common import iPlaceHolder, fPlaceHolder
 from cellbin2.image.augmentation import line_enhance_method
-from cellbin2.contrib.param import TrackPointsInfo, TemplateInfo
 from cellbin2.utils.common import TechType
 from cellbin2.utils import clog
 from typing import List
+
+
+class TemplateInfo(BaseModel):
+    template_points: np.ndarray = Field(np.array([]), description="推导出的所有模板点")
+    template_recall: float = Field(fPlaceHolder, description="识别到的track点可以匹配回模板的占比")
+    template_valid_area: float = Field(fPlaceHolder, description="track点分布的面积占比")
+    trackcross_qc_pass_flag: int = Field(iPlaceHolder, description="track点数目及分布是否达到要求")
+    trackline_channel: int = Field(iPlaceHolder, description="检测track line的通道")
+    rotation: float = Field(fPlaceHolder, description="track line的水平角")
+    scale_x: float = Field(fPlaceHolder, description="水平尺度")
+    scale_y: float = Field(fPlaceHolder, description="竖直尺度")
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class TemplateReference(object):
@@ -62,8 +76,8 @@ class TemplateReference(object):
         )
 
         track_info = sorted(self.points_info.track_points.items(),
-                            key = lambda x: x[1].shape[0],
-                            reverse = True)[:10]
+                            key=lambda x: x[1].shape[0],
+                            reverse=True)[:10]
 
         track_ln_pc.set_preprocess_func(
             line_enhance_method.get(self.stain_type, None)
@@ -93,7 +107,7 @@ class TemplateReference(object):
 
         clog.info("Reference template: max=={:.3f}  mean=={:.3f}  "
                   "std=={:.3f}  qc_conf=={:.3f}  re_conf=={:.3f}".format(
-                  max_value, mean_value, std_value, qc_conf, re_conf)
+            max_value, mean_value, std_value, qc_conf, re_conf)
         )
         tr.template = np.array(tr.template)  # need numpy array which can dump into h5 file automatically
         template_info = TemplateInfo(**{
@@ -182,11 +196,13 @@ class TemplateReference(object):
                     template_info_v2.template_valid_area) > \
                 max(template_info_v1.template_recall,
                     template_info_v1.template_valid_area) else template_info_v1
-        else: template_info = template_info_v2
+        else:
+            template_info = template_info_v2
 
         if template_info.template_recall > thresh or template_info.template_valid_area > thresh:
             template_info.trackcross_qc_pass_flag = 1
-        else: template_info.trackcross_qc_pass_flag = 0
+        else:
+            template_info.trackcross_qc_pass_flag = 0
 
         return self.points_info, template_info
 
@@ -229,15 +245,16 @@ def main():
 
     points_info, template_info = template_inference(ref=[[240, 300, 330, 390, 390, 330, 300, 240, 420],
                                                          [240, 300, 330, 390, 390, 330, 300, 240, 420]],
-                       track_points_config=track_points_config,
-                       track_lines_config=track_lines_config,
-                       template_v1_config=TemplateReferenceV1Param(**{}),
-                       template_v2_config=TemplateReferenceV2Param(**{}),
-                       file_path=file_path,
-                       stain_type=stain_type,
-                       fov_wh=fov_wh,
-                       overlap=0)
-    np.savetxt(r'E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_DAPI_template.txt', template_info.template_points)
+                                                    track_points_config=track_points_config,
+                                                    track_lines_config=track_lines_config,
+                                                    template_v1_config=TemplateReferenceV1Param(**{}),
+                                                    template_v2_config=TemplateReferenceV2Param(**{}),
+                                                    file_path=file_path,
+                                                    stain_type=stain_type,
+                                                    fov_wh=fov_wh,
+                                                    overlap=0)
+    np.savetxt(r'E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_DAPI_template.txt',
+               template_info.template_points)
 
 
 if __name__ == '__main__':
