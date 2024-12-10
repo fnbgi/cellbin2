@@ -205,27 +205,16 @@ class Scheduler(object):
                 )
                 cur_c_image = self._channel_images[g_name]
                 # stitch
-                if not os.path.exists(cur_f_name.stitch_image):
-                    shutil.copy2(f.file_path, cur_f_name.stitch_image)
+                shutil.copy2(f.file_path, cur_f_name.stitch_image)
                 # transform in & out
-                t_o = run_transform(
+                run_transform(
                     file=f,
                     channel_images=self._channel_images,
                     param_chip=self.param_chip,
                     files=self._files,
+                    cur_f_name=cur_f_name,
                     if_track=f.registration.trackline
                 )
-                t_o.transform_image.write(file_path=cur_f_name.transformed_image)
-                cur_c_image.Stitch.TransformShape = t_o.TransformShape
-                if f.registration.trackline:
-                    cur_c_image.Stitch.TrackPoint = t_o.TrackPoint
-                    cur_c_image.Stitch.TransformTemplate = t_o.TransformTemplate
-                    cur_c_image.Stitch.TransformTrackPoint = t_o.TransformTrackPoint
-                    # 输出：参数写入ipr、txt、tif
-                    np.savetxt(cur_f_name.transformed_template, cur_c_image.Stitch.TransformTemplate)
-                    np.savetxt(cur_f_name.transformed_track_template,
-                               cur_c_image.Stitch.TransformTrackPoint)
-                    cur_c_image.Stitch.TransformChipBBox.update(t_o.chip_box_info)
                 final_tissue_mask = None
                 final_cell_mask = None
                 if f.tissue_segmentation:

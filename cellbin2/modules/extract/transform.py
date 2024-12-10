@@ -9,6 +9,7 @@ from cellbin2.contrib.alignment.basic import ChipBoxInfo
 from cellbin2.utils.common import TechType
 from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.modules.metadata import ProcParam, ProcFile
+from cellbin2.modules import naming
 
 
 class TransformOutput(BaseModel):
@@ -69,6 +70,7 @@ def run_transform(
         channel_images: Dict[str, Union[IFChannel, ImageChannel]],
         param_chip: StereoChip,
         files: Dict[int, ProcFile],
+        cur_f_name: naming.DumpImageFileNaming,
         if_track: bool
 ):
     scale, rotation, offset = read_transform(
@@ -113,17 +115,13 @@ def run_transform(
         trans_chip_box_info.set_chip_box(trans_chip_box)
         trans_chip_box_info.ScaleX, trans_chip_box_info.ScaleY = 1.0, 1.0
         trans_chip_box_info.Rotation = 0.0
-        outs = TransformOutput(
-            transform_image=transform_image,
-            TransformShape=trans_im_shape,
-            TrackPoint=qc_template,
-            TransformTemplate=stitch_trans_template,
-            TransformTrackPoint=qc_trans_template,
-            chip_box_info=trans_chip_box_info
-        )
-    else:
-        outs = TransformOutput(
-            transform_image=transform_image,
-            TransformShape=trans_im_shape
-        )
-    return outs
+
+        image_info.Stitch.TrackPoint = qc_template
+        image_info.Stitch.TransformTemplate = stitch_trans_template
+        image_info.Stitch.TransformTrackPoint = qc_trans_template
+        # 输出：参数写入ipr、txt、tif
+        np.savetxt(cur_f_name.transformed_template, image_info.Stitch.TransformTemplate)
+        np.savetxt(cur_f_name.transformed_track_template, image_info.Stitch.TransformTrackPoint)
+        image_info.Stitch.TransformChipBBox.update(trans_chip_box_info)
+    image_info.Stitch.TransformShape = trans_im_shape
+    transform_image.write(file_path=cur_f_name.transformed_image)
