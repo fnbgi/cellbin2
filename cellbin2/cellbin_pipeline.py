@@ -70,9 +70,9 @@ class CellBinPipeline(object):
         """ 完成图像、配准、校准、分割、矩阵提取等分析流程 """
         if self.pp.run.alignment:
             from cellbin2.modules import scheduler
-            # if self._naming.rpi.exists():
-            #     clog.info('scheduler has been done')
-            #     return 0
+            if self._naming.rpi.exists():
+                clog.info('scheduler has been done')
+                return 0
             scheduler.scheduler_pipeline(weights_root=self._weights_root, chip_no=self._chip_no,
                                          input_image=self._input_image, stain_type=self._stain_type,
                                          param_file=self._param_file, output_path=self._output_path,

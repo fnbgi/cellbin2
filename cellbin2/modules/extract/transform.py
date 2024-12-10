@@ -12,18 +12,6 @@ from cellbin2.modules.metadata import ProcParam, ProcFile
 from cellbin2.modules import naming
 
 
-class TransformOutput(BaseModel):
-    transform_image: CBImage
-    TransformShape: Tuple[int, int]
-    TrackPoint: Optional[np.ndarray] = None
-    TransformTemplate: Optional[np.ndarray] = None
-    TransformTrackPoint: Optional[np.ndarray] = None
-    chip_box_info: Optional[ChipBoxInfo] = None
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
 def read_transform(
         image_file: ProcFile,
         param_chip: StereoChip,
