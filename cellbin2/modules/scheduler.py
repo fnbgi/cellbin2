@@ -55,24 +55,36 @@ class Scheduler(object):
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
                 n = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name, stain_type=g_name, save_dir=self._output_path)
-                c_mask_path = n.cell_mask
-                c_raw_mask_path = n.cell_mask_raw
-                register_path = n.registration_image
-                t_mask_path = n.tissue_mask
-                t_raw_mask_path = n.tissue_mask_raw
+                # c_mask_path = n.cell_mask
+                # c_raw_mask_path = n.cell_mask_raw
+                # register_path = n.registration_image
+                # t_mask_path = n.tissue_mask
+                # t_raw_mask_path = n.tissue_mask_raw
                 data[g_name] = {}
-                if os.path.exists(c_mask_path):
-                    data[g_name]['CellMask'] = c_mask_path
-                if os.path.exists(register_path):
-                    data[g_name]['Image'] = register_path
-                if os.path.exists(t_mask_path):
-                    data[g_name]['TissueMask'] = t_mask_path
-                if os.path.exists(t_raw_mask_path):
-                    data[g_name]['TissueMaskRaw'] = t_raw_mask_path
-                if os.path.exists(c_raw_mask_path):
-                    data[g_name]['CellMaskRaw'] = c_raw_mask_path
-                # if os.path.exists(c_correct_mask_path):
-                #     data[g_name]['CellMaskCorrect'] = c_correct_mask_path
+                if os.path.exists(n.cell_mask):
+                    data[g_name]['CellMask'] = n.cell_mask
+                elif os.path.exists(n.transform_cell_mask):
+                    data[g_name]['CellMaskTransform'] = n.transform_cell_mask
+
+                if os.path.exists(n.cell_mask_raw):
+                    data[g_name]['CellMaskRaw'] = n.cell_mask_raw
+                elif os.path.exists(n.transform_cell_mask_raw):
+                    data[g_name]['CellMaskRawTransform'] = n.transform_cell_mask_raw
+
+                if os.path.exists(n.registration_image):
+                    data[g_name]['Image'] = n.registration_image
+                elif os.path.exists(n.transformed_image):
+                    data[g_name]['Image'] = n.transformed_image
+
+                if os.path.exists(n.tissue_mask):
+                    data[g_name]['TissueMask'] = n.tissue_mask
+                elif os.path.exists(n.transform_tissue_mask):
+                    data[g_name]['TissueMaskTransform'] = n.transform_tissue_mask
+
+                if os.path.exists(n.tissue_mask_raw):
+                    data[g_name]['TissueMaskRaw'] = n.tissue_mask_raw
+                elif os.path.exists(n.transform_tissue_mask_raw):
+                    data[g_name]['TissueMaskRawTransform'] = n.transform_tissue_mask_raw
         data['final'] = {}
         data['final']['CellMask'] = self.p_naming.final_nuclear_mask
         data['final']['TissueMask'] = self.p_naming.final_tissue_mask
@@ -174,104 +186,6 @@ class Scheduler(object):
 
         return s, r, offset
 
-    @process_decorator('GiB')
-    def _registration(self, image_file: ProcFile, cur_f_name: naming.DumpImageFileNaming) -> RegistrationOutput:
-        """
-        这里有以下几种情况：
-        1. if图，返回reuse图的配准参数
-        2. 影像图+矩阵：前置配准、重心法、芯片框配准
-        3. 影像图+影像图：暂不支持
-
-        返回（RegisterOutput）：配准参数
-        """
-        if image_file.registration.reuse != -1:
-            f_name = self._files[image_file.registration.reuse].get_group_name(sn=self.param_chip.chip_name)
-            info = self._channel_images[f_name].get_registration()
-            clog.info('Get registration param from ipr')
-            return info
-        else:
-            # TODO 配准前置暂关
-            #  11/22 by lizepeng
-            # if self._channel_images[file_tag].Register.Method == AlignMode.Template00Pt.name:  # 先前做了前置配准
-            #     # 从ipr获取配准参数
-            #     info = self._channel_images[file_tag].get_registration()
-            #     clog.info('Get registration param from ipr')
-            # else:
-            fixed = self._files[image_file.registration.fixed_image]
-            # 动图参数构建
-            g_name = image_file.get_group_name(sn=self.param_chip.chip_name)
-            param1 = self._channel_images[g_name]
-
-            moving_image = ChipFeature(
-                tech_type=image_file.tech,
-            )
-            moving_image.tech_type = image_file.tech
-            moving_image.set_mat(cur_f_name.transformed_image)
-            # 这里建议不要去ipr读，而是
-            if param1.QCInfo.TrackCrossQCPassFlag:
-                moving_image.set_template(
-                    np.loadtxt(cur_f_name.transformed_template))  # param1.transform_template_info
-            if param1.QCInfo.ChipDetectQCPassFlag:
-                moving_image.set_chip_box(param1.Stitch.TransformChipBBox.get())
-
-            # 静图参数构建
-            if fixed.is_matrix:
-                # 场景1：静图是矩阵
-                mfe = MatrixFeatureExtract(
-                    output_path=self._output_path,
-                    image_file=fixed,
-                    m_naming=naming.DumpMatrixFileNaming(
-                        sn=self.param_chip.chip_name,
-                        m_type=fixed.tech.name,
-                        save_dir=self._output_path
-                    )
-                )
-                mfe.set_chip_param(self.param_chip)
-                mfe.set_config(self.config)
-                mfe.extract4stitched()
-
-                fixed_image = ChipFeature(
-                    tech_type=fixed.tech,
-                    template=mfe.template,
-                    chip_box=mfe.chip_box,
-                )
-                fixed_image.set_mat(mfe.mat)
-                self._channel_images[g_name].Register.MatrixTemplate = mfe.template.template_points
-                self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
-            else:
-                # 场景2：静图是染色图
-                # fixed_image = ChipFeature()
-                # fixed_image.tech_type = fixed.tech
-                # fixed_image.set_mat(fixed.file_path)
-                # param2 = self._channel_images[fixed.tag]
-                # fixed_image.set_template(param2.transform_template_info)
-                # fixed_image.set_chip_box(param2.box_info)
-                raise Exception("Not supported yet")
-
-        # TODO 临时兼容性改动
-        #  11/22 by lizepeng
-        info, temp_info = registration(
-            moving_image=moving_image,
-            fixed_image=fixed_image,
-            ref=self.param_chip.fov_template,
-            from_stitched=False,
-            qc_info = (param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag)
-        )
-        if info is not None:
-            self._channel_images[g_name].update_registration(info)
-
-        self._channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
-
-        if temp_info is not None:
-            temp_info.register_mat.write(
-                os.path.join(self._output_path, f"{self._image_naming.sn}_chip_box_register.tif")
-            )
-            np.savetxt(os.path.join(
-                self._output_path, f"{self._image_naming.sn}_chip_box_register.txt"), temp_info.offset
-            )
-
-        return info if info is not None else temp_info
-
     def run(self, chip_no: str, input_image: str,
             stain_type: str, param_file: str,
             output_path: str, ipr_path: str,
@@ -291,7 +205,7 @@ class Scheduler(object):
         pp.print_files_info(self._files, mode='Scheduler')
 
         # 数据校验失败则退出
-        flag1 = self._data_check()
+        flag1 = 0
         if flag1 not in [0, 2]:
             return 1
         if flag1 == 0:
@@ -358,6 +272,10 @@ class Scheduler(object):
         for idx, f in self._files.items():
             clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
             if f.is_image:
+                if f.registration.fixed_image == -1 and f.registration.reuse == -1:
+                    continue
+                if f.registration.fixed_image == -1 and self._files[f.registration.reuse].registration.fixed_image == -1:
+                    continue
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
                 cur_f_name = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name,

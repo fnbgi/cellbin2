@@ -70,9 +70,9 @@ class CellBinPipeline(object):
         """ 完成图像、配准、校准、分割、矩阵提取等分析流程 """
         if self.pp.run.alignment:
             from cellbin2.modules import scheduler
-            if self._naming.rpi.exists():
-                clog.info('scheduler has been done')
-                return 0
+            # if self._naming.rpi.exists():
+            #     clog.info('scheduler has been done')
+            #     return 0
             scheduler.scheduler_pipeline(weights_root=self._weights_root, chip_no=self._chip_no,
                                          input_image=self._input_image, stain_type=self._stain_type,
                                          param_file=self._param_file, output_path=self._output_path,
@@ -194,6 +194,7 @@ class CellBinPipeline(object):
                 trans_tp.file_path = self._matrix_path
                 new_pp.image_process[str(im_count)] = trans_tp
                 trans_exp_idx = im_count
+                new_pp.image_process[str(nuclear_cell_idx)].registration.fixed_image = trans_exp_idx
                 im_count += 1
 
             # IF image if exists
@@ -203,6 +204,7 @@ class CellBinPipeline(object):
                     if_template = deepcopy(pp.image_process[TechType.IF.name])
                     if_template.file_path = i_path
                     new_pp.image_process[str(im_count)] = if_template
+                    new_pp.image_process[str(im_count)].registration.reuse = nuclear_cell_idx
                     im_count += 1
 
             if self._protein_matrix_path is not None:
@@ -210,6 +212,8 @@ class CellBinPipeline(object):
                 protein_tp.file_path = self._protein_matrix_path
                 new_pp.image_process[str(im_count)] = protein_tp
                 protein_exp_idx = im_count
+                if new_pp.image_process[str(nuclear_cell_idx)].registration.fixed_image == -1:
+                    new_pp.image_process[str(nuclear_cell_idx)].registration.fixed_image = protein_exp_idx
 
             # end of image part info parsing
 

@@ -121,17 +121,19 @@ def run_register(
             moving_image=moving_image,
             fixed_image=fixed_image,
             ref=param_chip.fov_template,
-            from_stitched=False
+            from_stitched=False,
+            qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag)
         )
-        reg_out_dct['info'] = info
-        # channel_images[g_name].update_registration(info)
-        # channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
-        temp_info.register_mat.write(
-            os.path.join(output_path, f"{sn}_chip_box_register.tif")
-        )
-        np.savetxt(
-            os.path.join(output_path, f"{sn}_chip_box_register.txt"),
-            temp_info.offset
-        )
+        if info is not None:
+            reg_out_dct['info'] = info
+        # TODO: 那这里temp_info不记录到ipr吗，这里需要改下，外面现在默认info一定存在的
+        if temp_info is not None:
+            temp_info.register_mat.write(
+                os.path.join(output_path, f"{sn}_chip_box_register.tif")
+            )
+            np.savetxt(
+                os.path.join(output_path, f"{sn}_chip_box_register.txt"),
+                temp_info.offset
+            )
     reg_out = RegisterOutput(**reg_out_dct)
     return reg_out

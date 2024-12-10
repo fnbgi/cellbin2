@@ -6,7 +6,7 @@
       "chip_detect": true,
       "quality_control": false,
       "registration": {
-        "fixed_image": 1,
+        "fixed_image": -1,
         "trackline": true,
         "reuse": -1
       },
@@ -38,7 +38,7 @@
       "registration": {
         "fixed_image": -1,
         "trackline": false,
-        "reuse": 0
+        "reuse": -1
       },
       "tissue_segmentation": true,
       "cell_segmentation": false,
@@ -51,8 +51,9 @@
       "chip_detect": true,
       "quality_control": false,
       "registration": {
-        "fixed_image": 1,
-        "trackline": true
+        "fixed_image": -1,
+        "trackline": true,
+        "reuse": -1
       },
       "tissue_segmentation": true,
       "cell_segmentation": false,
@@ -65,7 +66,7 @@
       "chip_detect": true,
       "quality_control": false,
       "registration": {
-        "fixed_image": 1,
+        "fixed_image": -1,
         "trackline": true,
         "reuse": -1
       },
@@ -84,8 +85,11 @@
       "extra_method": ""
     }
   },
-  "analysis": {
-    "report": true,
+  "run": {
+    "qc": true,
+    "alignment": true,
+    "matrix_extract": false,
+    "report": false,
     "annotation": false
   }
 }
