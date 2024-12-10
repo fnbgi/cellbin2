@@ -256,7 +256,8 @@ class Scheduler(object):
             if f.is_image:
                 if f.registration.fixed_image == -1 and f.registration.reuse == -1:
                     continue
-                if f.registration.fixed_image == -1 and self._files[f.registration.reuse].registration.fixed_image == -1:
+                if f.registration.fixed_image == -1 and self._files[
+                    f.registration.reuse].registration.fixed_image == -1:
                     continue
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
                 cur_f_name = naming.DumpImageFileNaming(
@@ -268,17 +269,15 @@ class Scheduler(object):
                 #     image_file=f,
                 #     cur_f_name=cur_f_name,
                 # )
-                reg_in = {
-                    'image_file': f,
-                    'cur_f_name': cur_f_name,
-                    'files': self._files,
-                    'channel_images': self._channel_images,
-                    'output_path': self._output_path,
-                    'param_chip': self.param_chip,
-                    'config': self.config
-                }
+
                 info: RegisterOutput = run_register(
-                    RegisterInput(**reg_in)
+                    image_file=f,
+                    cur_f_name=cur_f_name,
+                    files=self._files,
+                    channel_images=self._channel_images,
+                    output_path=self._output_path,
+                    param_chip=self.param_chip,
+                    config=self.config
                 )
                 self._channel_images[g_name].update_registration(info.info)
                 if info.MatrixTemplate is not None:

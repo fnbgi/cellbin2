@@ -38,7 +38,13 @@ class RegisterOutput(BaseModel):
 
 
 def run_register(
-        reg_in: RegisterInput
+        image_file: ProcFile,
+        cur_f_name: naming.DumpImageFileNaming,
+        files: Dict[int, ProcFile],
+        channel_images: Dict[str, Union[IFChannel, ImageChannel]],
+        output_path: str,
+        param_chip: StereoChip,
+        config: Config,
 ) -> RegisterOutput:
     """
     这个模块的任务就是对配准整体逻辑的整合，返回一个下游要用的配准参数
@@ -49,13 +55,6 @@ def run_register(
 
     返回（RegisterOutput）：配准参数
     """
-    param_chip = reg_in.param_chip
-    image_file = reg_in.image_file
-    files = reg_in.files
-    channel_images = reg_in.channel_images
-    cur_f_name = reg_in.cur_f_name
-    output_path = reg_in.output_path
-    config = reg_in.config
     sn = param_chip.chip_name
 
     reg_out_dct = {}
