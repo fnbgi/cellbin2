@@ -109,7 +109,7 @@
   },
   "run": {
     "qc": true,
-    "register": true,
+    "alignment": true,
     "matrix_extract": true,
     "report": true,
     "annotation": false

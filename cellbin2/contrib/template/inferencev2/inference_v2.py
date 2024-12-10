@@ -21,6 +21,7 @@ class TemplateReferenceV2Param(BaseModel):
     v2_rotate_range_thr: int = Field(35, description="角度适配范围")  # TODO：未用到，删除？@lizep
     v2_search_range_thr: int = Field(500, description="搜索阈值")  # TODO：未用到，删除？@lizep
     v2_rotate_fov_min_thr: int = Field(7, description="")
+    v2_scale_limits: float = Field(0.5, description="Upper and lower limits")
 
 
 class TemplateReferenceV2(TemplateReferenceV1):
@@ -40,6 +41,7 @@ class TemplateReferenceV2(TemplateReferenceV1):
         self.rotate_range = cfg2.v2_rotate_range_thr
         self.search_thresh = cfg2.v2_search_range_thr
         self.rotate_fov_min = cfg2.v2_rotate_fov_min_thr
+        self.scale_limits = cfg2.v2_scale_limits
 
         self.set_scale_flag = False
         self.set_rotate_flag = False
@@ -59,7 +61,14 @@ class TemplateReferenceV2(TemplateReferenceV1):
         模板推导V2阈值
         """
         if scale_range is not None:
-            self.scale_range = scale_range
+            if isinstance(scale_range, (int, float)):
+                down_limit = scale_range - self.scale_limits
+                self.scale_range = [
+                    0.3 if down_limit < 0.3 else down_limit,
+                    scale_range + self.scale_limits
+                ]
+            else:
+                self.scale_range = scale_range
         if rotate_range is not None:
             self.rotate_range = rotate_range
         if rotate_fov_min is not None:

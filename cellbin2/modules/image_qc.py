@@ -29,7 +29,7 @@ class ImageQC(object):
         self._files: Dict[int, ProcFile] = {}
         self._ipr = ipr.ImageProcessRecord()
         self._channel_images: Dict[str, Union[ipr.ImageChannel, ipr.IFChannel]] = {}
-        self.p_naming: naming.DumpPipelineFileNaming
+        self.p_naming: naming.DumpPipelineFileNaming = None
 
     def _align_channels(self, image_file: ProcFile):
         from cellbin2.contrib import calibration
@@ -114,12 +114,14 @@ class ImageQC(object):
         # 芯片信息加载
         self.param_chip.parse_info(chip_no)
         self.p_naming = naming.DumpPipelineFileNaming(chip_no, save_dir=output_path)
+
         # 数据加载
         pp = read_param_file(
             file_path=param_file,
             cfg=self.config,
             out_path=self.p_naming.input_json
         )
+
         # 只加载与ImageQC相关的文件，同时检查该文件是否存在
         self._files = pp.get_image_files(do_image_qc=True, do_scheduler=False, cheek_exists=True)
         pp.print_files_info(self._files, mode='imageQC')
