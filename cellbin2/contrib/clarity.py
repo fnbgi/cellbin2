@@ -27,6 +27,8 @@ pt_enhance_method = {
 class ClarityOutput(BaseModel):
     score: float = Field(description="清晰度得分")
     preds: np.ndarray = Field(description="预测结果")
+    cut_siz: tuple
+    overlap: int
 
     class Config:
         arbitrary_types_allowed = True
@@ -253,7 +255,12 @@ def run_detect(
     clarity_qc = ClarityQC(cfg=cfg, stain_type=stain_type)
     img = cbimread(img_file)
     clarity_qc.run(img.image)
-    clarity_out = ClarityOutput(score=clarity_qc.score, preds=clarity_qc.preds)
+    clarity_out = ClarityOutput(
+        score=clarity_qc.score,
+        preds=clarity_qc.preds,
+        cut_siz=clarity_qc.cl_classify.img_size,
+        overlap=clarity_qc.cl_classify.overlap
+    )
 
     return clarity_out
 

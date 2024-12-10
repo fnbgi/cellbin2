@@ -15,7 +15,7 @@ from cellbin2.utils.weights_manager import WeightDownloader
 from typing import List, Dict, Any, Tuple, Union
 from cellbin2.image import cbimwrite
 from cellbin2.modules import naming, run_state
-from cellbin2.modules.metadata import ProcParam, ProcFile, default_image, read_param_file
+from cellbin2.modules.metadata import ProcParam, ProcFile, read_param_file
 from cellbin2.modules.extract.image_extract import ImageFeatureExtract
 from cellbin2.modules.extract.matrix_extract import MatrixFeatureExtract
 from cellbin2.contrib.alignment import AlignMode, registration, RegistrationOutput

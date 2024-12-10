@@ -14,7 +14,7 @@ from cellbin2.utils.weights_manager import WeightDownloader
 from cellbin2.modules.metadata import read_param_file, ProcFile, ProcParam
 from cellbin2.utils import ipr
 from cellbin2.modules import naming
-from cellbin2.modules.extract.image_extract import ImageFeatureExtract
+from cellbin2.modules.extract.qc import run_qc
 
 
 class ImageQC(object):
@@ -28,7 +28,7 @@ class ImageQC(object):
         self._fov_wh = (2000, 2000)  # 初始裁图尺寸
         self._files: Dict[int, ProcFile] = {}
         self._ipr = ipr.ImageProcessRecord()
-        self._channel_images: Dict[str, Any] = {}  # ipr.ImageChannel
+        self._channel_images: Dict[str, Union[ipr.ImageChannel, ipr.IFChannel]] = {}
         self.p_naming: naming.DumpPipelineFileNaming
 
     def _align_channels(self, image_file: ProcFile):
@@ -115,18 +115,11 @@ class ImageQC(object):
         self.param_chip.parse_info(chip_no)
         self.p_naming = naming.DumpPipelineFileNaming(chip_no, save_dir=output_path)
         # 数据加载
-        if os.path.exists(param_file):  # 参数文件图加入计算列表
-            pp = read_param_file(
-                file_path=param_file,
-                cfg=self.config,
-                out_path=self.p_naming.input_json
-            )
-        else:
-            pp = ProcParam()
-        # 命令行图加入计算列表
-        # TODO: 这里现在问题大大的，不能用
-        # pp.add_image(file_path=input_image, stain_type=stain_type, clarity=self.config.default_image.clarity)
-
+        pp = read_param_file(
+            file_path=param_file,
+            cfg=self.config,
+            out_path=self.p_naming.input_json
+        )
         # 只加载与ImageQC相关的文件，同时检查该文件是否存在
         self._files = pp.get_image_files(do_image_qc=True, do_scheduler=False, cheek_exists=True)
         pp.print_files_info(self._files, mode='imageQC')
@@ -151,27 +144,15 @@ class ImageQC(object):
             clog.info('Finished with no data do imageQC')
             return 0
         for idx, f in self._files.items():
-            # if idx == 0:
-            #     continue
             clog.info('======>  Image[{}] QC, {}'.format(idx, f.file_path))
-            # if f.channel_align != -1:
-            #     self._align_channels(f)
-            cur_f_name = naming.DumpImageFileNaming(
-                sn=self.param_chip.chip_name,
-                stain_type=f.tech.name,
-                save_dir=output_path
-            )
             if f.registration.trackline:
-                ife = ImageFeatureExtract(
-                    output_path=output_path,
+                channel_image = run_qc(
                     image_file=f,
-                    sn=chip_no,
-                    im_naming=cur_f_name,
+                    param_chip=self.param_chip,
+                    config=self.config,
+                    output_path=output_path
                 )
-                ife.set_chip_param(self.param_chip)
-                ife.set_config(self.config)
-                ife.extract4stitched()
-                self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = ife.channel_image
+                self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
             elif f.channel_align != -1:
                 channel_image = ipr.IFChannel()
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image

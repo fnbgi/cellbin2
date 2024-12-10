@@ -4,6 +4,7 @@ import numpy as np
 import shutil
 
 from PIL import ImageFile, Image
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 Image.MAX_IMAGE_PIXELS = None
 
@@ -83,12 +84,6 @@ class ImageFeatureExtract(FeatureExtract):
         #     if os.path.exists(img_path):
         #         os.remove(img_path)
 
-    def stitched2regist(self, trans_matrix: np.ndarray, dst_siz: Tuple[int, int]):
-        """
-        将stitched图（染色图/mask）变成配准图:芯片框变成regist模板
-        """
-        pass
-
     def extract4transform(
             self,
             scale: Tuple[float, float],
@@ -97,7 +92,7 @@ class ImageFeatureExtract(FeatureExtract):
     ):
         # stitch
         if not os.path.exists(self._naming.stitch_image):
-            shutil.copy2(self._image_file.file_path,  self._naming.stitch_image)
+            shutil.copy2(self._image_file.file_path, self._naming.stitch_image)
 
         # transform in & out
         t_i = TransformInput(
@@ -166,135 +161,6 @@ class ImageFeatureExtract(FeatureExtract):
                 output_path=self._naming.transform_tissue_mask,
                 files=final_tissue_mask
             )
-
-    def extract4stitched(self, ):
-        image = cbimread(self._image_file.file_path)
-        if self._image_file.tech is TechType.IF:
-            self._channel_image = ipr.IFChannel()
-        else:
-            self._channel_image = ipr.ImageChannel()
-        self._channel_image.update_basic_info(
-            chip_name=self._param_chip.chip_name,
-            channel=image.channel,
-            width=image.width,
-            height=image.height,
-            stain_type=self._image_file.tech_type,
-            depth=image.depth
-        )
-
-        # 估计 & 第一次更新裁图尺寸
-        cut_siz = self._estimate_fov_size()
-
-        if self._image_file.chip_detect:
-            chip_info: ChipBoxInfo = self._detect_chip()
-            self._channel_image.QCInfo.ChipDetectQCPassFlag = 1 if chip_info.IsAvailable else 0
-            if chip_info.IsAvailable:
-                # 第二次更新裁图尺寸
-                scale = (chip_info.ScaleY + chip_info.ScaleX) / 2
-                clog.info('Using the image chip box, calculate scale == {}'.format(scale))
-                cut_siz = (int(self._fov_wh[0] * scale), int(self._fov_wh[1] * scale))
-                clog.info('Estimate2 FOV-WH from {} to {}'.format(self._fov_wh, cut_siz))
-        self._channel_image.ImageInfo.FOVHeight = cut_siz[1]
-        self._channel_image.ImageInfo.FOVWidth = cut_siz[0]
-        if self._image_file.quality_control:
-            self._clarity()
-
-        if self._image_file.registration.trackline:
-            img_tpl = self._inference_template(cut_siz=cut_siz)
-            if img_tpl.trackcross_qc_pass_flag:
-                self._channel_image.QCInfo.TrackCrossQCPassFlag = 1
-                clog.info('Template Scale is {}, rotation is {}'.format(
-                    (img_tpl.scale_x, img_tpl.scale_y), img_tpl.rotation))
-
-        if self._image_file.chip_detect and self._param_chip.is_after_230508():  # 满足配准前置的条件
-            if chip_info.IsAvailable and img_tpl.trackcross_qc_pass_flag:
-                clog.info('The chip-data meets the pre-registration conditions')
-                self._pre_registration()
-        cpf = True if self._channel_image.QCInfo.ChipDetectQCPassFlag == 1 else False
-        tcf = True if self._channel_image.QCInfo.TrackCrossQCPassFlag == 1 else False
-        self._channel_image.QCInfo.QCPassFlag = (cpf or tcf)
-
-        clog.info('ImageQC result is {}'.format(self._channel_image.QCInfo.QCPassFlag))
-
-    @process_decorator('GiB')
-    def _pre_registration(self, ):
-        moving_image = ChipFeature(
-            tech_type=self._image_file.tech,
-            chip_box=self._channel_image.box_info,
-            template=self._channel_image.stitched_template_info,
-            point00=self._param_chip.zero_zero_point,
-            mat=cbimread(self._image_file.file_path)
-        )
-        re_input = RegistrationInput(
-            moving_image=moving_image,
-            ref=self._param_chip.fov_template,
-            dst_shape=(self._param_chip.height, self._param_chip.width),
-            from_stitched=True
-        )
-        re_out = get_alignment_00(re_input=re_input)
-
-        # TODO 临时测试用
-        with open(os.path.join(self.output_path, 'register_00pt.txt'), 'w') as f:
-            f.writelines(f"offset: {re_out.offset} \n")
-
-        # self._channel_image.update_registration(res)
-
-    @process_decorator('GiB')
-    def _estimate_fov_size(self, ):
-        scale = self._scale_estimate()  # 尺度估计
-        clog.info('Using the image and chip prior size, calculate scale == {}'.format(scale))
-        wh = (int(self._fov_wh[0] * scale), int(self._fov_wh[1] * scale))
-        clog.info('Estimate1 FOV-WH from {} to {}'.format(self._fov_wh, wh))
-        return wh
-
-    def _scale_estimate(self, ):
-        image = cbimread(self._image_file.file_path)
-        w = image.width / self._param_chip.width
-        h = image.height / self._param_chip.height
-        return (w + h) / 2
-
-    @process_decorator('GiB')
-    def _detect_chip(self, ) -> ChipBoxInfo:
-        from cellbin2.contrib import chip_detector
-
-        actual_size = self._param_chip.norm_chip_size
-        info = chip_detector.detect_chip(file_path=self._image_file.file_path,
-                                         cfg=self._config.chip_detector,
-                                         stain_type=self._image_file.tech,
-                                         actual_size=actual_size)
-        self._channel_image.QCInfo.ChipBBox.update(box=info)
-
-        return info
-
-    @process_decorator('GiB')
-    def _inference_template(self, cut_siz: Tuple[int, int], overlap=0.0):
-        from cellbin2.contrib import inference
-
-        points_info, template_info = inference.template_inference(
-            ref=self._param_chip.fov_template,
-            track_points_config=self._config.track_points,
-            track_lines_config=self._config.track_lines,
-            template_v1_config=self._config.template_ref_v1,
-            template_v2_config=self._config.template_ref_v2,
-            file_path=self._image_file.file_path,
-            stain_type=self._image_file.tech,
-            fov_wh=cut_siz,
-            overlap=overlap)
-        self._channel_image.update_template_points(points_info=points_info, template_info=template_info)
-        # np.savetxt(os.path.join(self.output_path, 'stitched.txt'), img_tpl.template_points)
-
-        return template_info
-
-    @process_decorator('GiB')
-    def _clarity(self, ):
-        from cellbin2.contrib import clarity
-
-        c = clarity.run_detect(
-            img_file=self._image_file.file_path,
-            cfg=self._config.clarity,
-            stain_type=self._image_file.tech
-        )
-        self._channel_image.QCInfo.update_clarity(cut_siz=64, overlap=0, score=int(c.score * 100), pred=c.preds)
 
     @process_decorator('GiB')
     def _tissue_segmentation(self, image_path: str, res_path: str):

@@ -126,44 +126,6 @@ class ProcFile(BaseModel):
             self.cell_segmentation = False
 
 
-def default_image(file_path: str, tech_type: str, clarity: bool = False) -> ProcFile:
-    pif = ProcFile()
-
-    pif.file_path = file_path
-    pif.tech_type = tech_type
-    pif.chip_detect = True
-    pif.quality_control = clarity and True or False
-    pif.tissue_segmentation = True
-    pif.cell_segmentation = True
-    pif.correct_r = 10
-    pif.channel_align = -1
-    pif.registration.fixed_image = 1
-    pif.registration.trackline = True  # 固定图：1-默认是转录组矩阵
-
-    return pif
-
-
-def default_matrix(file_path: str, tech_type: str, stain_type: str) -> ProcFile:
-    pif = ProcFile()
-    pif.file_path = file_path
-    pif.tech_type = tech_type
-    pif.chip_detect = True
-    pif.quality_control = False
-    pif.tissue_segmentation = False
-    pif.cell_segmentation = False
-    pif.correct_r = 0
-    pif.channel_align = -1
-    pif.registration.fixed_image = -1  # 固定图
-    pif.registration.trackline = True  # 固定图
-    if stain_type == 'Null':
-        pif.tissue_segmentation = True
-        pif.cell_segmentation = True
-        pif.chip_detect = False
-        pif.registration.trackline = False  # 固定图
-
-    return pif
-
-
 class ProcMolecularFile(BaseModel):
     exp_matrix: int
     cell_mask: List[int]

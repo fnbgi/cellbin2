@@ -14,6 +14,7 @@ from cellbin2.contrib import alignment
 from cellbin2.contrib.alignment.basic import ChipBoxInfo
 from cellbin2.contrib.template.inference import TemplateInfo
 from cellbin2.contrib.alignment import RegistrationOutput
+from cellbin2.contrib.clarity import ClarityOutput
 
 IPR_VERSION = '0.3.0'
 ALLOWED = [int, str, float, bool, list, np.int64, np.int32, np.float64, np.ndarray, np.bool_, tuple]
@@ -91,11 +92,11 @@ class QCInfo(BaseIpr):
         self.CrossPoints: CrossPoints = CrossPoints()
         self.ChipBBox: ChipBBox = ChipBBox()
 
-    def update_clarity(self, cut_siz, overlap, score, pred):
-        self.ClarityCutSize = cut_siz
-        self.ClarityOverlap = overlap
-        self.ClarityScore = score
-        self.ClarityPreds = pred
+    def update_clarity(self, clarity_out: ClarityOutput):
+        self.ClarityCutSize = clarity_out.cut_siz
+        self.ClarityOverlap = clarity_out.overlap
+        self.ClarityScore = clarity_out.score
+        self.ClarityPreds = clarity_out.pred
 
 
 class ChipBBox(object):
