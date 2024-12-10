@@ -143,7 +143,7 @@ class Run(BaseModel):
 class ProcParam(BaseModel):
     image_process: Dict[str, ProcFile] = {}
     molecular_classify: Dict[str, ProcMolecularFile] = {}
-    run: Run
+    run: Run = None
 
     @staticmethod
     def print_files_info(files: dict, mode: str = 'imageQC'):

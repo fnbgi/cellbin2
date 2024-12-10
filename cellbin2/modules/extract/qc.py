@@ -18,9 +18,9 @@ from cellbin2.contrib.alignment import ChipFeature, RegistrationInput, get_align
 
 def scale_estimate(image_file, param_chip):
     image = cbimread(image_file.file_path)
-    w = image.width / param_chip.width
-    h = image.height / param_chip.height
-    return (w + h) / 2
+    mx = max(image.width, image.height) / max(param_chip.width, param_chip.height)
+    my = min(image.width, image.height) / min(param_chip.width, param_chip.height)
+    return (mx + my) / 2
 
 
 def estimate_fov_size(
@@ -32,7 +32,7 @@ def estimate_fov_size(
     clog.info('Using the image and chip prior size, calculate scale == {}'.format(scale))
     wh = (int(fov_wh[0] * scale), int(fov_wh[1] * scale))
     clog.info('Estimate1 FOV-WH from {} to {}'.format(fov_wh, wh))
-    return wh
+    return wh, scale
 
 
 def detect_chip(
@@ -62,6 +62,7 @@ def run_clarity(
 
 def inference_template(
         cut_siz: Tuple[int, int],
+        est_scale: float,
         image_file: ProcFile,
         param_chip: StereoChip,
         config: Config,
@@ -76,6 +77,7 @@ def inference_template(
         file_path=image_file.file_path,
         stain_type=image_file.tech,
         fov_wh=cut_siz,
+        est_scale = est_scale,
         overlap=overlap)
     return points_info, template_info
 
@@ -128,7 +130,7 @@ def run_qc(
     )
 
     # 估计 & 第一次更新裁图尺寸
-    cut_siz = estimate_fov_size(
+    cut_siz, est_scale = estimate_fov_size(
         image_file=image_file,
         param_chip=param_chip,
         fov_wh=fov_wh
@@ -160,6 +162,7 @@ def run_qc(
     if image_file.registration.trackline:
         points_info, template_info = inference_template(
             cut_siz=cut_siz,
+            est_scale = est_scale,
             image_file=image_file,
             param_chip=param_chip,
             config=config,

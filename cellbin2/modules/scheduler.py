@@ -40,6 +40,8 @@ class Scheduler(object):
         self._ipr = ipr.ImageProcessRecord()
         self._channel_images: Dict[str, Union[ipr.IFChannel, ipr.ImageChannel]] = {}  # ipr.ImageChannel
         self._output_path: str = ''
+
+        self.p_naming: naming.DumpPipelineFileNaming = None
         # self._image_naming: naming.DumpImageFileNaming
         # self._matrix_naming: naming.DumpMatrixFileNaming
 
@@ -151,10 +153,13 @@ class Scheduler(object):
             stain_type: str, param_file: str,
             output_path: str, ipr_path: str,
             matrix_path: str, kit: str):
+
         self._output_path = output_path
+
         # 芯片信息加载
         self.param_chip.parse_info(chip_no)
         self.p_naming = naming.DumpPipelineFileNaming(chip_no=chip_no, save_dir=self._output_path)
+
         # 数据加载
         pp = read_param_file(
             file_path=param_file,
@@ -186,10 +191,10 @@ class Scheduler(object):
                     # TODO: deal with two versions of ipr
                     qc_ = self._channel_images[g_name].QCInfo
                     if hasattr(qc_, 'QcPassFlag'):
-                        self.qc_flag = getattr(qc_, 'QcPassFlag')
+                        qc_flag = getattr(qc_, 'QcPassFlag')
                     else:
-                        self.qc_flag = getattr(qc_, 'QCPassFlag')
-                    if self.qc_flag != 1:  # 现有条件下无法配准
+                        qc_flag = getattr(qc_, 'QCPassFlag')
+                    if qc_flag != 1:  # 现有条件下无法配准
                         clog.warning('Image QC not pass, cannot deal this pipeline')
                         sys.exit(ErrorCode.qcFail.value)
                 # Transform 操作：Transform > segmentation > mask merge & expand
