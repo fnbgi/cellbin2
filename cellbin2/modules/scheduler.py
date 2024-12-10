@@ -18,12 +18,11 @@ from cellbin2.modules import naming, run_state
 from cellbin2.modules.metadata import ProcParam, ProcFile, read_param_file
 from cellbin2.modules.extract.image_extract import ImageFeatureExtract
 from cellbin2.modules.extract.matrix_extract import MatrixFeatureExtract
-from cellbin2.contrib.alignment import AlignMode, registration, RegistrationOutput
-from cellbin2.contrib.alignment.basic import ChipFeature
 from cellbin2.contrib.fast_correct import run_fast_correct
 from cellbin2.utils.pro_monitor import process_decorator
 from cellbin2.utils.common import ErrorCode
 from cellbin2.modules.extract.register import run_register, RegisterInput, RegisterOutput
+from cellbin2.modules.extract.transform import run_transform
 
 
 class Scheduler(object):
@@ -146,46 +145,6 @@ class Scheduler(object):
         # TODO: 这里暂时就默认im_naming1是核分割结果，im_naming2是膜分割结果
         return merged_mask
 
-    def _read_transform(self, image_file: ProcFile):
-        """ 标准化完成对图像位置、尺度及角度的标准放置：位置针对的是固定染色图，尺度及角度针对的是矩阵
-        :param image_file: 待标准化的图文件信息
-        :return:
-        """
-        c_name = image_file.get_group_name(sn=self.param_chip.chip_name)
-        if image_file.channel_align != -1:  # 如果该图是校准图，则先切换到其对齐图上
-            if self._channel_images[c_name].Calibration.CalibrationQCPassFlag:  # 校准通过
-                # 先平移
-                offset = (self._channel_images[c_name].Calibration.Scope.OffsetX,
-                          self._channel_images[c_name].Calibration.Scope.OffsetY)
-            else:  # 校准不通过，不贸然操作
-                offset = (0, 0)
-        else:
-            offset = (0, 0)
-        s = (1., 1.)  # default
-        r = 0.  # default
-        if image_file.tech != TechType.IF:
-            if self.qc_flag == 1:  # 现有条件下无法标准化，保持原样
-                # 获取配准参数
-                if self._channel_images[c_name].QCInfo.TrackCrossQCPassFlag:
-                    s = (1 / self._channel_images[c_name].Register.ScaleX,
-                         1 / self._channel_images[c_name].Register.ScaleY)
-                    r = self._channel_images[c_name].Register.Rotation
-                else:
-                    s = (1 / self._channel_images[c_name].QCInfo.ChipBBox.ScaleX,
-                         1 / self._channel_images[c_name].QCInfo.ChipBBox.ScaleY)
-                    r = self._channel_images[c_name].QCInfo.ChipBBox.Rotation
-        else:
-            reuse_channel = image_file.registration.reuse
-            reuse_g_name = self._files[reuse_channel].get_group_name(sn=self.param_chip.chip_name)
-            if reuse_channel != -1:
-                s = (
-                    1 / self._channel_images[reuse_g_name].Register.ScaleX,
-                    1 / self._channel_images[reuse_g_name].Register.ScaleY
-                )
-                r = self._channel_images[reuse_g_name].Register.Rotation
-
-        return s, r, offset
-
     def run(self, chip_no: str, input_image: str,
             stain_type: str, param_file: str,
             output_path: str, ipr_path: str,
@@ -231,13 +190,13 @@ class Scheduler(object):
                     if self.qc_flag != 1:  # 现有条件下无法配准
                         clog.warning('Image QC not pass, cannot deal this pipeline')
                         sys.exit(ErrorCode.qcFail.value)
-                s, r, offset = self._read_transform(f)
                 # Transform 操作：Transform > segmentation > mask merge & expand
                 cur_f_name = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name,
                     stain_type=g_name,
                     save_dir=self._output_path
                 )
+                cur_c_image = self._channel_images[g_name]
                 ife = ImageFeatureExtract(
                     output_path=output_path,
                     image_file=f,
@@ -246,10 +205,33 @@ class Scheduler(object):
                 )
                 ife.set_chip_param(self.param_chip)
                 ife.set_config(self.config)
-                ife.set_channel_image(self._channel_images[g_name])
+                ife.set_channel_image(cur_c_image)
                 if 1:  # TODO: 先不跳过这一步了
-                    ife.extract4transform(scale=s, rotation=r, offset=offset)
-                    self._channel_images[g_name] = ife.channel_image
+                    # stitch
+                    if not os.path.exists(cur_f_name.stitch_image):
+                        shutil.copy2(f.file_path, cur_f_name.stitch_image)
+
+                    # transform in & out
+                    t_o = run_transform(
+                        file=f,
+                        channel_images=self._channel_images,
+                        param_chip=self.param_chip,
+                        files=self._files,
+                        if_track=f.registration.trackline
+                    )
+                    t_o.transform_image.write(file_path=cur_f_name.transformed_image)
+                    cur_c_image.Stitch.TransformShape = t_o.TransformShape
+                    if f.registration.trackline:
+                        cur_c_image.Stitch.TrackPoint = t_o.TrackPoint
+                        cur_c_image.Stitch.TransformTemplate = t_o.TransformTemplate
+                        cur_c_image.Stitch.TransformTrackPoint = t_o.TransformTrackPoint
+                        # 输出：参数写入ipr、txt、tif
+                        np.savetxt(cur_f_name.transformed_template, cur_c_image.Stitch.TransformTemplate)
+                        np.savetxt(cur_f_name.transformed_track_template,
+                                   cur_c_image.Stitch.TransformTrackPoint)
+                        cur_c_image.Stitch.TransformChipBBox.update(t_o.chip_box_info)
+                    ife.extract4transform()
+                    # self._channel_images[g_name] = ife.channel_image
             else:
                 mfe = MatrixFeatureExtract(
                     output_path=self._output_path,

@@ -22,7 +22,7 @@ from cellbin2.contrib.mask_manager import BestTissueCellMask, MaskManagerInfo
 from cellbin2.contrib.tissue_segmentor import TissueSegInputInfo
 from cellbin2.utils.pro_monitor import process_decorator
 from cellbin2.image import CBImage, cbimread
-from cellbin2.modules.extract.transform import run_transform, TransformInput
+from cellbin2.modules.extract.transform import run_transform
 from cellbin2.utils.common import iPlaceHolder
 
 
@@ -84,36 +84,8 @@ class ImageFeatureExtract(FeatureExtract):
         #     if os.path.exists(img_path):
         #         os.remove(img_path)
 
-    def extract4transform(
-            self,
-            scale: Tuple[float, float],
-            rotation: float,
-            offset: Tuple[float, float] = (0., 0.)
-    ):
-        # stitch
-        if not os.path.exists(self._naming.stitch_image):
-            shutil.copy2(self._image_file.file_path, self._naming.stitch_image)
+    def extract4transform(self,):
 
-        # transform in & out
-        t_i = TransformInput(
-            stitch_image=self._image_file.file_path,
-            image_info=self._channel_image,
-            scale=scale,
-            rotation=rotation,
-            offset=offset,
-            if_track=self._image_file.registration.trackline
-        )
-        t_o = run_transform(t_i)
-        t_o.transform_image.write(file_path=self._naming.transformed_image)
-        self._channel_image.Stitch.TransformShape = t_o.TransformShape
-        if t_i.if_track:
-            self._channel_image.Stitch.TrackPoint = t_o.TrackPoint
-            self._channel_image.Stitch.TransformTemplate = t_o.TransformTemplate
-            self._channel_image.Stitch.TransformTrackPoint = t_o.TransformTrackPoint
-            # 输出：参数写入ipr、txt、tif
-            np.savetxt(self._naming.transformed_template, self._channel_image.Stitch.TransformTemplate)
-            np.savetxt(self._naming.transformed_track_template, self._channel_image.Stitch.TransformTrackPoint)
-            self._channel_image.Stitch.TransformChipBBox.update(t_o.chip_box_info)
 
         # tissue & cell seg
         final_tissue_mask = None
