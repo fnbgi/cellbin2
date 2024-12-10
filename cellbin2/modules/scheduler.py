@@ -16,13 +16,15 @@ from typing import List, Dict, Any, Tuple, Union
 from cellbin2.image import cbimwrite
 from cellbin2.modules import naming, run_state
 from cellbin2.modules.metadata import ProcParam, ProcFile, read_param_file
-from cellbin2.modules.extract.image_extract import ImageFeatureExtract
 from cellbin2.modules.extract.matrix_extract import MatrixFeatureExtract
 from cellbin2.contrib.fast_correct import run_fast_correct
 from cellbin2.utils.pro_monitor import process_decorator
 from cellbin2.utils.common import ErrorCode
-from cellbin2.modules.extract.register import run_register, RegisterInput, RegisterOutput
+from cellbin2.modules.extract.register import run_register, RegisterInput, RegisterOutput, transform_to_register
 from cellbin2.modules.extract.transform import run_transform
+from cellbin2.modules.extract.tissue_seg import run_tissue_seg
+from cellbin2.modules.extract.cell_seg import run_cell_seg
+from cellbin2.contrib.mask_manager import BestTissueCellMask, MaskManagerInfo
 
 
 class Scheduler(object):
@@ -197,41 +199,71 @@ class Scheduler(object):
                     save_dir=self._output_path
                 )
                 cur_c_image = self._channel_images[g_name]
-                ife = ImageFeatureExtract(
-                    output_path=output_path,
-                    image_file=f,
-                    sn=self.param_chip.chip_name,
-                    im_naming=cur_f_name,
+                # stitch
+                if not os.path.exists(cur_f_name.stitch_image):
+                    shutil.copy2(f.file_path, cur_f_name.stitch_image)
+                # transform in & out
+                t_o = run_transform(
+                    file=f,
+                    channel_images=self._channel_images,
+                    param_chip=self.param_chip,
+                    files=self._files,
+                    if_track=f.registration.trackline
                 )
-                ife.set_chip_param(self.param_chip)
-                ife.set_config(self.config)
-                ife.set_channel_image(cur_c_image)
-                if 1:  # TODO: 先不跳过这一步了
-                    # stitch
-                    if not os.path.exists(cur_f_name.stitch_image):
-                        shutil.copy2(f.file_path, cur_f_name.stitch_image)
-
-                    # transform in & out
-                    t_o = run_transform(
-                        file=f,
-                        channel_images=self._channel_images,
-                        param_chip=self.param_chip,
-                        files=self._files,
-                        if_track=f.registration.trackline
+                t_o.transform_image.write(file_path=cur_f_name.transformed_image)
+                cur_c_image.Stitch.TransformShape = t_o.TransformShape
+                if f.registration.trackline:
+                    cur_c_image.Stitch.TrackPoint = t_o.TrackPoint
+                    cur_c_image.Stitch.TransformTemplate = t_o.TransformTemplate
+                    cur_c_image.Stitch.TransformTrackPoint = t_o.TransformTrackPoint
+                    # 输出：参数写入ipr、txt、tif
+                    np.savetxt(cur_f_name.transformed_template, cur_c_image.Stitch.TransformTemplate)
+                    np.savetxt(cur_f_name.transformed_track_template,
+                               cur_c_image.Stitch.TransformTrackPoint)
+                    cur_c_image.Stitch.TransformChipBBox.update(t_o.chip_box_info)
+                final_tissue_mask = None
+                final_cell_mask = None
+                if f.tissue_segmentation:
+                    tissue_mask = run_tissue_seg(
+                        image_file=f,
+                        image_path=cur_f_name.transformed_image,
+                        save_path=cur_f_name.transform_tissue_mask_raw,
+                        config=self.config,
+                        channel_image=cur_c_image
                     )
-                    t_o.transform_image.write(file_path=cur_f_name.transformed_image)
-                    cur_c_image.Stitch.TransformShape = t_o.TransformShape
-                    if f.registration.trackline:
-                        cur_c_image.Stitch.TrackPoint = t_o.TrackPoint
-                        cur_c_image.Stitch.TransformTemplate = t_o.TransformTemplate
-                        cur_c_image.Stitch.TransformTrackPoint = t_o.TransformTrackPoint
-                        # 输出：参数写入ipr、txt、tif
-                        np.savetxt(cur_f_name.transformed_template, cur_c_image.Stitch.TransformTemplate)
-                        np.savetxt(cur_f_name.transformed_track_template,
-                                   cur_c_image.Stitch.TransformTrackPoint)
-                        cur_c_image.Stitch.TransformChipBBox.update(t_o.chip_box_info)
-                    ife.extract4transform()
-                    # self._channel_images[g_name] = ife.channel_image
+                    final_tissue_mask = tissue_mask
+                if f.cell_segmentation:
+                    cell_mask = run_cell_seg(
+                        image_file=f,
+                        image_path=cur_f_name.transformed_image,
+                        save_path=cur_f_name.transform_tissue_mask_raw,
+                        config=self.config,
+                        channel_image=cur_c_image
+                    )
+                    final_cell_mask = cell_mask
+                if f.tissue_segmentation and f.cell_segmentation:
+                    tissue_mask = cbimread(cur_f_name.transform_tissue_mask_raw, only_np=True)
+                    cell_mask = cbimread(cur_f_name.transform_tissue_mask_raw, only_np=True)
+                    input_data = MaskManagerInfo(
+                        tissue_mask=tissue_mask,
+                        cell_mask=cell_mask,
+                        chip_box=cur_c_image.Stitch.TransformChipBBox.get(),
+                        method=1,
+                        stain_type=f.tech
+                    )
+                    btcm = BestTissueCellMask.get_best_tissue_cell_mask(input_data=input_data)
+                    final_tissue_mask = btcm.best_tissue_mask
+                    final_cell_mask = btcm.best_cell_mask
+                if final_cell_mask is not None:
+                    cbimwrite(
+                        output_path=cur_f_name.transform_cell_mask,
+                        files=final_cell_mask
+                    )
+                if final_tissue_mask is not None:
+                    cbimwrite(
+                        output_path=cur_f_name.transform_tissue_mask,
+                        files=final_tissue_mask
+                    )
             else:
                 mfe = MatrixFeatureExtract(
                     output_path=self._output_path,
@@ -265,11 +297,7 @@ class Scheduler(object):
                     stain_type=g_name,
                     save_dir=self._output_path
                 )
-                # info = self._registration(
-                #     image_file=f,
-                #     cur_f_name=cur_f_name,
-                # )
-
+                cur_c_image = self._channel_images[g_name]
                 info: RegisterOutput = run_register(
                     image_file=f,
                     cur_f_name=cur_f_name,
@@ -279,21 +307,16 @@ class Scheduler(object):
                     param_chip=self.param_chip,
                     config=self.config
                 )
-                self._channel_images[g_name].update_registration(info.info)
+                cur_c_image.update_registration(info.info)
                 if info.MatrixTemplate is not None:
-                    self._channel_images[g_name].Register.MatrixTemplate = info.MatrixTemplate
+                    cur_c_image.Register.MatrixTemplate = info.MatrixTemplate
                 if info.gene_chip_box is not None:
-                    self._channel_images[g_name].Register.GeneChipBBox.update(info.gene_chip_box)
-                ife = ImageFeatureExtract(
-                    output_path=output_path,
-                    image_file=f,
-                    sn=self.param_chip.chip_name,
-                    im_naming=cur_f_name,
+                    cur_c_image.Register.GeneChipBBox.update(info.gene_chip_box)
+                transform_to_register(
+                    info=info.info,
+                    cur_f_name=cur_f_name,
+                    cur_c_image=cur_c_image
                 )
-                ife.set_chip_param(self.param_chip)
-                ife.set_config(self.config)
-                ife.set_channel_image(self._channel_images[g_name])
-                ife.transform2regist(info.info)
 
         if flag1 == 0:
             self._dump_ipr(self.p_naming.ipr)

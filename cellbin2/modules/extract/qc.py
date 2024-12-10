@@ -14,7 +14,6 @@ from cellbin2.contrib import clarity
 from cellbin2.contrib import inference
 from cellbin2.contrib.template.point_detector import TrackPointsInfo
 from cellbin2.contrib.alignment import ChipFeature, RegistrationInput, get_alignment_00
-from cellbin2.contrib import calibration
 
 
 def scale_estimate(image_file, param_chip):
