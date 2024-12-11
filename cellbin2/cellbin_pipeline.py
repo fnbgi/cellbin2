@@ -79,30 +79,25 @@ class CellBinPipeline(object):
                                          matrix_path=self._matrix_path,
                                          ipr_path=self._naming.ipr, kit=self._kit)
 
-    def matrix_extract(self):
+    def m_extract(self):
         if self.pp.run.matrix_extract:
-            from cellbin2.modules.extract.matrix_extract import MatrixFeatureExtract
-            from cellbin2.utils.stereo_chip import StereoChip
+            from cellbin2.modules.extract.matrix_extract import extract4matrix
             mcf = self.pp.get_molecular_classify()
             files = self.pp.get_image_files(do_image_qc=False, do_scheduler=True, cheek_exists=True)
-            param_chip = StereoChip(self._chip_mask_file)
             p_naming = naming.DumpPipelineFileNaming(chip_no=self._chip_no, save_dir=self._output_path)
             for idx, m in mcf.items():
                 if m.exp_matrix == -1:
                     continue
                 matrix = files[m.exp_matrix]
-                mfe = MatrixFeatureExtract(
-                    output_path=self._output_path,
+                extract4matrix(
+                    p_naming=p_naming,
                     image_file=matrix,
                     m_naming=naming.DumpMatrixFileNaming(
-                        sn=param_chip.chip_name,
+                        sn=self._chip_no,
                         m_type=matrix.tech.name,
                         save_dir=self._output_path
-                    )
+                    ),
                 )
-                mfe.set_chip_param(param_chip)
-                mfe.set_config(self.config)
-                mfe.extract4matrix(m_naming=p_naming)
 
     def metrics(self, ):
         """ 计算指标 """
@@ -140,7 +135,8 @@ class CellBinPipeline(object):
                 matrix = files[m.exp_matrix]
                 cur_m_type = matrix.tech.name
                 if cur_m_type not in matrix_dict:
-                    cur_m_name = naming.DumpMatrixFileNaming(sn=self._chip_no, m_type=cur_m_type, save_dir=self._output_path)
+                    cur_m_name = naming.DumpMatrixFileNaming(sn=self._chip_no, m_type=cur_m_type,
+                                                             save_dir=self._output_path)
                     cur_m_src_files = metrics.MatrixArray(
                         tissue_bin_matrix=str(cur_m_name.tissue_bin_matrix),
                         cell_bin_matrix=str(cur_m_name.cell_bin_matrix),
@@ -260,6 +256,7 @@ class CellBinPipeline(object):
         self.usr_inp_to_param()
         self.image_quality_control()  # 图像质控
         self.image_analysis()  # 图像分析
+        self.m_extract()  # 矩阵提取
         self.metrics()  # 指标计算
         self.export_report()  # 生成报告
 
@@ -278,6 +275,17 @@ def pipeline(
         if_report,
         weights_root,
 ):
+    """
+        :param weights_root: CNN权重文件本地存储目录路径
+        :param chip_no: 样本芯片号
+        :param input_image: 染色图本地路径
+        :param stain_type: 染色图对应的染色类型
+        :param param_file: 入参文件本地路径
+        :param kit: 测序技术
+        :param output_path: 输出文件本地存储目录路径
+        :param matrix_path: 表达矩阵本地存储路径
+        :return: int(状态码)
+    """
     os.makedirs(output_path, exist_ok=True)
     clog.log2file(output_path)
     clog.info(f"CellBin Version: {cellbin2.__version__}")
@@ -307,17 +315,6 @@ def pipeline(
 
 
 def main(args, para):
-    """
-     :param weights_root: CNN权重文件本地存储目录路径
-     :param chip_no: 样本芯片号
-     :param input_image: 染色图本地路径
-     :param stain_type: 染色图对应的染色类型
-     :param param_file: 入参文件本地路径
-     :param kit: 测序技术
-     :param output_path: 输出文件本地存储目录路径
-     :param matrix_path: 表达矩阵本地存储路径
-     :return: int(状态码)
-     """
     chip_no = args.chip_no
     input_image = args.input_image
     if_image = args.input_image_if

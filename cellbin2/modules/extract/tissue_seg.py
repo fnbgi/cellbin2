@@ -1,4 +1,4 @@
-from typing import List, Any, Tuple, Union
+from typing import Union, Optional
 from pathlib import Path
 
 from cellbin2.image import cbimwrite
@@ -14,7 +14,7 @@ def run_tissue_seg(
         image_path: Path,
         save_path: Path,
         config: Config,
-        channel_image: Union[ipr.ImageChannel, ipr.IFChannel]
+        channel_image: Optional[Union[ipr.ImageChannel, ipr.IFChannel]] = None
 ):
     from cellbin2.contrib.tissue_segmentor import segment4tissue
     tissue_input = TissueSegInputInfo(
@@ -25,9 +25,10 @@ def run_tissue_seg(
     tissue_mask_output = segment4tissue(tissue_input)
     tissue_mask = tissue_mask_output.tissue_mask
     cbimwrite(str(save_path), tissue_mask)
-    channel_image.TissueSeg.TissueSegShape = tissue_mask.shape
-    # channel_image.TissueSeg.TissueSegScore =
-    bmr = RLEncode()
-    t_mask_encode = bmr.encode(tissue_mask)
-    channel_image.TissueSeg.TissueMask = t_mask_encode
+    if channel_image is not None:
+        channel_image.TissueSeg.TissueSegShape = tissue_mask.shape
+        # channel_image.TissueSeg.TissueSegScore =
+        bmr = RLEncode()
+        t_mask_encode = bmr.encode(tissue_mask)
+        channel_image.TissueSeg.TissueMask = t_mask_encode
     return tissue_mask

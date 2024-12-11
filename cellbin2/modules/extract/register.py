@@ -8,7 +8,7 @@ from cellbin2.contrib.alignment import registration, RegistrationOutput
 from cellbin2.utils.ipr import IFChannel, ImageChannel
 from cellbin2.utils import clog
 from cellbin2.contrib.alignment.basic import ChipFeature
-from cellbin2.modules.extract.matrix_extract import MatrixFeatureExtract
+from cellbin2.modules.extract.matrix_extract import extract4stitched
 from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.utils.config import Config
 from cellbin2.contrib.alignment.basic import transform_points
@@ -106,28 +106,25 @@ def run_register(
         # 静图参数构建
         if fixed.is_matrix:
             # 场景1：静图是矩阵
-            mfe = MatrixFeatureExtract(
-                output_path=output_path,
+            cm = extract4stitched(
                 image_file=fixed,
+                param_chip=param_chip,
                 m_naming=naming.DumpMatrixFileNaming(
                     sn=sn,
                     m_type=fixed.tech.name,
                     save_dir=output_path
-                )
+                ),
+                detect_feature=True
             )
-            mfe.set_chip_param(param_chip)
-            mfe.set_config(config)
-            mfe.extract4stitched()
-
             fixed_image = ChipFeature(
                 tech_type=fixed.tech,
-                template=mfe.template,
-                chip_box=mfe.chip_box,
+                template=cm.template,
+                chip_box=cm.chip_box,
             )
-            fixed_image.set_mat(mfe.mat)
+            fixed_image.set_mat(cm.heatmap)
             # channel_images[g_name].Register.MatrixTemplate = mfe.template.template_points
             # channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
-            param1.Register.MatrixTemplate = mfe.template.template_points
+            param1.Register.MatrixTemplate = cm.template.template_points
             param1.Register.GeneChipBBox.update(fixed_image.chip_box)
         else:
             raise Exception("Not supported yet")

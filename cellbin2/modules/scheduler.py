@@ -1,4 +1,3 @@
-#  新的流程，位于imageQC后（充分利用各个独立模块计算所得的结果）
 import sys
 import os
 import shutil
@@ -16,15 +15,15 @@ from typing import List, Dict, Any, Tuple, Union
 from cellbin2.image import cbimwrite
 from cellbin2.modules import naming, run_state
 from cellbin2.modules.metadata import ProcParam, ProcFile, read_param_file
-from cellbin2.modules.extract.matrix_extract import MatrixFeatureExtract
 from cellbin2.contrib.fast_correct import run_fast_correct
 from cellbin2.utils.pro_monitor import process_decorator
 from cellbin2.utils.common import ErrorCode
-from cellbin2.modules.extract.register import run_register, RegisterInput, RegisterOutput, transform_to_register
+from cellbin2.modules.extract.register import run_register
 from cellbin2.modules.extract.transform import run_transform
 from cellbin2.modules.extract.tissue_seg import run_tissue_seg
 from cellbin2.modules.extract.cell_seg import run_cell_seg
 from cellbin2.contrib.mask_manager import BestTissueCellMask, MaskManagerInfo
+from cellbin2.modules.extract.matrix_extract import extract4stitched
 
 
 class Scheduler(object):
@@ -259,22 +258,31 @@ class Scheduler(object):
                         files=final_tissue_mask
                     )
             else:
-                mfe = MatrixFeatureExtract(
-                    output_path=self._output_path,
-                    image_file=f,
-                    m_naming=naming.DumpMatrixFileNaming(
+                cur_m_naming = naming.DumpMatrixFileNaming(
                         sn=self.param_chip.chip_name,
                         m_type=f.tech.name,
                         save_dir=self._output_path,
                     )
+                cm = extract4stitched(
+                    image_file=f,
+                    param_chip=self.param_chip,
+                    m_naming=cur_m_naming,
+                    detect_feature=False
                 )
-                mfe.set_chip_param(self.param_chip)
-                mfe.set_config(self.config)
-                mfe.extract4stitched(detect_feature=False)
                 if f.tissue_segmentation:
-                    mfe.tissue_segmentation()
+                    run_tissue_seg(
+                        image_file=f,
+                        image_path=cur_m_naming.heatmap,
+                        save_path=cur_m_naming.tissue_mask,
+                        config=self.config,
+                    )
                 if f.cell_segmentation:
-                    mfe.cell_segmentation()
+                    run_cell_seg(
+                        image_file=f,
+                        image_path=cur_m_naming.heatmap,
+                        save_path=cur_m_naming.cell_mask,
+                        config=self.config,
+                    )
 
         # 这里涉及多张图的配合，因为是配准。所以默认但张图的处理都结束了
         for idx, f in self._files.items():
@@ -291,8 +299,7 @@ class Scheduler(object):
                     stain_type=g_name,
                     save_dir=self._output_path
                 )
-                cur_c_image = self._channel_images[g_name]
-                info: RegisterOutput = run_register(
+                run_register(
                     image_file=f,
                     cur_f_name=cur_f_name,
                     files=self._files,
@@ -300,16 +307,6 @@ class Scheduler(object):
                     output_path=self._output_path,
                     param_chip=self.param_chip,
                     config=self.config
-                )
-                cur_c_image.update_registration(info.info)
-                if info.MatrixTemplate is not None:
-                    cur_c_image.Register.MatrixTemplate = info.MatrixTemplate
-                if info.gene_chip_box is not None:
-                    cur_c_image.Register.GeneChipBBox.update(info.gene_chip_box)
-                transform_to_register(
-                    info=info.info,
-                    cur_f_name=cur_f_name,
-                    cur_c_image=cur_c_image
                 )
 
         if flag1 == 0:

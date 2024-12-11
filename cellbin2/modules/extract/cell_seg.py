@@ -1,4 +1,4 @@
-from typing import List, Any, Tuple, Union
+from typing import Optional, Union
 
 from cellbin2.image import cbimwrite
 from cellbin2.utils.config import Config
@@ -15,7 +15,7 @@ def run_cell_seg(
         image_path: Path,
         save_path: Path,
         config: Config,
-        channel_image: Union[ipr.ImageChannel, ipr.IFChannel]
+        channel_image: Optional[Union[ipr.ImageChannel, ipr.IFChannel]] = None
 ):
     if image_file.tech == TechType.IF:
         from cellbin2.contrib import cellpose_segmentor
@@ -32,9 +32,10 @@ def run_cell_seg(
             gpu=0
         )
     cbimwrite(str(save_path), cell_mask)
-    channel_image.CellSeg.CellSegShape = cell_mask.shape
-    # channel_image.CellSeg.CellSegTrace =
-    bmr = RLEncode()
-    c_mask_encode = bmr.encode(cell_mask)
-    channel_image.CellSeg.CellMask = c_mask_encode
+    if channel_image is not None:
+        channel_image.CellSeg.CellSegShape = cell_mask.shape
+        # channel_image.CellSeg.CellSegTrace =
+        bmr = RLEncode()
+        c_mask_encode = bmr.encode(cell_mask)
+        channel_image.CellSeg.CellMask = c_mask_encode
     return cell_mask
