@@ -86,13 +86,14 @@ def pre_registration(
         image_file: ProcFile,
         param_chip: StereoChip,
         channel_image: Union[ipr.ImageChannel, ipr.IFChannel],
-        output_path
+        output_path: str
 ):
     moving_image = ChipFeature(
         tech_type=image_file.tech,
         chip_box=channel_image.box_info,
         template=channel_image.stitched_template_info,
         point00=param_chip.zero_zero_point,
+        anchor_point = param_chip.zero_zero_chip_point,
         mat=cbimread(image_file.file_path)
     )
     re_input = RegistrationInput(
@@ -103,9 +104,7 @@ def pre_registration(
     )
     re_out = get_alignment_00(re_input=re_input)
 
-    # TODO 临时测试用
-    with open(os.path.join(output_path, 'register_00pt.txt'), 'w') as f:
-        f.writelines(f"offset: {re_out.offset} \n")
+    return re_out
 
 
 def run_qc(
@@ -176,7 +175,7 @@ def run_qc(
     if image_file.chip_detect and param_chip.is_after_230508():  # 满足配准前置的条件
         if chip_info.IsAvailable and template_info.trackcross_qc_pass_flag:
             clog.info('The chip-data meets the pre-registration conditions')
-            pre_registration(
+            pre_out = pre_registration(
                 image_file=image_file,
                 param_chip=param_chip,
                 channel_image=channel_image,

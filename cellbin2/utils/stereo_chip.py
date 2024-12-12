@@ -249,12 +249,12 @@ class StereoChip(object):
                     return False
 
             if self.is_from_S13:
-                if int(self.chip_name[1: 1 + 5]) > s13_min_num:
+                if int(self.chip_name[1: 1 + 5]) >= s13_min_num:
                     return True
                 else:
                     return False
             else:
-                if int(self.chip_name[1: 1 + 5]) > s6_min_num:
+                if int(self.chip_name[1: 1 + 5]) >= s6_min_num:
                     return True
                 else:
                     return False
@@ -297,7 +297,7 @@ if __name__ == '__main__':
     # main()
     curr_path = os.path.dirname(os.path.realpath(__file__))
     sc = StereoChip(chip_mask_file = os.path.join(curr_path, r'../config/chip_mask.json'))
-    sc.parse_info(chip_no = 'B03612A4C6')
+    sc.parse_info(chip_no = 'A03599D1')
     print(1)
     # word = 'ACDEFGHJKLMNP'
     # num = '123456789ACDE'

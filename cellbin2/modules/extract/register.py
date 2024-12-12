@@ -7,7 +7,7 @@ from cellbin2.modules import naming
 from cellbin2.contrib.alignment import registration, RegistrationOutput
 from cellbin2.utils.ipr import IFChannel, ImageChannel
 from cellbin2.utils import clog
-from cellbin2.contrib.alignment.basic import ChipFeature
+from cellbin2.contrib.alignment.basic import ChipFeature, AlignMode
 from cellbin2.modules.extract.matrix_extract import extract4stitched
 from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.utils.config import Config
@@ -83,15 +83,8 @@ def run_register(
         info = channel_images[f_name].get_registration()
         clog.info('Get registration param from ipr')
     else:
-        # TODO 配准前置暂关
-        #  11/22 by lizepeng
-        # if self._channel_images[file_tag].Register.Method == AlignMode.Template00Pt.name:  # 先前做了前置配准
-        #     # 从ipr获取配准参数
-        #     info = self._channel_images[file_tag].get_registration()
-        #     clog.info('Get registration param from ipr')
-        # else:
-        fixed = files[image_file.registration.fixed_image]
-        # 动图参数构建
+
+        """ 动图参数构建 """
         moving_image = ChipFeature(
             tech_type=image_file.tech,
         )
@@ -103,7 +96,8 @@ def run_register(
         if param1.QCInfo.ChipDetectQCPassFlag:
             moving_image.set_chip_box(param1.Stitch.TransformChipBBox.get())
 
-        # 静图参数构建
+        """ 静图参数构建 """
+        fixed = files[image_file.registration.fixed_image]
         if fixed.is_matrix:
             # 场景1：静图是矩阵
             cm = extract4stitched(
@@ -122,29 +116,36 @@ def run_register(
                 chip_box=cm.chip_box,
             )
             fixed_image.set_mat(cm.heatmap)
-            # channel_images[g_name].Register.MatrixTemplate = mfe.template.template_points
-            # channel_images[g_name].Register.GeneChipBBox.update(fixed_image.chip_box)
             param1.Register.MatrixTemplate = cm.template.template_points
             param1.Register.GeneChipBBox.update(fixed_image.chip_box)
         else:
             raise Exception("Not supported yet")
 
-        info, temp_info = registration(
-            moving_image=moving_image,
-            fixed_image=fixed_image,
-            ref=param_chip.fov_template,
-            from_stitched=False,
-            qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag)
-        )
-        # TODO: 那这里temp_info不记录到ipr吗，这里需要改下，外面现在默认info一定存在的
-        if temp_info is not None:
-            temp_info.register_mat.write(
-                os.path.join(output_path, f"{sn}_chip_box_register.tif")
+        """ 配准开始 """
+        if param1.Register.Method == AlignMode.Template00Pt.name:  # 先前做了前置配准
+            # 从ipr获取配准参数
+            pre_info = param1.get_pre_registration()
+            # clog.info('Get registration param from ipr')
+
+
+        else:
+            info, temp_info = registration(
+                moving_image=moving_image,
+                fixed_image=fixed_image,
+                ref=param_chip.fov_template,
+                from_stitched=False,
+                qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag)
             )
-            np.savetxt(
-                os.path.join(output_path, f"{sn}_chip_box_register.txt"),
-                temp_info.offset
-            )
+            # TODO: 那这里temp_info不记录到ipr吗，这里需要改下，外面现在默认info一定存在的
+            if temp_info is not None:
+                temp_info.register_mat.write(
+                    os.path.join(output_path, f"{sn}_chip_box_register.tif")
+                )
+                np.savetxt(
+                    os.path.join(output_path, f"{sn}_chip_box_register.txt"),
+                    temp_info.offset
+                )
+
     param1.update_registration(info)
     transform_to_register(
         info=info,

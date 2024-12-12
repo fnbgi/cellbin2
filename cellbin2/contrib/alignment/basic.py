@@ -57,6 +57,7 @@ class ChipFeature(BaseModel):
     template: TemplateInfo = TemplateInfo()
     point00: Tuple[int, int] = (0, 0)  # xy,相对于芯片而不是矩阵的位置坐标
     mat: Union[str, CBImage] = ''
+    anchor_point: Tuple[int, int] = (0, 0)  # xy, 用于配准前置的辅助锚点
 
     class Config:
         arbitrary_types_allowed = True
@@ -70,6 +71,10 @@ class ChipFeature(BaseModel):
     def set_point00(self, points):
         if isinstance(points, tuple) and len(points) == 2:
             self.point00 = points
+
+    def set_anchor_point(self, points):
+        if isinstance(points, tuple) and len(points) == 2:
+            self.anchor_point = points
 
     # @property
     # def point00(self, ):
@@ -460,14 +465,21 @@ def transform_points(
 
 
 if __name__ == "__main__":
-    src_points = np.array([[0, 0],
-                           [0, 100],
-                           [100, 100],
-                           [100, 0]])
-    dst_points = transform_points(src_points,
-                                  src_shape=(100, 100),
-                                  scale=2,
-                                  rotation=30,
-                                  offset=(10, 10),
-                                  flip=0)
-    print(dst_points)
+    # src_points = np.array([[0, 0],
+    #                        [0, 100],
+    #                        [100, 100],
+    #                        [100, 0]])
+    # dst_points = transform_points(src_points,
+    #                               src_shape=(100, 100),
+    #                               scale=2,
+    #                               rotation=30,
+    #                               offset=(10, 10),
+    #                               flip=0)
+    # print(dst_points)
+
+    _points, _ = transform_points(
+        np.loadtxt(r"D:\02.data\temp\A03599D1\00pt\temp_rot0.txt"),
+        (22346, 24406),
+        rotation = 90
+    )
+    np.savetxt(r"D:\02.data\temp\A03599D1\00pt\temp_rot0__1.txt", _points)

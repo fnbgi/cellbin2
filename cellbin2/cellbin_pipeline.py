@@ -42,11 +42,16 @@ class CellBinPipeline(object):
         self._kit: str = ''
 
         # naming
-        self._naming: naming.DumpPipelineFileNaming
+        self._naming: naming.DumpPipelineFileNaming = None
 
         # 内部需要的
         self.pp: ProcParam
         self.config: Config
+
+        #
+        self._if_report = None
+        self._if_image = None
+        self._protein_matrix_path: str = ''
 
     def image_quality_control(self, ):
         """ 完成图像 QC 流程 """
