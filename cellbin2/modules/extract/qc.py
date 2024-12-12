@@ -181,6 +181,7 @@ def run_qc(
                 channel_image=channel_image,
                 output_path=output_path
             )
+            channel_image.Register.Register00.update(pre_out)
     cpf = True if channel_image.QCInfo.ChipDetectQCPassFlag == 1 else False
     tcf = True if channel_image.QCInfo.TrackCrossQCPassFlag == 1 else False
     channel_image.QCInfo.QCPassFlag = (cpf or tcf)

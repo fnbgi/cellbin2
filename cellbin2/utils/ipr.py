@@ -6,7 +6,7 @@ import numpy as np
 from objtyping import objtyping
 import h5py
 
-from cellbin2.utils import h52dict
+from cellbin2.utils import h52dict, obj2dict
 from cellbin2.utils.common import bPlaceHolder, fPlaceHolder, iPlaceHolder, sPlaceHolder
 from cellbin2.utils import HDF5
 from cellbin2.contrib import param
@@ -15,6 +15,7 @@ from cellbin2.contrib.alignment.basic import ChipBoxInfo
 from cellbin2.contrib.template.inference import TemplateInfo
 from cellbin2.contrib.alignment import RegistrationOutput
 from cellbin2.contrib.clarity import ClarityOutput
+from cellbin2.contrib.alignment import Registration00Output, Registration00Offset
 
 IPR_VERSION = '0.3.0'
 ALLOWED = [int, str, float, bool, list, np.int64, np.int32, np.float64, np.ndarray, np.bool_, tuple]
@@ -155,8 +156,12 @@ class CrossPoints(object):
 
 class Register00OffsetInfo:
     def __init__(self):
-        self.offset = np.ones((1, 4)) * iPlaceHolder
-        self.score: float = fPlaceHolder
+        self.offset: List[float] = [fPlaceHolder, fPlaceHolder]
+        self.dist: float = fPlaceHolder
+
+    def update(self, offset: Registration00Offset):
+        self.offset = offset.offset
+        self.dist = offset.dist
 
 
 class Register00:
@@ -165,6 +170,14 @@ class Register00:
         self.rot90 = Register00OffsetInfo()
         self.rot180 = Register00OffsetInfo()
         self.rot270 = Register00OffsetInfo()
+
+    def update(self, output: Registration00Output):
+        for i, v in iter(output):
+            getattr(self, i).update(v)
+
+    def get(self) -> Registration00Output:
+        info = Registration00Output(**obj2dict(self))
+        return info
 
 
 class Register(BaseIpr):
@@ -448,6 +461,7 @@ def main():
     # ipr, image_dct = read(file_path)
     #
     ifc = ImageChannel()
+    ifc.Register.Register00.get()
     ifc.write("/media/Data/dzh/data/cellbin2/tmp/tmp.ipr", extra={})
     # ifc.box_info()
     print()

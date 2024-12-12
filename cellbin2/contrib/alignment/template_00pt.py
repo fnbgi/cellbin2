@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Dict
 from scipy.spatial.distance import cdist
 
 from cellbin2.contrib.track_align import AlignByTrack
@@ -25,7 +25,7 @@ class Template00PtAlignment(Alignment):
 
         self.fixed_template: np.ndarray = np.array([])
         self.fixed_box: List[float] = [0, 0, 0, 0]
-        self.offset_info: dict = {}
+        self.offset_info: Dict[int, dict] = {}
 
     @staticmethod
     def _rot90_points(

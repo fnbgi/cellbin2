@@ -28,6 +28,21 @@ class RegistrationOutput(BaseModel):
     dst_shape: Tuple[int, int] = Field((0, 0), description='')
 
 
+class Registration00Offset(BaseModel):
+    offset: list
+    dist: float
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class Registration00Output(BaseModel):
+    rot0: Registration00Offset
+    rot90: Registration00Offset
+    rot180: Registration00Offset
+    rot270: Registration00Offset
+
+
 def registration(moving_image: ChipFeature,
                  fixed_image: ChipFeature,
                  ref: Tuple[List, List],
@@ -77,14 +92,23 @@ def registration(moving_image: ChipFeature,
     return cent_info, chip_info
 
 
-def get_alignment_00(re_input: RegistrationInput) -> RegistrationOutput:
+def get_alignment_00(re_input: RegistrationInput) -> Registration00Output:
     res = template_00pt.template_00pt_align(
         moving_image=re_input.moving_image,
         ref=re_input.ref,
         dst_shape=re_input.dst_shape,
         from_stitched=re_input.from_stitched
     )
-    reg_o = RegistrationOutput(**res)
+    new_res = {
+        "rot0": res['offset'][0],
+        "rot90": res['offset'][1],
+        "rot180": res['offset'][2],
+        "rot270": res['offset'][3],
+        "offset": res['offset'],
+        "method": res["method"],
+        "dst_shape": res['dst_shape']
+    }
+    reg_o = Registration00Output(**new_res)
     return reg_o
 
 
