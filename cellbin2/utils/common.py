@@ -50,7 +50,7 @@ class ErrorCode(Enum):
 
 
 def write_e2f():
-    err_md = "../../docs/manage/error.md"
+    err_md = "../../docs/v2/error.md"
     markdown_content = "### Error codes and corresponding meanings\n\n| Error code | meaning |\n| :---: | :---: |\n"
     for error in list(ErrorCode):
         code = error.value

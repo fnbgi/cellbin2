@@ -1,3 +1,5 @@
+mpp effective range: 1.67μm/pixel ~ 0.167μm/pixel
+
 test
 ```shell
 

@@ -98,11 +98,10 @@ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -k "Stereo-CITE T FF V1.1 R"
 ```
 
-### Customization
-To be tested
+more examples, please visit [example.md](docs/v2/example.md)
 
 ## ErrorCode
-refer to [error.md](docs/manage/error.md)
+refer to [error.md](docs/v2/error.md)
 
 
 ## Outputs
