@@ -1,9 +1,10 @@
 import numpy as np
 
 from typing import List, Tuple, Union
+from scipy.spatial.distance import cdist
 
 from cellbin2.contrib.track_align import AlignByTrack
-from cellbin2.contrib.alignment.basic import Alignment, ChipFeature
+from cellbin2.contrib.alignment.basic import Alignment, ChipFeature, transform_points
 from cellbin2.contrib.alignment import AlignMode
 from cellbin2.image import CBImage, cbimread
 
@@ -20,16 +21,52 @@ class Template00PtAlignment(Alignment):
         super(Template00PtAlignment, self).__init__()
         self._reference = ref
         self._register_shape = shape
+        self._rot90_search_flag: bool = True
 
         self.fixed_template: np.ndarray = np.array([])
         self.fixed_box: List[float] = [0, 0, 0, 0]
+        self.offset_info: dict = {}
+
+    @staticmethod
+    def _rot90_points(
+            points: np.ndarray,
+            shape: Union[List, Tuple],
+            ind: int,
+            reference: Tuple[List, List]
+    ) -> np.ndarray:
+        """
+
+        Args:
+            points: array -- n * 4
+            shape: h, w
+            ind: 0 1 2 3 -- rot90
+            reference:
+
+        Returns:
+
+        """
+        ind = ind % 4
+
+        if ind == 0: return points.copy()
+
+        _points, _ = transform_points(
+            points[:, :2], shape, rotation = 90 * ind
+        )
+
+        k = len(reference[0]) - 1
+        if ind == 1: _xy_ind = np.abs(points[:, 2:][:, ::-1] - [k, 0])
+        elif ind == 2: _xy_ind = np.abs(points[:, 2:][:, ::-1] - [k, k])
+        else: _xy_ind = np.abs(points[:, 2:][:, ::-1] - [0, k])
+
+        new_points = np.concatenate([np.array(_points), _xy_ind], axis = 1)
+        return new_points
 
     def registration_image(
             self,
             file: Union[str, np.ndarray, CBImage]
     ) -> CBImage:
         """
-
+        从拼接图开始配
         Args:
             file:
 
@@ -41,11 +78,15 @@ class Template00PtAlignment(Alignment):
         else:
             image = file
 
+        offset_info = sorted(self.offset_info.items(), key = lambda x: x[1]['dist'])[0]
+        rot90 = offset_info[0]
+        offset = offset_info[1]['offset']
+
         result = image.trans_image(
             scale=[1 / self._scale_x, 1 / self._scale_y],
             rotate=self._rotation,
-            rot90=self.rot90,
-            offset=self.offset,
+            rot90=4 - rot90,
+            offset=offset,
             dst_size=self._register_shape,
             flip_ud=True  # 配准前置默认是上下翻转即可对齐
         )
@@ -120,18 +161,42 @@ class Template00PtAlignment(Alignment):
             points = moving_image.template.template_points
             chip_box_points = moving_image.chip_box.chip_box
 
-        _points = points.copy()
-        _points[:, :2] = _points[:, :2] - chip_box_points[0]
+        if self._rot90_search_flag: rot90_ind = [0, 1, 2, 3]
+        else: rot90_ind = [0]
 
-        _points = self.get_lt_zero_point(_points)
-        _points = _points[(_points[:, 0] > 0) & (_points[:, 1] > 0)]
+        for ri in rot90_ind:
 
-        px, py = sorted(
-            _points.tolist(),
-            key=lambda x: np.abs(x[0] - moving_image.anchor_point[0]) + np.abs(x[1] - moving_image.anchor_point[1])
-        )[0] + chip_box_points[0]
+            _points = self._rot90_points(
+                points,
+                moving_image.mat.shape,
+                ind=ri,
+                reference = self._reference
+            )
 
-        self._offset = [moving_image.point00[0] - px, moving_image.point00[1] - py]
+            new_chip_points, _ = transform_points(
+                chip_box_points,
+                moving_image.mat.shape,
+                rotation = 90 * ri
+            )
+
+            new_chip_points = self.check_border(new_chip_points)
+            # _points = points.copy()
+            _points[:, :2] = _points[:, :2] - new_chip_points[0]
+
+            _points = self.get_lt_zero_point(_points)
+            _points = _points[(_points[:, 0] > 0) & (_points[:, 1] > 0)]
+
+            # px, py = sorted(
+            #     _points.tolist(),
+            #     key=lambda x: np.abs(x[0] - moving_image.anchor_point[0]) + np.abs(x[1] - moving_image.anchor_point[1])
+            # )[0] + chip_box_points[0]
+
+            _dist = cdist(_points, np.array([moving_image.anchor_point]))
+            index = np.argmin(_dist)
+            min_dist = _dist[index]
+            px, py = _points[index] + new_chip_points[0]
+            offset = [moving_image.point00[0] - px, moving_image.point00[1] - py]
+            self.offset_info[ri] = {'offset': offset, 'dist': min_dist}
 
     @staticmethod
     def get_lt_zero_point(template_points, x_index=0, y_index=0):
@@ -146,6 +211,39 @@ class Template00PtAlignment(Alignment):
         zero_template_points = template_points[(template_points[:, 3] == y_index) &
                                                (template_points[:, 2] == x_index)][:, :2]
         return zero_template_points
+
+
+def template_00pt_check(
+        moving_image: ChipFeature,
+        fixed_image: ChipFeature,
+        offset_info: dict,
+        fixed_offset: tuple = (0, 0)
+) -> dict:
+    """
+
+    Args:
+        moving_image:
+        fixed_image:
+        offset_info:
+        fixed_offset: 矩阵图的起始 xy 信息
+
+    Returns:
+
+    """
+
+    offset_info = sorted(offset_info.items(), key = lambda x:x[1]['dist'])
+
+    register_info = dict()
+    for rot_ind, _info in offset_info:
+        offset = _info["offset"]
+        rot90 = 4 - rot_ind
+        register_image = moving_image.mat.trans_image(
+            rot90 = rot90,
+            offset = offset - fixed_offset
+        )
+        #TODO
+
+
 
 
 def template_00pt_align(
@@ -168,7 +266,8 @@ def template_00pt_align(
         tpa.align_transformed(moving_image=moving_image)
 
     info = {
-        'offset': tuple(list(tpa.offset)),
+        # 'offset': tuple(list(tpa.offset)),
+        'offset': tpa.offset_info,
         'flip': tpa.hflip,
         'register_score': tpa.score,
         'register_mat': tpa.registration_image(moving_image.mat),
@@ -182,13 +281,25 @@ def template_00pt_align(
 if __name__ == '__main__':
     import os
     from cellbin2.image import cbimread, cbimwrite
-    from cellbin2.contrib.param import TemplateInfo
+    from cellbin2.contrib.template.inference import TemplateInfo
     from cellbin2.utils.common import TechType
     from cellbin2.utils.stereo_chip import StereoChip
     from cellbin2.contrib.chip_detector import ChipParam, detect_chip
 
     template_ref = ([240, 300, 330, 390, 390, 330, 300, 240, 420],
                     [240, 300, 330, 390, 390, 330, 300, 240, 420])
+
+    import pickle
+    with open(r"D:\02.data\temp\A03599D1\00pt\moving.pickle", "rb") as file:
+        moving = pickle.load(file)
+    info = template_00pt_align(moving_image = moving, ref = template_ref, dst_shape = (23520, 20580))
+    # tpa = Template00PtAlignment()
+    # aaa = tpa._rot90_points(
+    #     points=np.loadtxt(r"D:\02.data\temp\A03599D1\cellbin2\A03599D1_Transcriptomics_matrix_template.txt"),
+    #     shape=[23494, 20580],
+    #     ind=3,
+    #     reference = template_ref
+    # )
 
     # 移动图像信息
     moving_image = ChipFeature()

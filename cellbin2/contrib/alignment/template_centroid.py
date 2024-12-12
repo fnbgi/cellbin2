@@ -104,7 +104,6 @@ def centroid(moving_image: ChipFeature,
             'method': AlignMode.TemplateCentroid
         }
 
-
     return info
 
 

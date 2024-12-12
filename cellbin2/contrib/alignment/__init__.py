@@ -1,6 +1,6 @@
 import numpy as np
 from pydantic import BaseModel, Field
-from typing import Tuple, Union, List, Any, Optional
+from typing import Tuple, Union, List, Any, Optional, Dict
 
 from cellbin2.contrib.alignment.basic import AlignMode, ChipFeature, ChipBoxInfo
 from cellbin2.contrib.alignment.chip_box import chip_align
@@ -21,7 +21,8 @@ class RegistrationOutput(BaseModel):
     counter_rot90: int = Field(0, description='')
     flip: bool = Field(True, description='')
     register_score: int = Field(-999, description='')
-    offset: Tuple[float, float] = Field((0., 0.), description='')
+    # offset 多样原因为前置为暂定四个方向
+    offset: Union[Dict, Tuple[float, float]] = Field((0., 0.), description='')
     register_mat: Any = Field(None, description='')
     method: AlignMode = Field(AlignMode.TemplateCentroid, description='')
     dst_shape: Tuple[int, int] = Field((0, 0), description='')
