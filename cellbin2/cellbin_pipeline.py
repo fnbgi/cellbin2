@@ -228,7 +228,7 @@ class CellBinPipeline(object):
                 new_pp.molecular_classify['1'] = protein_m_tp
             new_pp.run.report = True if self._if_report else False
             param_f_p = self._naming.input_json
-            dict2json(new_pp.dict(), json_path=param_f_p)
+            dict2json(new_pp.model_dump(), json_path=param_f_p)
             self._param_file = param_f_p
             self.pp = new_pp
         else:
