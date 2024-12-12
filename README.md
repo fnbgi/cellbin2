@@ -129,6 +129,7 @@ refer to [error.md](docs/v2/error.md)
 
 
 ## Reference
+https://github.com/STOmics/CellBin <br>
 https://github.com/MouseLand/cellpose <br>
 https://github.com/matejak/imreg_dft <br>
 https://github.com/rezazad68/BCDU-Net <br>

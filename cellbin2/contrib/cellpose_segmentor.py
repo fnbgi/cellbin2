@@ -1,8 +1,7 @@
 import os
 import sys
-
 from math import ceil
-import patchify
+import pip
 import tqdm
 import numpy.typing as npt
 import numpy as np
@@ -107,12 +106,16 @@ def main(
     try:
         import cellpose
     except ImportError:
-        clog.error(f"pip install cellpose==3.0.11")
+        pip.main(['install', 'cellpose==3.0.11'])
     import cellpose
     if cellpose.version != '3.0.11':
-        raise Exception("pip install cellpose==3.0.11")
-
+        pip.main(['install', 'cellpose==3.0.11'])
+    try:
+        import patchify
+    except ImportError:
+        pip.main(['install', 'patchify==0.2.3'])
     from cellpose import models
+    import patchify
 
     overlap = photo_size - photo_step
     if (overlap % 2) == 1:
