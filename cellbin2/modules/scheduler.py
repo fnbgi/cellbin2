@@ -1,9 +1,10 @@
 import sys
 import os
 import shutil
+from pathlib import Path
 
 from cellbin2.utils.config import Config
-from cellbin2.utils.common import TechType
+from cellbin2.utils.common import TechType, FILES_TO_KEEP, ErrorCode
 from cellbin2.utils import clog
 import numpy as np
 from cellbin2.image import cbimread, CBImage
@@ -121,10 +122,11 @@ class Scheduler(object):
         else:
             wh = []
             for idx, f in self._files.items():
-                if not f.is_image: continue
-                # if not os.path.exists(f.file_path):
-                #     clog.warning('Missing file, {}'.format(f.file_path))
-                #     sys.exit(1)  # 缺失文件，非正常退出
+                if not f.is_image:
+                    continue
+                if not os.path.exists(f.file_path):
+                    clog.warning('Missing file, {}'.format(f.file_path))
+                    sys.exit(ErrorCode.missFile)  # 缺失文件，非正常退出
                 image = cbimread(f.file_path)
                 wh.append([image.width, image.height])
 
@@ -151,10 +153,10 @@ class Scheduler(object):
     def run(self, chip_no: str, input_image: str,
             stain_type: str, param_file: str,
             output_path: str, ipr_path: str,
-            matrix_path: str, kit: str):
+            matrix_path: str, kit: str, debug: bool):
 
         self._output_path = output_path
-
+        self.debug = debug
         # 芯片信息加载
         self.param_chip.parse_info(chip_no)
         self.p_naming = naming.DumpPipelineFileNaming(chip_no=chip_no, save_dir=self._output_path)
@@ -170,7 +172,7 @@ class Scheduler(object):
         pp.print_files_info(self._files, mode='Scheduler')
 
         # 数据校验失败则退出
-        flag1 = 0
+        flag1 = self._data_check()
         if flag1 not in [0, 2]:
             return 1
         if flag1 == 0:
@@ -259,10 +261,10 @@ class Scheduler(object):
                     )
             else:
                 cur_m_naming = naming.DumpMatrixFileNaming(
-                        sn=self.param_chip.chip_name,
-                        m_type=f.tech.name,
-                        save_dir=self._output_path,
-                    )
+                    sn=self.param_chip.chip_name,
+                    m_type=f.tech.name,
+                    save_dir=self._output_path,
+                )
                 cm = extract4stitched(
                     image_file=f,
                     param_chip=self.param_chip,
@@ -359,11 +361,56 @@ class Scheduler(object):
                     cbimwrite(final_cell_mask_path, fast_mask)
         if flag1 == 0:
             self._dump_rpi(self.p_naming.rpi)
+        if not self.debug:
+            self.del_files()
+
+    def del_files(self):
+        all_ = []
+        k_ = []
+        remove_ = []
+        for idx, f in self._files.items():
+            g_name = f.get_group_name(sn=self.param_chip.chip_name)
+            if f.is_matrix:
+                f_name = naming.DumpMatrixFileNaming(
+                    sn=self.param_chip.chip_name,
+                    m_type=f.tech.name,
+                    save_dir=self._output_path,
+                )
+            else:
+                f_name = naming.DumpImageFileNaming(
+                    sn=self.param_chip.chip_name,
+                    stain_type=g_name,
+                    save_dir=self._output_path
+                )
+            for p in dir(f_name):
+                att = getattr(f_name, p)
+                pt = f_name.__class__.__dict__.get(p)
+                if isinstance(pt, property) and att.exists():
+                    all_.append(att)
+                    if f.is_matrix:
+                        remove_.append(att)
+                    elif pt not in FILES_TO_KEEP:
+                        remove_.append(att)
+                    else:
+                        k_.append(att)
+        for p_p in dir(self.p_naming):
+            p_att = getattr(self.p_naming, p_p)
+            p_pt = self.p_naming.__class__.__dict__.get(p_p)
+            if isinstance(p_pt, property) and p_att.exists():
+                all_.append(p_att)
+                if p_pt not in FILES_TO_KEEP:
+                    remove_.append(p_att)
+                else:
+                    k_.append(p_att)
+        for f in os.listdir(self._output_path):
+            path = os.path.join(self._output_path, f)
+            if Path(path) in remove_:
+                os.remove(path)
 
 
 def scheduler_pipeline(weights_root: str, chip_no: str, input_image: str, stain_type: str,
                        param_file: str, output_path: str, matrix_path: str, ipr_path: str,
-                       kit: str):
+                       kit: str, debug: bool = False):
     """
     :param weights_root: CNN权重文件本地存储目录路径
     :param chip_no: 样本芯片号
@@ -387,7 +434,7 @@ def scheduler_pipeline(weights_root: str, chip_no: str, input_image: str, stain_
             param_file=param_file,
             output_path=output_path,
             ipr_path=ipr_path,
-            matrix_path=matrix_path, kit=kit)
+            matrix_path=matrix_path, kit=kit, debug=debug)
 
 
 def main(args, para):

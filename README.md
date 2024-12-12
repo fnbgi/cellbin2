@@ -15,19 +15,77 @@ python install.py
 
 
 ## Tutorials
-### Default
-***This mode will use the default parameters which stored in config/default_param.json***
+
+### Official product
+case 1: 
+Stereo-seq T FF
+DAPI + mIF
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c C04042E3 \ # chip number
--i /media/Data/C04042E3_fov_stitched.tif \ # ssDNA, DAPI, HE data path
--s HE \ # stain type, (ssDNA, DAPI, HE)
--m /media/Data/C04042E3/C04042E3.raw.gef \ # Transcriptomics gef path
--w /media/Data/weights \ # weights save dir
--o /media/Data/C04042E3_demo \  # output dir
--r # if report 
+-c SS200000045_M5 \
+-i /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_fov_stitched.tif \
+-s DAPI \
+-if /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_ATP_IF_fov_stitched.tif,/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_CD31_IF_fov_stitched.tif,/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_NeuN_IF_fov_stitched.tif \
+-m /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5.raw.gef \
+-o /media/Data/dzh/data/cellbin2/test/SS200000045_M5_11 \
+-k "Stereo-seq T FF V1.2"
+```
+case 2: 
+Stereo-seq T FF
+ssDNA
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c SS200000135TL_D1 \
+-i /media/Data/dzh/data/cellbin2/demo_data/product_demo/SS200000135TL_D1/SS200000135TL_D1.tif \
+-s ssDNA \
+-m /media/Data/dzh/data/cellbin2/demo_data/product_demo/SS200000135TL_D1/SS200000135TL_D1.raw.gef \
+-o /media/Data/dzh/data/cellbin2/test/SS200000135TL_D1 \
+-k "Stereo-seq T FF V1.2"
+```
+case 3: 
+Stereo-seq T FF
+H&E
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c C04042E3 \
+-i /media/Data/dzh/data/cellbin2/demo_data/product_demo/C04042E3/C04042E3.tif \
+-s HE \
+-m /media/Data/dzh/data/cellbin2/demo_data/product_demo/C04042E3/C04042E3.raw.gef \
+-o /media/Data/dzh/data/cellbin2/test/C04042E3 \
+-k "Stereo-seq T FF V1.2"
 ```
 
+### Research mode
+case 1:
+Stereo-CITE 
+DAPI + IF + trans gef
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c A02677B5 \
+-i /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5.tif \
+-s DAPI \
+-if /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5_IF.tif \
+-m /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5.raw.gef \
+-o /media/Data/dzh/data/cellbin2/test/A02677B5 \
+-k "Stereo-CITE T FF V1.1 R"
+```
+
+case 2: 
+Stereo-CITE
+DAPI + protein gef
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c A03899A4 \
+-i /media/Data/dzh/data/cellbin2/data/A03899A4/A03899A4_fov_stitched.tif \
+-s DAPI \
+-pr /media/Data/dzh/data/cellbin2/data/A03899A4/A03899A4.protein.tissue.gef \
+-o /media/Data/dzh/data/cellbin2/test/A03899A4 \
+-k "Stereo-CITE T FF V1.1 R"
+```
+
+case 3:
+Stereo-CITE
+DAPI + IF + trans gef + protein gef
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -c A03599D1 \ # chip number
@@ -36,26 +94,16 @@ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -s DAPI \  # stain type，(ssDNA, DAPI, HE)
 -m /media/Data/A03599D1.raw.gef \  # Transcriptomics gef path
 -pr /media/Data/A03599D1.protein.raw.gef \  # protein gef path
--w /media/Data/weights \ # weights save dir
 -o /media/Data/C04042E3_demo \ # output dir
--r  # if report 
+-k "Stereo-CITE T FF V1.1 R"
 ```
 
 ### Customization
-***You can customize parameters in this mode. You can use config/StereoCITE_param.json as an example***
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c \
-A03599D1 \
--s \
-DAPI \
--w \
-/media/Data/data/cellbin2/weights \
--o \
-/media/Data/data/cellbin2/test/A03599D1_demo_3 \
--p \
-/media/code/cellbin2/cellbin2/config/StereoCITE_param.json
-```
+To be tested
+
+## ErrorCode
+refer to [error.md](docs/manage/error.md)
+
 
 ## Outputs
 
@@ -70,38 +118,12 @@ DAPI \
 | CellBin_0.0.1_report.html | CellBin 2.0 report |
 | A03599D1.rpi | Recorded image processing (for visualization) |
 | A03599D1_DAPI_mask.tif | Cell mask on registered image |
-| A03599D1_DAPI_mask_merged.tif | Merged cell mask on registered image (nuclear + cell membrane) |
-| A03599D1_DAPI_mask_raw.tif | Cell raw mask on registered image |
-| A03599D1_DAPI_register.txt | Track template on registered image |
-| A03599D1_DAPI_register_track.txt | Track detect result on registered image |
 | A03599D1_DAPI_regist.tif | Registered image |
-| A03599D1_DAPI_stitch.tif | Stitched image |
-| A03599D1_DAPI_stitch_template.txt | Track template on stitched image |
 | A03599D1_DAPI_tissue_cut.tif | Tissue mask on registered image |
-| A03599D1_DAPI_tissue_cut_raw.tif | Tissue raw mask on registered image |
-| A03599D1_DAPI_transform_mask.tif | Cell mask on transformed image |
-| A03599D1_DAPI_transform_mask_raw.tif | Cell raw mask on transformed image |
-| A03599D1_DAPI_transform_tissue_cut.tif | Tissue mask on transformed image |
-| A03599D1_DAPI_transform_tissue_cut_raw.tif | Tissue raw mask on transformed image |
-| A03599D1_DAPI_transformed.tif | Transformed image |
-| A03599D1_DAPI_transformed.txt | Track template on transformed image |
-| A03599D1_DAPI_transformed_track.txt | Track detect result on transformed image |
 | A03599D1_IF_mask.tif | Cell mask on registered image |
-| A03599D1_IF_mask_raw.tif | Cell raw mask on registered image |
-| A03599D1_IF_stitch.tif | Stitched image |
+| A03599D1_IF_regist.tif | Registered image |
 | A03599D1_IF_tissue_cut.tif | Tissue mask on registered image |
-| A03599D1_IF_tissue_cut_raw.tif | Tissue raw mask on registered image |
-| A03599D1_IF_transform_mask.tif | Cell mask on transformed image |
-| A03599D1_IF_transform_mask_raw.tif | Cell raw mask on transformed image |
-| A03599D1_IF_transform_tissue_cut.tif | Tissue mask on transformed image |
-| A03599D1_IF_transform_tissue_cut_raw.tif | Tissue raw mask on transformed image |
-| A03599D1_IF_transformed.tif | Transformed image |
-| A03599D1_Transcriptomics.cellbin.gef | CellBin gef |
-| A03599D1_Transcriptomics.adjusted.cellbin.gef | CellBin correct gef |
-| A03599D1_Transcriptomics.tif | Gene matrix in tif format |
-| A03599D1_Transcriptomics_matrix_template.txt | Track template on gene matrix |
-| A03599D1_Transcriptomics.tissue.gef | Tissuebin gef |
-| A03599D1_Transcriptomics_tissue_cut.tif | Tissue mask on gene matrix |
+
 
 ## Other content
 

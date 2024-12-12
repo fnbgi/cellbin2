@@ -1,5 +1,6 @@
 # base
 PyYAML
+aenum
 coloredlogs
 tifffile==2023.2.3
 scikit-image==0.21.0

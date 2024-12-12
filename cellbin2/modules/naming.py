@@ -3,11 +3,13 @@ from typing import Union, Callable
 from cellbin2 import __version__
 
 
+
 def my_property_dec(func: Callable[..., str]) -> property:
     def wrapper(self) -> Path:
         result = func(self)
         result = Path(self.save_dir).joinpath(result)
         return result
+
     wrapper.__doc__ = func.__doc__  # 保留原始函数的文档字符串
     return property(wrapper)
 
@@ -209,66 +211,9 @@ class DumpPipelineFileNaming(object):
         return f"{self._chip_no}_params.json"
 
 
-def write_to_readme():
-    import re
-    from cellbin2.utils.common import TechType
-    sn = 'A03599D1'
-    save_dir = "/demo"
-    im_type = TechType.DAPI
-    im_type2 = TechType.IF
-    m_type = TechType.Transcriptomics
-    readme_p = "../../README.md"
-    with open(readme_p, "r") as f:
-        md_cont = f.read()
-    pfn = DumpPipelineFileNaming(sn, save_dir=save_dir)
-    ifn = DumpImageFileNaming(sn=sn, stain_type=im_type.name, save_dir=save_dir)
-    ifn2 = DumpImageFileNaming(sn=sn, stain_type=im_type2.name, save_dir=save_dir)
-    mfn = DumpMatrixFileNaming(sn=sn, m_type=m_type.name, save_dir=save_dir)
-    all_ = [pfn, ifn, ifn2, mfn]
-    table_md = "| File Name | Description |\n| ---- | ---- |\n"
-    if_key_word = ["regist", "txt", "merged"]
-    m_key_word = ["mask"]
-    for n in all_:
-        attrs = dir(n)
-        for name in attrs:
-            if name.startswith("__") or name.startswith("_") or not isinstance(n.__class__.__dict__.get(name),
-                                                                               property):
-                continue
-            else:
-                # isinstance(name, property)
-                value = getattr(n, name)
-                doc = getattr(n.__class__, name).__doc__
-                value = value.name
-                if isinstance(n, DumpImageFileNaming):
-                    type_ = n.stain_type
-                    if type_ not in [TechType.DAPI.name, TechType.ssDNA, TechType.HE.name] and\
-                            any(kw in value for kw in if_key_word):
-                        continue
-                if isinstance(n, DumpMatrixFileNaming):
-                    if any(kw in value for kw in m_key_word):
-                        continue
-
-                table_md += f"| {value} | {doc} |\n"
-
-    print(table_md)
-    updated_markdown_text = re.sub(r'# Outputs\n[\s\S]*?(?=\n#|\Z)', f'# Outputs\n\n{table_md}\n', md_cont)
-    with open(readme_p, "w") as f:
-        f.write(updated_markdown_text)
-
-
 def main():
-    # difn = DumpImageFileNaming(src_file='A03599D1_DAPI.tif')
-    # print(difn.cell_correct_mask)
-    # difn = DumpImageFileNaming(src_file=r'E:\03.users\liuhuanlin\01.data\cellbin2\output\A03599D1\A03599D1_DAPI.tif')
-    # print(difn.cell_correct_mask)
-    #
-    # difn = DumpMatrixFileNaming(src_file='A03599D1_DAPI.raw.gef')
-    # print(difn.cell_bin_matrix)
-    # difn = DumpMatrixFileNaming(
-    #     src_file=r'E:\03.users\liuhuanlin\01.data\cellbin2\output\A03599D1\A03599D1_DAPI.raw.gef')
-    # print(difn.cell_bin_matrix)
-    dmf = DumpMatrixFileNaming(sn="ddd", m_type="111", save_dir="/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo_2")
-    print()
+    pass
+
 
 if __name__ == '__main__':
-    write_to_readme()
+    main()

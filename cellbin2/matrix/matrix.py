@@ -205,6 +205,8 @@ class cMatrix(object):
 def adjust_mask_shape(gef_path, mask_path):
     m_width, m_height = cMatrix.gef_gef_shape(gef_path)
     mask = cbimread(mask_path)
+    if mask.width == m_width and mask.height == m_height:
+        return mask_path
     mask_adjust = mask.trans_image(offset=[0, 0], dst_size=(m_height, m_width))
     path_no_ext, ext = os.path.splitext(mask_path)
     new_path = path_no_ext + "_adjust" + ".tif"

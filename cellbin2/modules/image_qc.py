@@ -15,6 +15,7 @@ from cellbin2.modules.metadata import read_param_file, ProcFile, ProcParam
 from cellbin2.utils import ipr
 from cellbin2.modules import naming
 from cellbin2.modules.extract.qc import run_qc
+from cellbin2.utils.common import ErrorCode
 
 
 class ImageQC(object):
@@ -60,7 +61,7 @@ class ImageQC(object):
                 wp = self.config.track_points.get_weights_path(stain_type)
                 if wp is None:
                     clog.warning('Points detect get weights path failed')
-                    return 1
+                    sys.exit(ErrorCode.weightDownloadFail)
                 weights.append(os.path.basename(wp))
 
             if f.chip_detect:
@@ -69,14 +70,14 @@ class ImageQC(object):
                 for wp in [wp1, wp2]:
                     if wp is None:
                         clog.warning('Chip detect get weights path failed')
-                        return 1
+                        sys.exit(ErrorCode.weightDownloadFail)
                     weights.append(os.path.basename(wp))
 
             if f.quality_control:
                 wp = self.config.clarity.get_weights_path(stain_type)
                 if wp is None:
                     clog.warning('Clarity get weights path failed')
-                    return 1
+                    sys.exit(ErrorCode.weightDownloadFail)
                 weights.append(os.path.basename(wp))
 
         weights = list(set(weights))
@@ -84,7 +85,7 @@ class ImageQC(object):
         wd = WeightDownloader(save_dir=self.weights_root)
         flag = wd.download_weight_by_names(weight_names=weights)
         if flag != 0:
-            clog.warning('Failed to retrieve the weights file from local or server')
+            sys.exit(ErrorCode.weightDownloadFail)
 
         return flag
 
@@ -98,13 +99,13 @@ class ImageQC(object):
             for idx, f in self._files.items():
                 if not os.path.exists(f.file_path):
                     clog.error('Missing file, {}'.format(f.file_path))
-                    return 1
+                    sys.exit(ErrorCode.missFile)  # 缺失文件，非正常退出
                 image = cbimread(f.file_path)
                 wh[f.tag] = [image.width, image.height]
             s = np.unique(list(wh.values()), axis=0)
             if s.shape[0] != 1:
                 clog.error(f'The sizes of the images are inconsistent: {wh}')
-                return 1
+                sys.exit(ErrorCode.sizeInconsistent)
             clog.info('Images info as (size, channel, depth) == ({}, {}, {})'.format(
                 s[0], image.channel, image.depth))
         return 0
@@ -165,7 +166,7 @@ class ImageQC(object):
 
 
 def image_quality_control(weights_root: str, chip_no: str, input_image: str,
-                          stain_type: str, param_file: str, output_path: str):
+                          stain_type: str, param_file: str, output_path: str, debug: bool=False):
     """
     :param weights_root: CNN权重文件本地存储目录路径
     :param chip_no: 样本芯片号

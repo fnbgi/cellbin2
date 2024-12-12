@@ -41,7 +41,7 @@
         "reuse": -1
       },
       "tissue_segmentation": true,
-      "cell_segmentation": false,
+      "cell_segmentation": true,
       "correct_r": 0,
       "channel_align": 0
     },
@@ -111,7 +111,7 @@
     "qc": true,
     "alignment": true,
     "matrix_extract": true,
-    "report": true,
+    "report": false,
     "annotation": false
   }
 }

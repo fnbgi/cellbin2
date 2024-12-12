@@ -11,7 +11,7 @@ from cellbin2.modules.metadata import read_param_file, ProcParam
 from cellbin2.utils.config import Config
 from cellbin2.modules.metrics import ImageSource
 from cellbin2.utils import dict2json
-from cellbin2.utils.common import KIT_VERSIONS, sPlaceHolder, bPlaceHolder
+from cellbin2.utils.common import KIT_VERSIONS, KIT_VERSIONS_R, sPlaceHolder, bPlaceHolder
 from cellbin2.utils.pro_monitor import process_decorator
 
 CURR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -61,7 +61,8 @@ class CellBinPipeline(object):
                 input_image=self._input_image,
                 stain_type=self._stain_type,
                 param_file=self._param_file,
-                output_path=self._output_path
+                output_path=self._output_path,
+                debug=self._debug,
             )
             if s_code != 0:
                 sys.exit(1)
@@ -77,7 +78,7 @@ class CellBinPipeline(object):
                                          input_image=self._input_image, stain_type=self._stain_type,
                                          param_file=self._param_file, output_path=self._output_path,
                                          matrix_path=self._matrix_path,
-                                         ipr_path=self._naming.ipr, kit=self._kit)
+                                         ipr_path=self._naming.ipr, kit=self._kit, debug=self._debug)
 
     def m_extract(self):
         if self.pp.run.matrix_extract:
@@ -165,10 +166,10 @@ class CellBinPipeline(object):
         if self._param_file is None:
             if self._input_image is None:
                 raise Exception(f"the input image can not be empty if param file is not provided")
-            if self._kit is None:
-                param_file = DEFAULT_PARAM_FILE
+            tech, version = self._kit.split("V")
+            if self._kit.endswith("R"):
+                param_file = os.path.join(CONFIG_PATH, tech.strip(" ") + " R" + ".json")
             else:
-                tech, version = self._kit.split("V")
                 param_file = os.path.join(CONFIG_PATH, tech.strip(" ") + ".json")
             pp = read_param_file(file_path=param_file, cfg=self.config)
             new_pp = ProcParam(run=pp.run)
@@ -238,7 +239,7 @@ class CellBinPipeline(object):
 
     def run(self, chip_no: str, input_image: str, if_image: str,
             stain_type: str, param_file: str,
-            output_path: str, matrix_path: str, protein_matrix_path: str, kit: str, if_report):
+            output_path: str, matrix_path: str, protein_matrix_path: str, kit: str, if_report: bool, debug: bool):
         """ 全分析流程 """
         self._chip_no = chip_no
         self._input_image = input_image
@@ -250,6 +251,7 @@ class CellBinPipeline(object):
         self._protein_matrix_path = protein_matrix_path
         self._kit = kit
         self._if_report = if_report
+        self._debug = debug
         self._naming = naming.DumpPipelineFileNaming(chip_no=chip_no, save_dir=self._output_path)
         # self.pipe_run_state = PipelineRunState(self._chip_no, self._output_path)
 
@@ -274,6 +276,7 @@ def pipeline(
         kit,
         if_report,
         weights_root,
+        debug=False
 ):
     """
         :param weights_root: CNN权重文件本地存储目录路径
@@ -310,7 +313,8 @@ def pipeline(
         matrix_path=matrix_path,
         protein_matrix_path=protein_matrix_path,
         kit=kit,
-        if_report=if_report
+        if_report=if_report,
+        debug=debug
     )
 
 
@@ -326,6 +330,7 @@ def main(args, para):
     kit = args.kit
     weights_root = args.weights_root
     if_report = args.report
+    debug = args.debug
 
     pipeline(
         chip_no,
@@ -339,6 +344,7 @@ def main(args, para):
         kit,
         if_report,
         weights_root,
+        debug=debug
     )
 
 
@@ -375,7 +381,7 @@ if __name__ == '__main__':  # main()
                         help="The path of transcriptomics matrix file.")
     parser.add_argument("-pr", "--protein_matrix_file", action="store", type=str,
                         help="The path of protein matrix file.")
-    parser.add_argument("-k", "--kit", action="store", type=str, choices=KIT_VERSIONS, help="Kit Type")
+    parser.add_argument("-k", "--kit", action="store", type=str, choices=KIT_VERSIONS + KIT_VERSIONS_R, help="Kit Type")
     parser.add_argument("-r", "--report", action="store_true", help="If run report.")
     parser.add_argument("-p", "--param_file", action="store", type=str, help="The path of input param file.")
     parser.add_argument("-w", "--weights_root", action="store", type=str,
