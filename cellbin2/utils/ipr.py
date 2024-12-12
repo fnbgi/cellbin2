@@ -155,8 +155,8 @@ class CrossPoints(object):
 
 class Register00OffsetInfo:
     def __init__(self):
-        self.offset = np.array([0])
-        self.score: float = 0.1
+        self.offset = np.ones((1, 4)) * iPlaceHolder
+        self.score: float = fPlaceHolder
 
 
 class Register00:
