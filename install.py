@@ -4,7 +4,7 @@ cuda_v = None
 if len(sys.argv) > 1:
     cuda_v = sys.argv[1]
 
-# subprocess.call(["conda", "install", "--channel", "conda-forge", "pyvips"])
+subprocess.call(["conda", "install", "--channel", "conda-forge", "pyvips"])
 
 with open('requirements.txt') as f:
     lines = f.readlines()
@@ -15,5 +15,5 @@ with open('requirements.txt') as f:
                 if int(cuda_v) == 12:
                     package_name = package_name.replace("1.15.1", "1.19.0")
             print(f"Installing {package_name}")
-            # subprocess.call(["pip", "install", package_name])
+            subprocess.call(["pip", "install", package_name])
 
