@@ -145,12 +145,26 @@ class CrossPoints(object):
     def stack_points(self, ):
         points = np.ones([0, 4])
         for _, v in vars(self).items():
-            points = np.concatenate((points, v), axis = 0)
+            points = np.concatenate((points, v), axis=0)
         return points
 
     def clear(self, ):
         for k in vars(self).keys():
             self.__delattr__(k)
+
+
+class Register00OffsetInfo:
+    def __init__(self):
+        self.offset = np.array([0])
+        self.score: float = 0.1
+
+
+class Register00:
+    def __init__(self):
+        self.rot0 = Register00OffsetInfo()
+        self.rot90 = Register00OffsetInfo()
+        self.rot180 = Register00OffsetInfo()
+        self.rot270 = Register00OffsetInfo()
 
 
 class Register(BaseIpr):
@@ -171,6 +185,7 @@ class Register(BaseIpr):
         self.RegisterTemplate: np.ndarray = np.array([])
         self.RegisterTrackTemplate: np.ndarray = np.array([])
         self.GeneChipBBox = ChipBBox()
+        self.Register00 = Register00()
 
 
 class TissueSeg(object):
@@ -311,7 +326,6 @@ class ImageChannel(HDF5):
 
     @property
     def stitched_template_info(self, ):
-
         ti = TemplateInfo(template_recall=self.QCInfo.TemplateRecall,
                           template_valid_area=self.QCInfo.TemplateValidArea,
                           trackcross_qc_pass_flag=self.QCInfo.TrackCrossQCPassFlag,
@@ -324,7 +338,6 @@ class ImageChannel(HDF5):
 
     @property
     def transform_template_info(self, ):
-
         ti = TemplateInfo(template_recall=1,
                           template_valid_area=1,
                           trackcross_qc_pass_flag=1,
@@ -430,8 +443,9 @@ def main():
     # file_path = "/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo_1/SS200000135TL_D1.ipr"
     # ipr, image_dct = read(file_path)
     #
-    ifc = IFChannel()
-    ifc.box_info()
+    ifc = ImageChannel()
+    ifc.write("/media/Data/dzh/data/cellbin2/tmp/tmp.ipr", extra={})
+    # ifc.box_info()
     print()
     # dct = read_key_metrics(file_path)
     # write(file_path, ipr, images)
