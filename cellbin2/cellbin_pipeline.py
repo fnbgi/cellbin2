@@ -370,9 +370,9 @@ if __name__ == '__main__':  # main()
     parser.add_argument("-v", "--version", action="version", version=_VERSION_)
     parser.add_argument("-c", "--chip_no", action="store", type=str, required=True,
                         help="The SN of chip.")
-    parser.add_argument("-i", "--input_image", action="store", type=str,
+    parser.add_argument("-i", "--input_image", action="store", type=str, required=True,
                         help=f"The path of {{{','.join(SUPPORTED_STAINED_TYPES)}}} input file.")
-    parser.add_argument("-s", "--stain_type", action="store", type=str,
+    parser.add_argument("-s", "--stain_type", action="store", type=str, required=True,
                         choices=SUPPORTED_STAINED_TYPES,
                         help=f"The stain type of input image, choices are {{{','.join(SUPPORTED_STAINED_TYPES)}}}.")
     parser.add_argument("-if", "--input_image_if", action="store", type=str,
@@ -381,7 +381,8 @@ if __name__ == '__main__':  # main()
                         help="The path of transcriptomics matrix file.")
     parser.add_argument("-pr", "--protein_matrix_file", action="store", type=str,
                         help="The path of protein matrix file.")
-    parser.add_argument("-k", "--kit", action="store", type=str, choices=KIT_VERSIONS + KIT_VERSIONS_R, help="Kit Type")
+    parser.add_argument("-k", "--kit", action="store", type=str, required=True,
+                        choices=KIT_VERSIONS + KIT_VERSIONS_R, help="Kit Type")
     parser.add_argument("-r", "--report", action="store_true", help="If run report.")
     parser.add_argument("-p", "--param_file", action="store", type=str, help="The path of input param file.")
     parser.add_argument("-w", "--weights_root", action="store", type=str,

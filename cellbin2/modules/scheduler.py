@@ -126,7 +126,7 @@ class Scheduler(object):
                     continue
                 if not os.path.exists(f.file_path):
                     clog.warning('Missing file, {}'.format(f.file_path))
-                    sys.exit(ErrorCode.missFile)  # 缺失文件，非正常退出
+                    sys.exit(ErrorCode.missFile.value)  # 缺失文件，非正常退出
                 image = cbimread(f.file_path)
                 wh.append([image.width, image.height])
 
@@ -168,7 +168,7 @@ class Scheduler(object):
             out_path=self.p_naming.input_json
         )
 
-        self._files = pp.get_image_files(do_image_qc=False, do_scheduler=True, cheek_exists=True)
+        self._files = pp.get_image_files(do_image_qc=False, do_scheduler=True, cheek_exists=False)
         pp.print_files_info(self._files, mode='Scheduler')
 
         # 数据校验失败则退出

@@ -61,7 +61,7 @@ class ImageQC(object):
                 wp = self.config.track_points.get_weights_path(stain_type)
                 if wp is None:
                     clog.warning('Points detect get weights path failed')
-                    sys.exit(ErrorCode.weightDownloadFail)
+                    sys.exit(ErrorCode.weightDownloadFail.value)
                 weights.append(os.path.basename(wp))
 
             if f.chip_detect:
@@ -70,14 +70,14 @@ class ImageQC(object):
                 for wp in [wp1, wp2]:
                     if wp is None:
                         clog.warning('Chip detect get weights path failed')
-                        sys.exit(ErrorCode.weightDownloadFail)
+                        sys.exit(ErrorCode.weightDownloadFail.value)
                     weights.append(os.path.basename(wp))
 
             if f.quality_control:
                 wp = self.config.clarity.get_weights_path(stain_type)
                 if wp is None:
                     clog.warning('Clarity get weights path failed')
-                    sys.exit(ErrorCode.weightDownloadFail)
+                    sys.exit(ErrorCode.weightDownloadFail.value)
                 weights.append(os.path.basename(wp))
 
         weights = list(set(weights))
@@ -85,7 +85,7 @@ class ImageQC(object):
         wd = WeightDownloader(save_dir=self.weights_root)
         flag = wd.download_weight_by_names(weight_names=weights)
         if flag != 0:
-            sys.exit(ErrorCode.weightDownloadFail)
+            sys.exit(ErrorCode.weightDownloadFail.value)
 
         return flag
 
@@ -99,13 +99,13 @@ class ImageQC(object):
             for idx, f in self._files.items():
                 if not os.path.exists(f.file_path):
                     clog.error('Missing file, {}'.format(f.file_path))
-                    sys.exit(ErrorCode.missFile)  # 缺失文件，非正常退出
+                    sys.exit(ErrorCode.missFile.value)  # 缺失文件，非正常退出
                 image = cbimread(f.file_path)
                 wh[f.tag] = [image.width, image.height]
             s = np.unique(list(wh.values()), axis=0)
             if s.shape[0] != 1:
                 clog.error(f'The sizes of the images are inconsistent: {wh}')
-                sys.exit(ErrorCode.sizeInconsistent)
+                sys.exit(ErrorCode.sizeInconsistent.value)
             clog.info('Images info as (size, channel, depth) == ({}, {}, {})'.format(
                 s[0], image.channel, image.depth))
         return 0
@@ -124,7 +124,7 @@ class ImageQC(object):
         )
 
         # 只加载与ImageQC相关的文件，同时检查该文件是否存在
-        self._files = pp.get_image_files(do_image_qc=True, do_scheduler=False, cheek_exists=True)
+        self._files = pp.get_image_files(do_image_qc=True, do_scheduler=False, cheek_exists=False)
         pp.print_files_info(self._files, mode='imageQC')
 
         # 数据校验失败则退出（尺寸、通道及位深等信息）
