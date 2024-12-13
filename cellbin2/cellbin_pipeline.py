@@ -2,6 +2,9 @@ import os
 import sys
 from copy import deepcopy
 
+CURR_PATH = os.path.dirname(os.path.realpath(__file__))
+CB2_PATH = os.path.dirname(CURR_PATH)
+sys.path.append(CB2_PATH)
 from cellbin2.utils.common import TechType
 from cellbin2.modules import naming
 from cellbin2.utils import clog
@@ -14,7 +17,6 @@ from cellbin2.utils import dict2json
 from cellbin2.utils.common import KIT_VERSIONS, KIT_VERSIONS_R, sPlaceHolder, bPlaceHolder
 from cellbin2.utils.pro_monitor import process_decorator
 
-CURR_PATH = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(CURR_PATH, 'config')
 DEFAULT_WEIGHTS_DIR = os.path.join(CURR_PATH, "weights")
 
@@ -356,7 +358,7 @@ def main(args, para):
 if __name__ == '__main__':  # main()
     import argparse
 
-    _VERSION_ = '2.0'
+    _VERSION_ = '0.1'
     usage_str = f"python {__file__} \n" \
                 f"-c A03599D1 \n" \
                 f"-i /media/Data/dzh/data/cellbin2/demo_data/A03599D1/A03599D1_DAPI_fov_stitched.tif \n" \

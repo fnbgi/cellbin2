@@ -17,6 +17,26 @@ class DNNModuleName(Enum):
     chip_detect = 5
 
 
+def download(local_file, file_url):
+    f_name = os.path.basename(local_file)
+    if not os.path.exists(local_file):
+        try:
+            r = requests.get(file_url, stream=True)
+            total = int(r.headers.get('content-length', 0))
+            with open(local_file, 'wb') as fd, tqdm(
+                    desc='Downloading {}'.format(f_name), total=total,
+                    unit='B', unit_scale=True) as bar:
+                for data in r.iter_content(chunk_size=1024):
+                    siz = fd.write(data)
+                    bar.update(siz)
+        except Exception as e:
+            clog.error('FAILED! (Download {} from remote {})'.format(f_name, file_url))
+            print(e)
+            return 1
+    else:
+        clog.info('{} already exists'.format(f_name))
+
+
 class WeightDownloader(object):
     def __init__(self, save_dir: str, url_file: str = None):
         if url_file:
@@ -39,22 +59,9 @@ class WeightDownloader(object):
 
     def _download(self, weight_name: str, model_url: str):
         weight = os.path.join(self._save_dir, weight_name)
-        if not os.path.exists(weight):
-            try:
-                r = requests.get(model_url, stream=True)
-                total = int(r.headers.get('content-length', 0))
-                with open(os.path.join(self._save_dir, weight_name), 'wb') as fd, tqdm(
-                        desc='Downloading {}'.format(weight_name), total=total,
-                        unit='B', unit_scale=True) as bar:
-                    for data in r.iter_content(chunk_size=1024):
-                        siz = fd.write(data)
-                        bar.update(siz)
-            except Exception as e:
-                clog.error('FAILED! (Download {} from remote {})'.format(weight_name, model_url))
-                print(e)
-                return 1
-        else:
-            clog.info('{} already exists'.format(weight_name))
+        download(
+            local_file=weight, file_url=model_url
+        )
 
         return 0
 
@@ -115,8 +122,5 @@ if __name__ == '__main__':
     wd.download_weight_by_names(['chip_detect_yolov5obb_SSDNA_20241001_pytorch.onnx',
                                  'tissueseg_yolo_SH_20230131_th.onnx'])
 
-
     """
     """
-
-

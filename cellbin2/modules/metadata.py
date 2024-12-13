@@ -169,7 +169,7 @@ class ProcParam(BaseModel):
                         do_scheduler: bool = True,
                         cheek_exists: bool = False) -> Dict[int, ProcFile]:
         images = copy.copy(self.image_process)
-
+        images = {int(idx): image for idx, image in images.items()}
         if do_image_qc:
             images = {
                 idx: image for idx, image in images.items()

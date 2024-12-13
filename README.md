@@ -28,8 +28,10 @@ Linux
 ```shell
 git clone https://github.com/STOmics/cellbin2
 conda create --name cellbin2 python=3.8
+cd cellbin2
 python install.py 12  # if your cuda version is 12.x
 python install.py 11  # if your cuda version is 11.x
+python demo.py  # run 3 demos, approximately 30-40 mins on GPU
 ```
 
 
