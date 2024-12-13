@@ -25,6 +25,7 @@ TEST_DATA = [
         "DAPI",  # stain_type (DAPI, HE, ssDNA)
         "SS200000045_M5/SS200000045_M5.raw.gef",  # transcriptomics gef path
         "",  # protein gef path
+        "Stereo-seq T FF V1.2 R"
     ),
     (
         # H&E
@@ -33,7 +34,8 @@ TEST_DATA = [
         "",
         "HE",
         "C04042E3/C04042E3.raw.gef",
-        ""
+        "",
+        "Stereo-seq T FF V1.3 R"
      ),
     (
         # ssDNA
@@ -42,7 +44,8 @@ TEST_DATA = [
         "",
         "ssDNA",
         "SS200000135TL_D1/SS200000135TL_D1.raw.gef",
-        ""
+        "",
+        "Stereo-seq T FF V1.2 R"
     ),
     (
         # DAPI + IF
@@ -52,6 +55,7 @@ TEST_DATA = [
         "DAPI",
         "A03599D1/A03599D1.raw.gef",
         "A03599D1/A03599D1.protein.raw.gef",
+        "Stereo-CITE T FF V1.0 R"
     )
 ]
 
@@ -59,8 +63,8 @@ TEST_DATA = [
 class TestPipelineMain:
 
     # test script mode
-    @pytest.mark.parametrize("sn, im_path, if_path, s_type, trans_gef, p_gef", TEST_DATA)
-    def test_run(self, sn, im_path, if_path, s_type, trans_gef, p_gef):
+    @pytest.mark.parametrize("sn, im_path, if_path, s_type, trans_gef, p_gef, kit_type", TEST_DATA)
+    def test_run(self, sn, im_path, if_path, s_type, trans_gef, p_gef, kit_type):
         print(sn, im_path, if_path, s_type, trans_gef, p_gef)
         git_commit = os.getenv('GITHUB_SHA')
         if git_commit is not None:
@@ -86,7 +90,7 @@ class TestPipelineMain:
                 output_path=cur_out,
                 matrix_path=trans_gef,
                 protein_matrix_path=p_gef,
-                kit="",
+                kit=kit_type,
                 if_report=True,
                 weights_root=WEIGHTS_ROOT,
             )
