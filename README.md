@@ -45,6 +45,8 @@ KIT_VERSIONS = (
     'Stereo-seq N FFPE V1.0',
 )
 ``` 
+***Each product line has the configurations of the product and R&D versions. You can visit [config.md](docs/v2/config.md) to view the detailed configurations.***
+
 ### Official product
 case 1: 
 Stereo-seq T FF
