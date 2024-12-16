@@ -287,27 +287,78 @@ class Fast:
 
 
 @process_decorator("MiB")
-def run_fast_correct(mask, dis=10, process=5):
-    if not isinstance(mask, np.ndarray):
-        mask = cbimread(mask, only_np=True)
+def run_fast_correct(
+        mask_path,
+        distance=10,
+        n_jobs=5
+):
+    """
+    import os
+    save_dir = "/media/Data/dzh/data/fast_correct_test/after"
+    # all black
+    m1 = "/media/Data/dzh/data/single_cell/debug_for_qiuying/result/C03427C3_mask.tif"
+    # roi (1658x 2501)
+    m2 = "/media/Data/dzh/data/cellbin/debug_cell_cor/ssDNA_D02266C2_regist_cellseg_D182_RA1_8_masks.tif"
+    # roi (233, 230)
+    m3 = "/media/Data/dzh/data/single_cell/wq_issue/result/C03433F3_mask.tif"
+
+    # normal data
+    m4 = "/media/Data/dzh/data/cellbin/FF-HE-C-Seg-Upgrade/TEST-all/cellseg_bcdu_H_240823_tf_deploy_test_tc_cls_2/ztron_output/B04372C214_SC_20240925_145336_4.1.0-beta.25.tif"
+
+    # roi (1609, 14957)
+    m5 = "/media/Data/dzh/data/fast_correct_test_data/data/Y00935N4_ssDNA_mask(2).tif"
+
+    # roi (1658, 2051)
+    m6 = "/media/Data/dzh/data/fast_correct_test_data/data/D02266C2_mask.tif"
+    test_data = [m6]
+    for i in test_data:
+        i_no_ext, ext = os.path.splitext(os.path.basename(i))
+        cur_save = os.path.join(save_dir, i_no_ext + "_fast" + ext)
+        mask = run_fast_correct(mask_path=i)
+        tifffile.imwrite(cur_save, mask, compression=True)
+    """
+    if not isinstance(mask_path, np.ndarray):
+        mask_path = cbimread(mask_path, only_np=True)
     f_cor = Fast(
-        mask,
-        dis,
-        process
+        mask_path,
+        distance,
+        n_jobs
     )
     f_cor.process()
     re_mask = f_cor.get_mask_fast()
     return re_mask
 
 
-if __name__ == '__main__':
-    m1 = "/media/Data/dzh/data/single_cell/debug_for_qiuying/result/C03427C3_mask.tif"  # all black
-    m2 = "/media/Data/dzh/data/single_cell/wq_issue/result/C03433F3_mask.tif"
-    m3 = "/media/Data/dzh/data/single_cell/debug_20240511/A03580C4_result/A03580C4_mask.tif"  # all black
+def fast_main():
+    import argparse
+    from cellbin2.image import cbimwrite
+    usage_str = f"python {__file__} \n"
+    parser = argparse.ArgumentParser(
+        description="Fast correct script",
+        usage=usage_str
+    )
+    parser.add_argument("-i", "--input_image", action="store", type=str, required=True,
+                        help="Cell mask path")
+    parser.add_argument("-o", "--output_path", action="store", type=str, required=True,
+                        help="Save path")
+    parser.add_argument("-d", "--distance", action="store", type=int, default=10,
+                        help="Distance (radius)")
+    parser.add_argument("-p", "--process", action="store", type=int, default=10,
+                        help="# of process")
+    (para, args) = parser.parse_known_args()
+    mask_path = para.input_image
+    distance = para.distance
+    process = para.process
+    save_path = para.output_path
 
-    m4 = "/media/Data/dzh/data/single_cell/dapi_mif/rseg_result/B02304A2_mask.tif"  # normal
-    mask = tifffile.imread(m2)
-    a = run_fast_correct(mask)
-    a.process()
-    result = a.get_mask_fast()
-    print(result.sum())
+    f_mask = run_fast_correct(
+        mask_path=mask_path,
+        distance=distance,
+        n_jobs=process
+    )
+    cbimwrite(save_path, files=f_mask)
+
+
+if __name__ == '__main__':
+    fast_main()
+

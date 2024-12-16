@@ -126,9 +126,9 @@ class CellSegmentation:
     def run_fast(cls, mask: npt.NDArray, distance: int, process: int) -> npt.NDArray[np.uint8]:
         if distance > 0:
             fast_mask = run_fast_correct(
-                mask=mask,
-                dis=distance,
-                process=process
+                mask_path=mask,
+                distance=distance,
+                n_jobs=process
             )
             return fast_mask
         else:
