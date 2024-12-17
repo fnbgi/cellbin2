@@ -141,7 +141,7 @@ class CellBinPipeline(object):
                         fp = _get_stitched(files, stain_type=c_name)
                     else:
                         fp = getattr(c_pipeline_name, filed_name)
-                    if not os.path.exists(fp):
+                    if not os.path.exists(str(fp)):
                         fp = ""
                     src_img_dict[c_name][filed_name] = str(fp)
             gene_matrix = pp.get_molecular_classify().items()
