@@ -14,6 +14,7 @@ from cellbin2.contrib import clarity
 from cellbin2.contrib import inference
 from cellbin2.contrib.template.point_detector import TrackPointsInfo
 from cellbin2.contrib.alignment import ChipFeature, RegistrationInput, get_alignment_00
+from cellbin2.contrib.alignment.basic import AlignMode
 
 
 def scale_estimate(image_file, param_chip):
@@ -182,6 +183,7 @@ def run_qc(
                 output_path=output_path
             )
             channel_image.Register.Register00.update(pre_out)
+            channel_image.Register.Method = AlignMode.Template00Pt.name
     cpf = True if channel_image.QCInfo.ChipDetectQCPassFlag == 1 else False
     tcf = True if channel_image.QCInfo.TrackCrossQCPassFlag == 1 else False
     channel_image.QCInfo.QCPassFlag = (cpf or tcf)

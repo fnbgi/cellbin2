@@ -13,6 +13,28 @@ class TemplateCentroid(Alignment):
         super(TemplateCentroid, self).__init__()
         self._reference = ref
 
+    def _mask_process(
+            self,
+            cf: ChipFeature,
+            mask_flag: bool
+    ) -> np.ndarray:
+        """
+
+        Args:
+            cf: ChipFeature
+
+        Returns:
+
+        """
+        if not mask_flag: return cf.mat.image
+
+        if cf.chip_box.IsAvailable:
+            image = self._fill_image(cf.mat.image, cf.chip_box.chip_box)
+        else:
+            image = cf.mat.image
+
+        return image
+
     def align_stitched(self, fixed_image: ChipFeature, moving_image: ChipFeature):
         """
 
@@ -53,12 +75,18 @@ class TemplateCentroid(Alignment):
 
         self.align_transformed(fixed_image, transformed_feature)
 
-    def align_transformed(self, fixed_image: ChipFeature, moving_image: ChipFeature):
+    def align_transformed(
+            self,
+            fixed_image: ChipFeature,
+            moving_image: ChipFeature,
+            mask_flag = False
+    ):
         """
 
         Args:
             fixed_image:
             moving_image:
+            mask_flag: whether or not mask coverage through chip box
 
         Returns:
 
@@ -67,8 +95,10 @@ class TemplateCentroid(Alignment):
         abt = AlignByTrack()
         abt.set_chip_template(chip_template=self._reference)
 
+        mi = self._mask_process(moving_image, mask_flag)
+
         self._offset, self._rot90, score = abt.run(
-            moving_image.mat.image, fixed_image.mat.image,
+            mi, fixed_image.mat.image,
             np.array(fixed_image.template.template_points),
             np.array(moving_image.template.template_points),
             self.hflip,

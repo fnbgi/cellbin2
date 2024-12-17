@@ -101,6 +101,7 @@ def run_transform(
         )
         trans_chip_box_info = ChipBoxInfo()
         trans_chip_box_info.set_chip_box(trans_chip_box)
+        trans_chip_box_info.IsAvailable = image_info.QCInfo.ChipBBox.IsAvailable
         trans_chip_box_info.ScaleX, trans_chip_box_info.ScaleY = 1.0, 1.0
         trans_chip_box_info.Rotation = 0.0
 

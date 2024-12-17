@@ -92,3 +92,9 @@ calibration:
 defaultImage:
   clarity: false
 
+geneticStandards:
+  bin20_thr: -1
+  bin50_thr: -1
+  bin200_thr: -1
+
+

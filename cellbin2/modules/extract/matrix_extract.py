@@ -7,16 +7,19 @@ from cellbin2.modules.metadata import ProcFile
 from cellbin2.modules import naming
 from cellbin2.matrix.matrix import cMatrix
 from cellbin2.utils.stereo_chip import StereoChip
+from cellbin2.utils.config import Config
 
 
 def extract4stitched(
         image_file: ProcFile,
         param_chip: StereoChip,
         m_naming: naming.DumpMatrixFileNaming,
+        config: Config,
         detect_feature: bool = True,
 ):
     cm = cMatrix()
     cm.read(file_path=Path(image_file.file_path))
+    cm.check_standards(config.genetic_standards)
     if detect_feature:
         cm.detect_feature(ref=param_chip.fov_template,
                           chip_size=min(param_chip.chip_specif))

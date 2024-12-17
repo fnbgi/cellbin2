@@ -408,6 +408,32 @@ class Alignment(object):
         return file
 
     @staticmethod
+    def _fill_image(
+            image: np.ndarray,
+            chip_box: np.ndarray
+    ):
+        """
+
+        Args:
+            image:
+            chip_box:
+
+        Returns:
+
+        """
+        contours = list()
+        _temp = np.zeros_like(image, dtype = image.dtype)
+
+        _chip_box = np.int_(chip_box)
+        contours.append(_chip_box.reshape(_chip_box.shape[0], 1, -1))
+        contours = tuple(contours)
+
+        _temp = cv.drawContours(_temp, contours, -1, 1, cv.FILLED)
+        image = image * _temp
+
+        return image
+
+    @staticmethod
     @njit(parallel=True)
     def multiply_sum(a, b):
         """
