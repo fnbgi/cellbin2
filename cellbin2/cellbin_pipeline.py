@@ -395,7 +395,7 @@ if __name__ == '__main__':  # main()
                         help="The path of transcriptomics matrix file.")
     parser.add_argument("-pr", "--protein_matrix_file", action="store", type=str,
                         help="The path of protein matrix file.")
-    parser.add_argument("-k", "--kit", action="store", type=str,
+    parser.add_argument("-k", "--kit", action="store", type=str, default="Stereo-CITE T FF V1.0",
                         choices=KIT_VERSIONS + KIT_VERSIONS_R, help="Kit Type")
     parser.add_argument("-r", "--report", action="store_true", help="If run report.")
     parser.add_argument("-p", "--param_file", action="store", type=str, help="The path of input param file.")
