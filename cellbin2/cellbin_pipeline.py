@@ -110,9 +110,9 @@ class CellBinPipeline(object):
 
     def metrics(self, ):
         """ 计算指标 """
-        def _get_stitched(files: Dict[int, ProcFile], stain_type: str):
+        def _get_stitched(files: Dict[int, ProcFile], g_name: str, sn: str):
             for i, v in files.items():
-                if v.tech_type == stain_type:
+                if v.get_group_name(sn) == g_name:
                     return v.file_path
 
         if self.pp.run.report:
@@ -134,11 +134,11 @@ class CellBinPipeline(object):
                     save_dir=self._output_path
                 )
                 src_img_dict[c_name] = {}
-                for filed_name, filed in ImageSource.__fields__.items():
+                for filed_name, filed in ImageSource.model_fields.items():
                     if filed_name == "cell_correct_mask":
                         fp = getattr(self._naming, f"final_cell_mask")
                     elif filed_name == 'stitch_image':
-                        fp = _get_stitched(files, stain_type=c_name)
+                        fp = _get_stitched(files, g_name=c_name, sn=self._chip_no)
                     else:
                         fp = getattr(c_pipeline_name, filed_name)
                     if not os.path.exists(str(fp)):
