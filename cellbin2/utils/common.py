@@ -37,7 +37,8 @@ FILES_TO_KEEP = (
     naming.DumpPipelineFileNaming.rpi,
     naming.DumpPipelineFileNaming.final_nuclear_mask,
     naming.DumpPipelineFileNaming.final_cell_mask,
-    naming.DumpPipelineFileNaming.final_tissue_mask
+    naming.DumpPipelineFileNaming.final_tissue_mask,
+    naming.DumpPipelineFileNaming.input_json
 )
 
 

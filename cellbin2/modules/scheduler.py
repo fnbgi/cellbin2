@@ -354,9 +354,9 @@ class Scheduler(object):
                 # here, we got final cell mask and final tissue mask
                 if not os.path.exists(final_cell_mask_path):
                     fast_mask = run_fast_correct(
-                        mask=to_fast,
-                        dis=self.config.cell_correct.expand_r,
-                        process=self.config.cell_correct.process
+                        mask_path=to_fast,
+                        distance=self.config.cell_correct.expand_r,
+                        n_jobs=self.config.cell_correct.process
                     )
                     cbimwrite(final_cell_mask_path, fast_mask)
         if flag1 == 0:
