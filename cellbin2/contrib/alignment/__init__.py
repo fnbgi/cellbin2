@@ -5,7 +5,7 @@ from typing import Tuple, Union, List, Any, Optional, Dict
 from cellbin2.contrib.alignment.basic import AlignMode, ChipFeature, ChipBoxInfo
 from cellbin2.contrib.alignment.chip_box import chip_align
 from cellbin2.contrib.alignment.template_centroid import centroid
-from cellbin2.contrib.alignment.template_00pt import template_00pt_align
+from cellbin2.contrib.alignment.template_00pt import template_00pt_align, template_00pt_check
 from cellbin2.utils import clog
 
 
@@ -41,6 +41,27 @@ class Registration00Output(BaseModel):
     rot90: Registration00Offset
     rot180: Registration00Offset
     rot270: Registration00Offset
+
+    def to_dict(self):
+        info_dict = {
+            0: {
+                'offset': self.rot0.offset,
+                'dist': self.rot0.dist
+            },
+            1: {
+                'offset': self.rot90.offset,
+                'dist': self.rot90.dist
+            },
+            2: {
+                'offset': self.rot180.offset,
+                'dist': self.rot180.dist
+            },
+            3: {
+                'offset': self.rot270.offset,
+                'dist': self.rot270.dist
+            }
+        }
+        return info_dict
 
 
 def registration(moving_image: ChipFeature,

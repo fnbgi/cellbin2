@@ -13,6 +13,7 @@ from cellbin2.contrib.alignment.basic import TemplateInfo, ChipBoxInfo
 from cellbin2.image import cbimread, cbimwrite
 from cellbin2.modules import naming
 from cellbin2.utils.cell_shape import f_main
+from pydantic import BaseModel, Field
 
 
 @njit(parallel=True)
@@ -23,6 +24,12 @@ def parse_gef_line(data, img):
     for i in prange(len(data)):
         y, x, c = data[i]["y"], data[i]["x"], data[i]["count"]
         img[y, x] = min(255, c + img[y, x])
+
+
+class GeneticStandards(BaseModel):
+    bin20_thr: int = Field(-1, description="")
+    bin50_thr: int = Field(-1, description="")
+    bin200_thr: int = Field(-1, description="")
 
 
 class cMatrix(object):
@@ -187,6 +194,11 @@ class cMatrix(object):
 
         self._template = detect_cross_points(ref, self._gene_mat)
         self._chip_box = detect_chip_box(self._gene_mat, chip_size)
+
+    def check_standards(self, gs: GeneticStandards):
+        # TODO
+        #  gs
+        pass
 
     @property
     def template(self, ):

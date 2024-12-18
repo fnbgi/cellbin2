@@ -1,4 +1,4 @@
-from aenum import Enum
+from enum import Enum
 from cellbin2.modules import naming
 
 
@@ -43,7 +43,7 @@ FILES_TO_KEEP = (
 
 
 class ErrorCode(Enum):
-    _init_ = 'value __doc__'
+    init = 'value __doc__'
     qcFail = 1, 'image qc failed'
     missFile = 2, 'missing file'
     sizeInconsistent = 3, 'input images are not in the same size'

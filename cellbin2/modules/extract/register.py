@@ -4,7 +4,7 @@ import os
 
 from cellbin2.modules.metadata import ProcFile
 from cellbin2.modules import naming
-from cellbin2.contrib.alignment import registration, RegistrationOutput
+from cellbin2.contrib.alignment import registration, RegistrationOutput, template_00pt_check
 from cellbin2.utils.ipr import IFChannel, ImageChannel
 from cellbin2.utils import clog
 from cellbin2.contrib.alignment.basic import ChipFeature, AlignMode
@@ -108,7 +108,8 @@ def run_register(
                     m_type=fixed.tech.name,
                     save_dir=output_path
                 ),
-                detect_feature=True
+                detect_feature=True,
+                config = config
             )
             fixed_image = ChipFeature(
                 tech_type=fixed.tech,
@@ -124,11 +125,22 @@ def run_register(
         """ 配准开始 """
         if param1.Register.Method == AlignMode.Template00Pt.name:  # 先前做了前置配准
             # 从ipr获取配准参数
-            pre_info = param1.get_pre_registration()
-            # clog.info('Get registration param from ipr')
-
+            pre_info = param1.Register.Register00.get().to_dict()
+            _info = template_00pt_check(
+                moving_image = moving_image,
+                fixed_image = fixed_image,
+                offset_info = pre_info,
+                fixed_offset = (cm.x_start, cm.y_start)
+            )
+            info = RegistrationOutput(**_info)
 
         else:
+            # TODO
+            """
+                目前以下两个配准都做，因QC现在是模板推导和芯片框检测任意一个过了，都会判定QC成功
+                所以下面的选择首先是重心法的配准，其次是芯片框配准
+                这种改动是为了两种配准算法后续相互纠错做准备
+            """
             info, temp_info = registration(
                 moving_image=moving_image,
                 fixed_image=fixed_image,
@@ -136,7 +148,6 @@ def run_register(
                 from_stitched=False,
                 qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag)
             )
-            # TODO: 那这里temp_info不记录到ipr吗，这里需要改下，外面现在默认info一定存在的
             if temp_info is not None:
                 temp_info.register_mat.write(
                     os.path.join(output_path, f"{sn}_chip_box_register.tif")
@@ -145,6 +156,9 @@ def run_register(
                     os.path.join(output_path, f"{sn}_chip_box_register.txt"),
                     temp_info.offset
                 )
+
+            # TODO 需要增加芯片框配准的ipr写入
+            info = info if info is not None else temp_info
 
     param1.update_registration(info)
     transform_to_register(

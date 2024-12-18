@@ -216,6 +216,7 @@ class Scheduler(object):
                     cur_f_name=cur_f_name,
                     if_track=f.registration.trackline
                 )
+
                 final_tissue_mask = None
                 final_cell_mask = None
                 if f.tissue_segmentation:

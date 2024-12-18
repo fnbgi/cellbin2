@@ -7,6 +7,7 @@ from cellbin2.contrib.track_align import AlignByTrack
 from cellbin2.contrib.alignment.basic import Alignment, ChipFeature, transform_points
 from cellbin2.contrib.alignment import AlignMode
 from cellbin2.image import CBImage, cbimread
+from cellbin2.utils import clog
 
 
 class Template00PtAlignment(Alignment):
@@ -217,7 +218,8 @@ def template_00pt_check(
         moving_image: ChipFeature,
         fixed_image: ChipFeature,
         offset_info: dict,
-        fixed_offset: tuple = (0, 0)
+        fixed_offset: tuple = (0, 0),
+        max_length: int = 9996
 ) -> dict:
     """
 
@@ -226,24 +228,52 @@ def template_00pt_check(
         fixed_image:
         offset_info:
         fixed_offset: 矩阵图的起始 xy 信息
+        max_length:
 
     Returns:
 
     """
 
-    offset_info = sorted(offset_info.items(), key = lambda x:x[1]['dist'])
+    offset_info = sorted(offset_info.items(), key = lambda x: x[1]['dist'])
+
+    down_size = max(fixed_image.mat.shape) // max_length
+
+    lu_x, lu_y = map(int, fixed_image.chip_box.chip_box[0] / down_size)
+    rd_x, rd_y = map(int, fixed_image.chip_box.chip_box[2] / down_size)
+    _gene_image = fixed_image.mat.image[::down_size, ::down_size][lu_y: rd_y, lu_x:rd_x]
+
+    mm = moving_image.mat.trans_image(flip_lr = True)
 
     register_info = dict()
     for rot_ind, _info in offset_info:
         offset = _info["offset"]
-        rot90 = 4 - rot_ind
-        register_image = moving_image.mat.trans_image(
-            rot90 = rot90,
-            offset = offset - fixed_offset
+        _offset = (np.array(offset) - np.array(fixed_offset)).tolist()
+        register_image = mm.trans_image(
+            rot90 = rot_ind,
+            offset = _offset,
+            dst_size = fixed_image.mat.shape
         )
-        #TODO
 
+        _register_image = register_image.resize_image(1 / down_size).image
+        _wsi_image = _register_image[lu_y: rd_y, lu_x:rd_x]
 
+        ms = Alignment.multiply_sum(_wsi_image, _gene_image)
+
+        register_info[rot_ind] = {"score": ms, "offset": _offset}
+        clog.info(f"Rot{rot_ind * 90}, Score: {ms}")
+
+    best_info = sorted(register_info.items(), key = lambda x: x[1]["score"], reverse = True)[0]
+
+    check_info = {
+        'offset': best_info[1]["offset"],
+        'flip': True,
+        'register_score': best_info[1]["score"],
+        'counter_rot90': best_info[0],
+        # 'register_mat': tpa.registration_image(moving_image.mat),
+        'method': AlignMode.Template00Pt,
+        'dst_shape': (fixed_image.mat.shape[0], fixed_image.mat.shape[1])
+    }
+    return check_info
 
 
 def template_00pt_align(

@@ -26,32 +26,6 @@ class ChipAlignment(Alignment):
 
         self.max_length = 9996  # 图像降采样最大尺寸
 
-    @staticmethod
-    def _fill_image(
-            image: np.ndarray,
-            chip_box: np.ndarray
-    ):
-        """
-
-        Args:
-            image:
-            chip_box:
-
-        Returns:
-
-        """
-        contours = list()
-        _temp = np.zeros_like(image, dtype = image.dtype)
-
-        _chip_box = np.int_(chip_box)
-        contours.append(_chip_box.reshape(_chip_box.shape[0], 1, -1))
-        contours = tuple(contours)
-
-        _temp = cv.drawContours(_temp, contours, -1, 1, cv.FILLED)
-        image = image * _temp
-
-        return image
-
     def registration_image(self,
                            file: Union[str, np.ndarray, CBImage]):
         """ 对待变换的图像，调用图像处理库按照对齐参数，返回变换后的图 """
