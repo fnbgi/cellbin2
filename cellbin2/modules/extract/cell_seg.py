@@ -33,7 +33,7 @@ def run_cell_seg(
         )
     cbimwrite(str(save_path), cell_mask)
     if channel_image is not None:
-        channel_image.CellSeg.CellSegShape = cell_mask.shape
+        channel_image.CellSeg.CellSegShape = list(cell_mask.shape)
         # channel_image.CellSeg.CellSegTrace =
         bmr = RLEncode()
         c_mask_encode = bmr.encode(cell_mask)

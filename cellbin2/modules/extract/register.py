@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 import numpy as np
 import os
 from pydantic import BaseModel
@@ -23,9 +23,9 @@ class RegistrationParam(BaseModel):
 
 
 def transform_to_register(
-        info: RegistrationOutput,
         cur_f_name: naming.DumpImageFileNaming,
-        cur_c_image: Union[IFChannel, ImageChannel]
+        info: Optional[RegistrationOutput] = None,
+        cur_c_image: Optional[Union[IFChannel, ImageChannel]] = None
 ):
     dct = {
         cur_f_name.transformed_image: cur_f_name.registration_image,
@@ -37,30 +37,36 @@ def transform_to_register(
         cur_f_name.transformed_template: cur_f_name.register_template,
         cur_f_name.transformed_track_template: cur_f_name.register_track_template
     }
-    for src, dst in dct.items():
-        src_path = src
-        dst_path = dst
-        # if os.path.exists(dst_path):
-        #     continue
-        if os.path.exists(src_path):
-            if os.path.splitext(src_path)[1] == ".txt":  # 或其他判断
-                points, _ = transform_points(
-                    src_shape=cur_c_image.Stitch.TransformShape,
-                    points=np.loadtxt(src_path),
-                    rotation=(4 - info.counter_rot90) * 90,
-                    flip=0 if info.flip else -1,
-                    offset=info.offset
-                )
-                np.savetxt(dst_path, points)
-                if dst == cur_f_name.register_template:
-                    cur_c_image.Register.RegisterTemplate = points
-                if dst == cur_f_name.register_track_template:
-                    cur_c_image.Register.RegisterTrackTemplate = points
-            else:
-                dst_image = cbimread(src_path).trans_image(
-                    flip_lr=info.flip, rot90=info.counter_rot90, offset=info.offset,
-                    dst_size=info.dst_shape)
-                cbimwrite(dst_path, dst_image)
+    if info is None and cur_c_image is None:
+        for src, dst in dct.items():
+            if not os.path.exists(src):
+                continue
+            os.rename(src, dst)
+    else:
+        for src, dst in dct.items():
+            src_path = src
+            dst_path = dst
+            # if os.path.exists(dst_path):
+            #     continue
+            if os.path.exists(src_path):
+                if os.path.splitext(src_path)[1] == ".txt":  # 或其他判断
+                    points, _ = transform_points(
+                        src_shape=cur_c_image.Stitch.TransformShape,
+                        points=np.loadtxt(src_path),
+                        rotation=(4 - info.counter_rot90) * 90,
+                        flip=0 if info.flip else -1,
+                        offset=info.offset
+                    )
+                    np.savetxt(dst_path, points)
+                    if dst == cur_f_name.register_template:
+                        cur_c_image.Register.RegisterTemplate = points
+                    if dst == cur_f_name.register_track_template:
+                        cur_c_image.Register.RegisterTrackTemplate = points
+                else:
+                    dst_image = cbimread(src_path).trans_image(
+                        flip_lr=info.flip, rot90=info.counter_rot90, offset=info.offset,
+                        dst_size=info.dst_shape)
+                    cbimwrite(dst_path, dst_image)
 
 
 def run_register(

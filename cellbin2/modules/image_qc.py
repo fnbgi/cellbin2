@@ -162,6 +162,7 @@ class ImageQC(object):
                 self._align_channels(f)
         """ Phase3: 输出 """
         self._dump_ipr(self.p_naming.ipr)
+        clog.info(f"ImageQC finished")
         return 0
 
 

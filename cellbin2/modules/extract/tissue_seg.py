@@ -26,7 +26,7 @@ def run_tissue_seg(
     tissue_mask = tissue_mask_output.tissue_mask
     cbimwrite(str(save_path), tissue_mask)
     if channel_image is not None:
-        channel_image.TissueSeg.TissueSegShape = tissue_mask.shape
+        channel_image.TissueSeg.TissueSegShape = list(tissue_mask.shape)
         # channel_image.TissueSeg.TissueSegScore =
         bmr = RLEncode()
         t_mask_encode = bmr.encode(tissue_mask)

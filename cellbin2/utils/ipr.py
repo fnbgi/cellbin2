@@ -56,7 +56,7 @@ class ImageInfo(BaseIpr):
         self.PixelSizeY: float = fPlaceHolder
         self.QCResultFile: str = sPlaceHolder  # optional
         self.RegisterVersion: str = sPlaceHolder
-        self.RGBScale: np.ndarray = np.array([iPlaceHolder, iPlaceHolder, iPlaceHolder], dtype=np.uint8)
+        self.RGBScale: np.ndarray = np.array([iPlaceHolder, iPlaceHolder, iPlaceHolder])
         self.STOmicsChipSN: str = sPlaceHolder
         self.ScanChannel: str = sPlaceHolder
         self.ScanCols: int = iPlaceHolder
@@ -74,7 +74,7 @@ class QCInfo(BaseIpr):
     def __init__(self):
         self.ClarityPreds: np.ndarray = np.array([])  # add at 2024/10/24, by @dzh
         self.ClarityCounts: str
-        self.ClarityCutSize: int = iPlaceHolder
+        self.ClarityCutSize: List[int, int] = [iPlaceHolder, iPlaceHolder]
         self.ClarityOverlap: int = iPlaceHolder
         self.ClarityScore: int = iPlaceHolder
         self.Experimenter: str = sPlaceHolder
@@ -218,7 +218,7 @@ class TissueSeg(object):
     def __init__(self):
         self.TissueMask: np.ndarray = np.array([], dtype=np.int64)
         self.TissueSegScore: int = 0
-        self.TissueSegShape: np.ndarray = np.array([], dtype=np.int64)
+        self.TissueSegShape: List[int] = []
 
 
 class CellSeg(object):
@@ -470,7 +470,7 @@ def main():
     #
     ifc = ImageChannel()
     ifc.Register.Register00.get()
-    ifc.write("/media/Data/dzh/data/cellbin2/tmp/tmp.ipr", extra={})
+    ifc.write("/media/Data1/user/dengzhonghan/data/cellbin2/random_test/A03599D1_11/tmp.ipr", extra={})
     # ifc.box_info()
     print()
     # dct = read_key_metrics(file_path)

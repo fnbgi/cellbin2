@@ -18,7 +18,7 @@ from cellbin2.utils.pro_monitor import process_decorator
 class MaskManagerInfo(BaseModel):
     tissue_mask: Any = Field(None, description='组织分割mask')
     cell_mask: Any = Field(None, description='细胞分割mask')
-    chip_box: ChipBoxInfo = Field(None, description='芯片框')
+    chip_box: Optional[ChipBoxInfo] = Field(None, description='芯片框')
     stain_type: TechType = Field(None, description='染色类型')
     method: int = Field(None, description='使用方法，0：稳定版，1：研发版')
 

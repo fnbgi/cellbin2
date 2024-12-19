@@ -1,25 +1,25 @@
 import sys
 import os
 import shutil
+from typing import List, Dict, Any, Tuple, Union, Optional
 from pathlib import Path
+
+import numpy as np
 
 from cellbin2.utils.config import Config
 from cellbin2.utils.common import TechType, FILES_TO_KEEP, ErrorCode
 from cellbin2.utils import clog
-import numpy as np
 from cellbin2.image import cbimread, CBImage
 from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.utils import ipr, rpi
-
 from cellbin2.utils.weights_manager import WeightDownloader
-from typing import List, Dict, Any, Tuple, Union
 from cellbin2.image import cbimwrite
 from cellbin2.modules import naming, run_state
 from cellbin2.modules.metadata import ProcParam, ProcFile, read_param_file
 from cellbin2.contrib.fast_correct import run_fast_correct
 from cellbin2.utils.pro_monitor import process_decorator
 from cellbin2.utils.common import ErrorCode
-from cellbin2.modules.extract.register import run_register
+from cellbin2.modules.extract.register import run_register, transform_to_register
 from cellbin2.modules.extract.transform import run_transform
 from cellbin2.modules.extract.tissue_seg import run_tissue_seg
 from cellbin2.modules.extract.cell_seg import run_cell_seg
@@ -142,83 +142,120 @@ class Scheduler(object):
                 return 2
         return 0
 
-    def single_image(self):
+    def run_segmentation(
+            self,
+            f,
+            im_path,
+            ts_raw_save_path,
+            cs_raw_save_path,
+            ts_save_path,
+            cs_save_path,
+            cur_c_image: Optional[Union[ipr.ImageChannel, ipr.IFChannel]] = None
+    ):
+        final_tissue_mask = None
+        final_cell_mask = None
+        if f.tissue_segmentation:
+            tissue_mask = run_tissue_seg(
+                image_file=f,
+                image_path=im_path,
+                save_path=ts_raw_save_path,
+                config=self.config,
+                channel_image=cur_c_image
+            )
+            final_tissue_mask = tissue_mask
+        if f.cell_segmentation:
+            cell_mask = run_cell_seg(
+                image_file=f,
+                image_path=im_path,
+                save_path=cs_raw_save_path,
+                config=self.config,
+                channel_image=cur_c_image
+            )
+            final_cell_mask = cell_mask
+        if f.tissue_segmentation and f.cell_segmentation:
+            tissue_mask = cbimread(ts_raw_save_path, only_np=True)
+            cell_mask = cbimread(cs_raw_save_path, only_np=True)
+            c_box = None
+            if cur_c_image is not None:
+                c_box = cur_c_image.Stitch.TransformChipBBox.get()
+            input_data = MaskManagerInfo(
+                tissue_mask=tissue_mask,
+                cell_mask=cell_mask,
+                chip_box=c_box,
+                method=1,
+                stain_type=f.tech
+            )
+            btcm = BestTissueCellMask.get_best_tissue_cell_mask(input_data=input_data)
+            final_tissue_mask = btcm.best_tissue_mask
+            final_cell_mask = btcm.best_cell_mask
+        if final_cell_mask is not None:
+            cbimwrite(
+                output_path=cs_save_path,
+                files=final_cell_mask
+            )
+        if final_tissue_mask is not None:
+            cbimwrite(
+                output_path=ts_save_path,
+                files=final_tissue_mask
+            )
+
+    def run_single_image(self):
         # 遍历单张图像，执行单张图的模块
         for idx, f in self._files.items():
             clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
             if f.is_image:
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
-                if not f.tech == TechType.IF:
-                    # TODO: deal with two versions of ipr
-                    qc_ = self._channel_images[g_name].QCInfo
-                    if hasattr(qc_, 'QcPassFlag'):
-                        qc_flag = getattr(qc_, 'QcPassFlag')
-                    else:
-                        qc_flag = getattr(qc_, 'QCPassFlag')
-                    if qc_flag != 1:  # 现有条件下无法配准
-                        clog.warning('Image QC not pass, cannot deal this pipeline')
-                        sys.exit(ErrorCode.qcFail.value)
-                # Transform 操作：Transform > segmentation > mask merge & expand
                 cur_f_name = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name,
                     stain_type=g_name,
                     save_dir=self._output_path
                 )
-                cur_c_image = self._channel_images[g_name]
+                cur_c_image = None
                 # stitch
                 shutil.copy2(f.file_path, cur_f_name.stitch_image)
-                # transform in & out
-                run_transform(
-                    file=f,
-                    channel_images=self._channel_images,
-                    param_chip=self.param_chip,
-                    files=self._files,
-                    cur_f_name=cur_f_name,
-                    if_track=f.registration.trackline
-                )
-
-                final_tissue_mask = None
-                final_cell_mask = None
-                if f.tissue_segmentation:
-                    tissue_mask = run_tissue_seg(
-                        image_file=f,
-                        image_path=cur_f_name.transformed_image,
-                        save_path=cur_f_name.transform_tissue_mask_raw,
-                        config=self.config,
-                        channel_image=cur_c_image
+                if self._channel_images is not None and self._ipr is not None:
+                    # 传ipr进来了
+                    if not f.tech == TechType.IF:
+                        # TODO: deal with two versions of ipr
+                        qc_ = self._channel_images[g_name].QCInfo
+                        if hasattr(qc_, 'QcPassFlag'):
+                            qc_flag = getattr(qc_, 'QcPassFlag')
+                        else:
+                            qc_flag = getattr(qc_, 'QCPassFlag')
+                        if qc_flag != 1:  # 现有条件下无法配准
+                            clog.warning('Image QC not pass, cannot deal this pipeline')
+                            sys.exit(ErrorCode.qcFail.value)
+                    # Transform 操作：Transform > segmentation > mask merge & expand
+                    cur_c_image = self._channel_images[g_name]
+                    # transform in & out
+                    run_transform(
+                        file=f,
+                        channel_images=self._channel_images,
+                        param_chip=self.param_chip,
+                        files=self._files,
+                        cur_f_name=cur_f_name,
+                        if_track=f.registration.trackline
                     )
-                    final_tissue_mask = tissue_mask
-                if f.cell_segmentation:
-                    cell_mask = run_cell_seg(
-                        image_file=f,
-                        image_path=cur_f_name.transformed_image,
-                        save_path=cur_f_name.transform_tissue_mask_raw,
-                        config=self.config,
-                        channel_image=cur_c_image
+                    self.run_segmentation(
+                        f=f,
+                        im_path=cur_f_name.transformed_image,
+                        ts_raw_save_path=cur_f_name.transform_tissue_mask_raw,
+                        cs_raw_save_path=cur_f_name.transform_cell_mask_raw,
+                        ts_save_path=cur_f_name.transform_tissue_mask,
+                        cs_save_path=cur_f_name.transform_cell_mask,
+                        cur_c_image=cur_c_image
                     )
-                    final_cell_mask = cell_mask
-                if f.tissue_segmentation and f.cell_segmentation:
-                    tissue_mask = cbimread(cur_f_name.transform_tissue_mask_raw, only_np=True)
-                    cell_mask = cbimread(cur_f_name.transform_tissue_mask_raw, only_np=True)
-                    input_data = MaskManagerInfo(
-                        tissue_mask=tissue_mask,
-                        cell_mask=cell_mask,
-                        chip_box=cur_c_image.Stitch.TransformChipBBox.get(),
-                        method=1,
-                        stain_type=f.tech
-                    )
-                    btcm = BestTissueCellMask.get_best_tissue_cell_mask(input_data=input_data)
-                    final_tissue_mask = btcm.best_tissue_mask
-                    final_cell_mask = btcm.best_cell_mask
-                if final_cell_mask is not None:
-                    cbimwrite(
-                        output_path=cur_f_name.transform_cell_mask,
-                        files=final_cell_mask
-                    )
-                if final_tissue_mask is not None:
-                    cbimwrite(
-                        output_path=cur_f_name.transform_tissue_mask,
-                        files=final_tissue_mask
+                else:
+                    # 没传ipr进来，直接基于输入的图进行分割
+                    shutil.copy2(cur_f_name.stitch_image, cur_f_name.transformed_image)
+                    self.run_segmentation(
+                        f=f,
+                        im_path=cur_f_name.stitch_image,
+                        ts_raw_save_path=cur_f_name.transform_tissue_mask_raw,
+                        cs_raw_save_path=cur_f_name.transform_cell_mask_raw,
+                        ts_save_path=cur_f_name.transform_tissue_mask,
+                        cs_save_path=cur_f_name.transform_cell_mask,
+                        cur_c_image=cur_c_image
                     )
             else:
                 if f.tissue_segmentation or f.cell_segmentation:
@@ -249,34 +286,39 @@ class Scheduler(object):
                             config=self.config,
                         )
 
-    def mul_image(self):
+    def run_mul_image(self):
         # 这里涉及多张图的配合，因为是配准。所以默认但张图的处理都结束了
         for idx, f in self._files.items():
             clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
             if f.is_image:
-                if f.registration.fixed_image == -1 and f.registration.reuse == -1:
-                    continue
-                if f.registration.fixed_image == -1 and self._files[
-                    f.registration.reuse].registration.fixed_image == -1:
-                    continue
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
                 cur_f_name = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name,
                     stain_type=g_name,
                     save_dir=self._output_path
                 )
-                run_register(
-                    image_file=f,
-                    cur_f_name=cur_f_name,
-                    files=self._files,
-                    channel_images=self._channel_images,
-                    output_path=self._output_path,
-                    param_chip=self.param_chip,
-                    config=self.config,
-                    debug=self.debug
-                )
+                if self._channel_images is not None and self._ipr is not None:
+                    if f.registration.fixed_image == -1 and f.registration.reuse == -1:
+                        continue
+                    if f.registration.fixed_image == -1 and self._files[
+                        f.registration.reuse].registration.fixed_image == -1:
+                        continue
+                    run_register(
+                        image_file=f,
+                        cur_f_name=cur_f_name,
+                        files=self._files,
+                        channel_images=self._channel_images,
+                        output_path=self._output_path,
+                        param_chip=self.param_chip,
+                        config=self.config,
+                        debug=self.debug
+                    )
+                else:
+                    transform_to_register(
+                        cur_f_name=cur_f_name
+                    )
 
-    def merge_masks(self):
+    def run_merge_masks(self):
         for idx, m in self.molecular_classify_files.items():
             clog.info('======>  Extract[{}], {}'.format(idx, m))
             picked_mask = m.cell_mask
@@ -356,20 +398,24 @@ class Scheduler(object):
         if flag1 not in [0, 2]:
             return 1
         if flag1 == 0:
-            self._ipr, self._channel_images = ipr.read(ipr_path)
+            if os.path.exists(ipr_path):
+                self._ipr, self._channel_images = ipr.read(ipr_path)
+            else:
+                clog.info(f"No existing ipr founded, assumes qc has not been done before")
+                self._ipr, self._channel_images = None, None
 
         # 模型加载
         flag2 = self._weights_check()
         if flag2 != 0:
             sys.exit(1)
 
-        self.single_image()
-        self.mul_image()
+        self.run_single_image()  # transform->tissue seg->cellseg
+        self.run_mul_image()  # registration between images
 
-        if flag1 == 0:
+        if flag1 == 0 and self._channel_images is not None and self._ipr is not None:
             self._dump_ipr(self.p_naming.ipr)
 
-        self.merge_masks()
+        self.run_merge_masks()  # merge multi masks if needed
 
         if flag1 == 0:
             self._dump_rpi(self.p_naming.rpi)
