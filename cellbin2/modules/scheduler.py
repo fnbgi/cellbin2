@@ -142,39 +142,7 @@ class Scheduler(object):
                 return 2
         return 0
 
-    def run(self, chip_no: str, input_image: str,
-            stain_type: str, param_file: str,
-            output_path: str, ipr_path: str,
-            matrix_path: str, kit: str, debug: bool):
-
-        self._output_path = output_path
-        self.debug = debug
-        # 芯片信息加载
-        self.param_chip.parse_info(chip_no)
-        self.p_naming = naming.DumpPipelineFileNaming(chip_no=chip_no, save_dir=self._output_path)
-
-        # 数据加载
-        pp = read_param_file(
-            file_path=param_file,
-            cfg=self.config,
-            out_path=self.p_naming.input_json
-        )
-
-        self._files = pp.get_image_files(do_image_qc=False, do_scheduler=True, cheek_exists=False)
-        pp.print_files_info(self._files, mode='Scheduler')
-
-        # 数据校验失败则退出
-        flag1 = self._data_check()
-        if flag1 not in [0, 2]:
-            return 1
-        if flag1 == 0:
-            self._ipr, self._channel_images = ipr.read(ipr_path)
-
-        # 模型加载
-        flag2 = self._weights_check()
-        if flag2 != 0:
-            sys.exit(1)
-
+    def single_image(self):
         # 遍历单张图像，执行单张图的模块
         for idx, f in self._files.items():
             clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
@@ -253,32 +221,35 @@ class Scheduler(object):
                         files=final_tissue_mask
                     )
             else:
-                cur_m_naming = naming.DumpMatrixFileNaming(
-                    sn=self.param_chip.chip_name,
-                    m_type=f.tech.name,
-                    save_dir=self._output_path,
-                )
-                cm = extract4stitched(
-                    image_file=f,
-                    param_chip=self.param_chip,
-                    m_naming=cur_m_naming,
-                    detect_feature=False
-                )
-                if f.tissue_segmentation:
-                    run_tissue_seg(
-                        image_file=f,
-                        image_path=cur_m_naming.heatmap,
-                        save_path=cur_m_naming.tissue_mask,
-                        config=self.config,
+                if f.tissue_segmentation or f.cell_segmentation:
+                    cur_m_naming = naming.DumpMatrixFileNaming(
+                        sn=self.param_chip.chip_name,
+                        m_type=f.tech.name,
+                        save_dir=self._output_path,
                     )
-                if f.cell_segmentation:
-                    run_cell_seg(
+                    cm = extract4stitched(
                         image_file=f,
-                        image_path=cur_m_naming.heatmap,
-                        save_path=cur_m_naming.cell_mask,
+                        param_chip=self.param_chip,
+                        m_naming=cur_m_naming,
                         config=self.config,
+                        detect_feature=False
                     )
+                    if f.tissue_segmentation:
+                        run_tissue_seg(
+                            image_file=f,
+                            image_path=cur_m_naming.heatmap,
+                            save_path=cur_m_naming.tissue_mask,
+                            config=self.config,
+                        )
+                    if f.cell_segmentation:
+                        run_cell_seg(
+                            image_file=f,
+                            image_path=cur_m_naming.heatmap,
+                            save_path=cur_m_naming.cell_mask,
+                            config=self.config,
+                        )
 
+    def mul_image(self):
         # 这里涉及多张图的配合，因为是配准。所以默认但张图的处理都结束了
         for idx, f in self._files.items():
             clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
@@ -305,62 +276,101 @@ class Scheduler(object):
                     debug=self.debug
                 )
 
-        if flag1 == 0:
-            self._dump_ipr(self.p_naming.ipr)
-        molecular_classify_files = pp.get_molecular_classify()
-
-        for idx, m in molecular_classify_files.items():
+    def merge_masks(self):
+        for idx, m in self.molecular_classify_files.items():
             clog.info('======>  Extract[{}], {}'.format(idx, m))
             picked_mask = m.cell_mask
             final_nuclear_path = self.p_naming.final_nuclear_mask
             final_t_mask_path = self.p_naming.final_tissue_mask
             final_cell_mask_path = self.p_naming.final_cell_mask
-            if 0 < len(picked_mask) < 3:
-                if len(picked_mask) == 1:  # 就一个mask
-                    im_naming = naming.DumpImageFileNaming(
-                        sn=self.param_chip.chip_name,
-                        stain_type=self._files[picked_mask[0]].get_group_name(sn=self.param_chip.chip_name),
-                        save_dir=self._output_path
-                    )
-                    to_fast = final_nuclear_path
-                else:  # 两个mask，现在默认第一个是核mask，第二个是膜mask
-                    im_naming1 = naming.DumpImageFileNaming(
-                        sn=self.param_chip.chip_name,
-                        stain_type=self._files[picked_mask[0]].get_group_name(sn=self.param_chip.chip_name),
-                        save_dir=self._output_path
-                    )
-                    im_naming2 = naming.DumpImageFileNaming(
-                        sn=self.param_chip.chip_name,
-                        stain_type=self._files[picked_mask[1]].get_group_name(sn=self.param_chip.chip_name),
-                        save_dir=self._output_path
-                    )
-                    if im_naming1.stain_type == TechType.IF.name:
-                        im_naming = im_naming2
-                    else:
-                        im_naming = im_naming1
-                    merged_cell_mask_path = im_naming.cell_mask_merged
-                    if not os.path.exists(merged_cell_mask_path):
-                        from cellbin2.contrib.mask_manager import merge_cell_mask
-                        # TODO: 这里暂时就默认im_naming1是核分割结果，im_naming2是膜分割结果
-                        if not im_naming1.cell_mask.exists() or im_naming2.cell_mask.exists():
-                            continue
-                        mask1 = cbimread(im_naming1.cell_mask, only_np=True)
-                        mask2 = cbimread(im_naming2.cell_mask, only_np=True)
-                        merged_mask = merge_cell_mask(mask1, mask2)
-                        cbimwrite(merged_cell_mask_path, merged_mask)
-                    to_fast = merged_cell_mask_path
-                if im_naming.cell_mask.exists():
-                    shutil.copy2(im_naming.cell_mask, final_nuclear_path)
-                if im_naming.tissue_mask.exists():
-                    shutil.copy2(im_naming.tissue_mask, final_t_mask_path)
-                # here, we got final cell mask and final tissue mask
-                if not os.path.exists(final_cell_mask_path) and to_fast.exists():
-                    fast_mask = run_fast_correct(
-                        mask_path=to_fast,
-                        distance=self.config.cell_correct.expand_r,
-                        n_jobs=self.config.cell_correct.process
-                    )
-                    cbimwrite(final_cell_mask_path, fast_mask)
+            if len(picked_mask) == 1:  # 就一个mask
+                im_naming = naming.DumpImageFileNaming(
+                    sn=self.param_chip.chip_name,
+                    stain_type=self._files[picked_mask[0]].get_group_name(sn=self.param_chip.chip_name),
+                    save_dir=self._output_path
+                )
+                to_fast = final_nuclear_path
+            else:  # 两个mask，现在默认第一个是核mask，第二个是膜mask
+                im_naming1 = naming.DumpImageFileNaming(
+                    sn=self.param_chip.chip_name,
+                    stain_type=self._files[picked_mask[0]].get_group_name(sn=self.param_chip.chip_name),
+                    save_dir=self._output_path
+                )
+                im_naming2 = naming.DumpImageFileNaming(
+                    sn=self.param_chip.chip_name,
+                    stain_type=self._files[picked_mask[1]].get_group_name(sn=self.param_chip.chip_name),
+                    save_dir=self._output_path
+                )
+                if im_naming1.stain_type == TechType.IF.name:
+                    im_naming = im_naming2
+                else:
+                    im_naming = im_naming1
+                merged_cell_mask_path = im_naming.cell_mask_merged
+                if not os.path.exists(merged_cell_mask_path):
+                    from cellbin2.contrib.mask_manager import merge_cell_mask
+                    # TODO: 这里暂时就默认im_naming1是核分割结果，im_naming2是膜分割结果
+                    if not im_naming1.cell_mask.exists() or im_naming2.cell_mask.exists():
+                        continue
+                    mask1 = cbimread(im_naming1.cell_mask, only_np=True)
+                    mask2 = cbimread(im_naming2.cell_mask, only_np=True)
+                    merged_mask = merge_cell_mask(mask1, mask2)
+                    cbimwrite(merged_cell_mask_path, merged_mask)
+                to_fast = merged_cell_mask_path
+            if im_naming.cell_mask.exists():
+                shutil.copy2(im_naming.cell_mask, final_nuclear_path)
+            if im_naming.tissue_mask.exists():
+                shutil.copy2(im_naming.tissue_mask, final_t_mask_path)
+            # here, we got final cell mask and final tissue mask
+            if not os.path.exists(final_cell_mask_path) and to_fast.exists():
+                fast_mask = run_fast_correct(
+                    mask_path=to_fast,
+                    distance=self.config.cell_correct.expand_r,
+                    n_jobs=self.config.cell_correct.process
+                )
+                cbimwrite(final_cell_mask_path, fast_mask)
+
+    def run(self, chip_no: str, input_image: str,
+            stain_type: str, param_file: str,
+            output_path: str, ipr_path: str,
+            matrix_path: str, kit: str, debug: bool):
+
+        self._output_path = output_path
+        self.debug = debug
+        # 芯片信息加载
+        self.param_chip.parse_info(chip_no)
+        self.p_naming = naming.DumpPipelineFileNaming(chip_no=chip_no, save_dir=self._output_path)
+
+        # 数据加载
+        pp = read_param_file(
+            file_path=param_file,
+            cfg=self.config,
+            out_path=self.p_naming.input_json
+        )
+
+        self._files = pp.get_image_files(do_image_qc=False, do_scheduler=True, cheek_exists=False)
+        self.molecular_classify_files = pp.get_molecular_classify()
+        pp.print_files_info(self._files, mode='Scheduler')
+
+        # 数据校验失败则退出
+        flag1 = self._data_check()
+        if flag1 not in [0, 2]:
+            return 1
+        if flag1 == 0:
+            self._ipr, self._channel_images = ipr.read(ipr_path)
+
+        # 模型加载
+        flag2 = self._weights_check()
+        if flag2 != 0:
+            sys.exit(1)
+
+        self.single_image()
+        self.mul_image()
+
+        if flag1 == 0:
+            self._dump_ipr(self.p_naming.ipr)
+
+        self.merge_masks()
+
         if flag1 == 0:
             self._dump_rpi(self.p_naming.rpi)
         if not self.debug:
