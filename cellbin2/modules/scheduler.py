@@ -142,14 +142,6 @@ class Scheduler(object):
                 return 2
         return 0
 
-    def _mask_merge(self, im_naming1: naming.DumpImageFileNaming, im_naming2: naming.DumpImageFileNaming):
-        from cellbin2.contrib.mask_manager import merge_cell_mask
-        mask1 = cbimread(im_naming1.cell_mask, only_np=True)
-        mask2 = cbimread(im_naming2.cell_mask, only_np=True)
-        merged_mask = final_mask = merge_cell_mask(mask1, mask2)
-        # TODO: 这里暂时就默认im_naming1是核分割结果，im_naming2是膜分割结果
-        return merged_mask
-
     def run(self, chip_no: str, input_image: str,
             stain_type: str, param_file: str,
             output_path: str, ipr_path: str,
@@ -309,12 +301,14 @@ class Scheduler(object):
                     channel_images=self._channel_images,
                     output_path=self._output_path,
                     param_chip=self.param_chip,
-                    config=self.config
+                    config=self.config,
+                    debug=self.debug
                 )
 
         if flag1 == 0:
             self._dump_ipr(self.p_naming.ipr)
         molecular_classify_files = pp.get_molecular_classify()
+
         for idx, m in molecular_classify_files.items():
             clog.info('======>  Extract[{}], {}'.format(idx, m))
             picked_mask = m.cell_mask
@@ -325,7 +319,7 @@ class Scheduler(object):
                 if len(picked_mask) == 1:  # 就一个mask
                     im_naming = naming.DumpImageFileNaming(
                         sn=self.param_chip.chip_name,
-                        stain_type=self._files[picked_mask[0]].tech.name,
+                        stain_type=self._files[picked_mask[0]].get_group_name(sn=self.param_chip.chip_name),
                         save_dir=self._output_path
                     )
                     to_fast = final_nuclear_path
@@ -346,14 +340,21 @@ class Scheduler(object):
                         im_naming = im_naming1
                     merged_cell_mask_path = im_naming.cell_mask_merged
                     if not os.path.exists(merged_cell_mask_path):
-                        merged_mask = self._mask_merge(im_naming1=im_naming1, im_naming2=im_naming2)
+                        from cellbin2.contrib.mask_manager import merge_cell_mask
+                        # TODO: 这里暂时就默认im_naming1是核分割结果，im_naming2是膜分割结果
+                        if not im_naming1.cell_mask.exists() or im_naming2.cell_mask.exists():
+                            continue
+                        mask1 = cbimread(im_naming1.cell_mask, only_np=True)
+                        mask2 = cbimread(im_naming2.cell_mask, only_np=True)
+                        merged_mask = merge_cell_mask(mask1, mask2)
                         cbimwrite(merged_cell_mask_path, merged_mask)
                     to_fast = merged_cell_mask_path
-
-                shutil.copy2(im_naming.cell_mask, final_nuclear_path)
-                shutil.copy2(im_naming.tissue_mask, final_t_mask_path)
+                if im_naming.cell_mask.exists():
+                    shutil.copy2(im_naming.cell_mask, final_nuclear_path)
+                if im_naming.tissue_mask.exists():
+                    shutil.copy2(im_naming.tissue_mask, final_t_mask_path)
                 # here, we got final cell mask and final tissue mask
-                if not os.path.exists(final_cell_mask_path):
+                if not os.path.exists(final_cell_mask_path) and to_fast.exists():
                     fast_mask = run_fast_correct(
                         mask_path=to_fast,
                         distance=self.config.cell_correct.expand_r,

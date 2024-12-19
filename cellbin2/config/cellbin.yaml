@@ -81,6 +81,8 @@ cellSegmentation:
 
 Registration:
   HE_channel: 1
+  rot90: true
+  flip: true
 
 cellCorrect:
   expand_r: 10

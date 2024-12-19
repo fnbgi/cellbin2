@@ -10,6 +10,7 @@ from cellbin2.utils.common import TechType
 from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.modules.metadata import ProcParam, ProcFile
 from cellbin2.modules import naming
+from cellbin2.utils import clog
 
 
 def read_transform(
@@ -61,6 +62,7 @@ def run_transform(
         cur_f_name: naming.DumpImageFileNaming,
         if_track: bool
 ):
+    clog.info(f"Running transform module")
     scale, rotation, offset = read_transform(
         image_file=file,
         param_chip=param_chip,

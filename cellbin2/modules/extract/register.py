@@ -1,6 +1,7 @@
 from typing import Dict, Union
 import numpy as np
 import os
+from pydantic import BaseModel
 
 from cellbin2.modules.metadata import ProcFile
 from cellbin2.modules import naming
@@ -13,6 +14,12 @@ from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.utils.config import Config
 from cellbin2.contrib.alignment.basic import transform_points
 from cellbin2.image import cbimread, cbimwrite
+
+
+class RegistrationParam(BaseModel):
+    HE_channel: int
+    rot90: bool
+    flip: bool
 
 
 def transform_to_register(
@@ -64,6 +71,7 @@ def run_register(
         output_path: str,
         param_chip: StereoChip,
         config: Config,
+        debug: bool
 ):
     """
     这个模块的任务就是对配准整体逻辑的整合，返回一个下游要用的配准参数
@@ -74,6 +82,8 @@ def run_register(
 
     返回（RegisterOutput）：配准参数
     """
+    # TODO: config种已传入flip和rot90的开关，在registration，lzp在配准内部启用开关
+    clog.info(f"Running register module")
     sn = param_chip.chip_name
 
     g_name = image_file.get_group_name(sn=sn)
@@ -109,7 +119,7 @@ def run_register(
                     save_dir=output_path
                 ),
                 detect_feature=True,
-                config = config
+                config=config
             )
             fixed_image = ChipFeature(
                 tech_type=fixed.tech,
@@ -127,10 +137,10 @@ def run_register(
             # 从ipr获取配准参数
             pre_info = param1.Register.Register00.get().to_dict()
             _info = template_00pt_check(
-                moving_image = moving_image,
-                fixed_image = fixed_image,
-                offset_info = pre_info,
-                fixed_offset = (cm.x_start, cm.y_start)
+                moving_image=moving_image,
+                fixed_image=fixed_image,
+                offset_info=pre_info,
+                fixed_offset=(cm.x_start, cm.y_start)
             )
             info = RegistrationOutput(**_info)
 
@@ -148,7 +158,9 @@ def run_register(
                 from_stitched=False,
                 qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag)
             )
-            if temp_info is not None:
+            clog.info(f"{info}")
+            clog.info(f"{temp_info}")
+            if temp_info is not None and debug:
                 temp_info.register_mat.write(
                     os.path.join(output_path, f"{sn}_chip_box_register.tif")
                 )
@@ -156,6 +168,7 @@ def run_register(
                     os.path.join(output_path, f"{sn}_chip_box_register.txt"),
                     temp_info.offset
                 )
+                param1.Register.RegisterChip.update(temp_info)
 
             # TODO 需要增加芯片框配准的ipr写入
             info = info if info is not None else temp_info

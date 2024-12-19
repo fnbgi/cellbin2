@@ -16,7 +16,7 @@ class DefaultIMage(BaseModel):
 
 
 class Config:
-    def __init__(self, config_file: str, weights_root: str=None):
+    def __init__(self, config_file: str, weights_root: str = None):
         with open(config_file, 'rb') as fd:
             dct = yaml.load(fd, Loader=yaml.FullLoader)
             for module, module_v in dct.items():
@@ -69,10 +69,10 @@ class Config:
     def tissue_segmentation(self, ):
         return TissueSegParam(**self.param['tissueSegmentation'])
 
-    def get_registration(self, ):
-        r = contrib.RegistrationParam()
-        r.init_from_dict(self.param['Registration'])
-        return r
+    @property
+    def registration(self, ):
+        from cellbin2.modules.extract.register import RegistrationParam
+        return RegistrationParam(**self.param['Registration'])
 
     @property
     def cell_correct(self, ):

@@ -183,9 +183,10 @@ class ProcParam(BaseModel):
         if do_scheduler:
             images = {
                 idx: image for idx, image in images.items()
-                if images[idx].tissue_segmentation or
-                   images[idx].cell_segmentation or
-                   images[idx].channel_align != -1
+                if image.tissue_segmentation or
+                   image.cell_segmentation or
+                   image.registration.trackline or
+                   image.channel_align != -1
             }
             # add matrix
             for idx, matrix in self.molecular_classify.items():

@@ -184,7 +184,7 @@ def chip_align(
             'register_score': ca.score,
             'register_mat': ca.registration_image(moving_image.mat),
             'dst_shape': (fixed_image.mat.shape[0], fixed_image.mat.shape[1]),
-            'method': AlignMode.TemplateCentroid
+            'method': AlignMode.ChipBox
         }
 
     return info

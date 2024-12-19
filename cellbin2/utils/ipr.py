@@ -180,25 +180,38 @@ class Register00:
         return info
 
 
-class Register(BaseIpr):
+class RegisterInfo(BaseIpr):
     def __init__(self):
-        self.CounterRot90: int = iPlaceHolder
-        self.Flip: bool = bPlaceHolder
-        self.MatrixShape: List[int] = []
         self.OffsetX: float = fPlaceHolder
         self.OffsetY: float = fPlaceHolder
-        self.RegisterScore: int = iPlaceHolder
+        self.Flip: bool = bPlaceHolder
+        self.Method: str = sPlaceHolder  # update at 2024-10-17, TemplateCentroid/Template00Pt/ChipBox
+        self.CounterRot90: int = iPlaceHolder
+        self.MatrixShape: List[int] = []
+
+    def update(self, info: RegistrationOutput):
+        self.OffsetX, self.OffsetY = info.offset
+        self.Flip = info.flip
+        self.RegisterScore = info.register_score
+        self.Method = info.method.name
+        self.CounterRot90 = info.counter_rot90
+        self.MatrixShape = info.dst_shape
+
+
+class Register(RegisterInfo):
+    def __init__(self):
+        super(Register, self).__init__()
         self.Rotation: float = fPlaceHolder
         self.ScaleX: float = fPlaceHolder
         self.ScaleY: float = fPlaceHolder
         self.XStart: int = iPlaceHolder
         self.YStart: int = iPlaceHolder
         self.MatrixTemplate: np.ndarray = np.array([])
-        self.Method: str = sPlaceHolder  # update at 2024-10-17, TemplateCentroid/Template00Pt/ChipBox
         self.RegisterTemplate: np.ndarray = np.array([])
         self.RegisterTrackTemplate: np.ndarray = np.array([])
         self.GeneChipBBox = ChipBBox()
         self.Register00 = Register00()
+        self.RegisterChip = RegisterInfo()
 
 
 class TissueSeg(object):
@@ -303,12 +316,7 @@ class ImageChannel(HDF5):
         self.Stitch.TemplatePoint = np.array(template_info.template_points)
 
     def update_registration(self, info: RegistrationOutput):
-        self.Register.OffsetX, self.Register.OffsetY = info.offset
-        self.Register.Flip = info.flip
-        self.Register.RegisterScore = info.register_score
-        self.Register.Method = info.method.name
-        self.Register.CounterRot90 = info.counter_rot90
-        self.Register.MatrixShape = info.dst_shape
+        self.Register.update(info)
 
     def get_registration(self, ) -> RegistrationOutput:
         r = RegistrationOutput(
