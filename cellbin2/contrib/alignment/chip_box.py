@@ -15,13 +15,18 @@ class ChipAlignment(Alignment):
     满足TissueBin需求：利用2模态芯片角为特征点，计算变换参数，实现配准。误差约100pix
     """
 
-    def __init__(self, ):
+    def __init__(
+            self,
+            flip_flag: bool = True,
+            rot90_flag: bool = True
+    ):
         super(ChipAlignment, self).__init__()
 
         self.register_matrix: np.matrix = None
         self.transforms_matrix: np.matrix = None
 
-        self.rot90_flag = True
+        self.rot90_flag = rot90_flag
+        self._hflip = flip_flag
         self.no_trans_flag = False
 
         self.max_length = 9996  # 图像降采样最大尺寸
@@ -117,8 +122,11 @@ class ChipAlignment(Alignment):
             new_box = self.transform_points(points=moving_image.chip_box.chip_box,
                                             shape=moving_image.mat.shape, flip=0)
             new_mi = np.fliplr(moving_image.mat.image)
+        else:
+            new_box = moving_image.chip_box.chip_box
+            new_mi = moving_image.mat.image
 
-            if new_mi.ndim == 3: new_mi = new_mi[:, :, 0]
+        if new_mi.ndim == 3: new_mi = new_mi[:, :, 0]
 
         down_size = max(fixed_image.mat.shape) // self.max_length
 
@@ -160,17 +168,21 @@ class ChipAlignment(Alignment):
 def chip_align(
         moving_image: ChipFeature,
         fixed_image: ChipFeature,
-        from_stitched: bool = True
+        from_stitched: bool = True,
+        flip_flag: bool = True,
+        rot90_flag: bool = True
 ):
     """
     :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
     :param fixed_image: 固定图
     :param from_stitched: 从拼接图开始
+    :param flip_flag:
+    :param rot90_flag:
 
     Returns:
 
     """
-    ca = ChipAlignment()
+    ca = ChipAlignment(flip_flag=flip_flag, rot90_flag=rot90_flag)
     if moving_image.tech_type is TechType.HE:
         from cellbin2.image.augmentation import f_rgb2hsv
         moving_image.set_mat(mat=f_rgb2hsv(moving_image.mat.image, channel=1, need_not=False))

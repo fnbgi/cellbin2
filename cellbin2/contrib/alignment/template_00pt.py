@@ -17,12 +17,15 @@ class Template00PtAlignment(Alignment):
 
     def __init__(self,
                  ref: Tuple[List, List] = ([], []),
-                 shape: Tuple[int, int] = (0, 0)
+                 shape: Tuple[int, int] = (0, 0),
+                 flip_flag: bool = True,
+                 rot90_flag: bool = True
                  ):
         super(Template00PtAlignment, self).__init__()
         self._reference = ref
         self._register_shape = shape
-        self._rot90_search_flag: bool = True
+        self._hflip = flip_flag
+        self._rot90_search_flag = rot90_flag
 
         self.fixed_template: np.ndarray = np.array([])
         self.fixed_box: List[float] = [0, 0, 0, 0]
@@ -219,6 +222,8 @@ def template_00pt_check(
         fixed_image: ChipFeature,
         offset_info: dict,
         fixed_offset: tuple = (0, 0),
+        flip_flag: bool = True,
+        rot90_flag: bool = True,
         max_length: int = 9996
 ) -> dict:
     """
@@ -228,11 +233,22 @@ def template_00pt_check(
         fixed_image:
         offset_info:
         fixed_offset: 矩阵图的起始 xy 信息
+        flip_flag:
+        rot90_flag:
         max_length:
 
     Returns:
 
     """
+    if not rot90_flag:
+        return {
+            'offset': offset_info[0]["offset"],
+            'flip': flip_flag,
+            'register_score': -1,
+            'counter_rot90': 0,
+            'method': AlignMode.Template00Pt,
+            'dst_shape': (fixed_image.mat.shape[0], fixed_image.mat.shape[1])
+        }
 
     offset_info = sorted(offset_info.items(), key = lambda x: x[1]['dist'])
 
@@ -242,7 +258,8 @@ def template_00pt_check(
     rd_x, rd_y = map(int, fixed_image.chip_box.chip_box[2] / down_size)
     _gene_image = fixed_image.mat.image[::down_size, ::down_size][lu_y: rd_y, lu_x:rd_x]
 
-    mm = moving_image.mat.trans_image(flip_lr = True)
+    if flip_flag: mm = moving_image.mat.trans_image(flip_lr = True)
+    else: mm = moving_image.mat
 
     register_info = dict()
     for rot_ind, _info in offset_info:
@@ -266,7 +283,7 @@ def template_00pt_check(
 
     check_info = {
         'offset': best_info[1]["offset"],
-        'flip': True,
+        'flip': flip_flag,
         'register_score': best_info[1]["score"],
         'counter_rot90': best_info[0],
         # 'register_mat': tpa.registration_image(moving_image.mat),
@@ -280,16 +297,20 @@ def template_00pt_align(
         moving_image: ChipFeature,
         ref: Tuple[List, List],
         dst_shape: Tuple[int, int],
-        from_stitched: bool = True
+        from_stitched: bool = True,
+        flip_flag: bool = True,
+        rot90_flag: bool = True
 ):
     """
     :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
     :param ref: 模板周期，仅在模板相关配准方法下用到
     :param dst_shape: 配准图理论尺寸
     :param from_stitched
+    :param flip_flag:
+    :param rot90_flag:
     :return: dict
     """
-    tpa = Template00PtAlignment(ref=ref, shape=dst_shape)
+    tpa = Template00PtAlignment(ref=ref, shape=dst_shape, flip_flag=flip_flag, rot90_flag=rot90_flag)
     if from_stitched:
         tpa.align_stitched(moving_image=moving_image)
     else:

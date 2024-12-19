@@ -15,6 +15,8 @@ class RegistrationInput(BaseModel):
     ref: Tuple[List, List] = Field(..., description="模板周期，仅在模板相关配准方法下用到")
     dst_shape: Optional[Tuple[int, int]] = Field(None, description="the shape of fixed image ")
     from_stitched: bool
+    rot90_flag: bool
+    flip_flag: bool
 
 
 class RegistrationOutput(BaseModel):
@@ -68,7 +70,9 @@ def registration(moving_image: ChipFeature,
                  fixed_image: ChipFeature,
                  ref: Tuple[List, List],
                  from_stitched: bool = True,
-                 qc_info: tuple = (0, 0)
+                 qc_info: tuple = (0, 0),
+                 flip_flag: bool = True,
+                 rot90_flag: bool = True,
                  ) -> (RegistrationOutput, RegistrationOutput):
     """
     :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
@@ -76,29 +80,31 @@ def registration(moving_image: ChipFeature,
     :param ref: 模板周期，仅在模板相关配准方法下用到
     :param from_stitched: 从拼接图配准
     :param qc_info: QC flag 信息
+    :param flip_flag:
+    :param rot90_flag:
     :return: RegistrationInfo
     """
-    # if moving_image.template.trackcross_qc_pass_flag:
-    #     res = centroid(moving_image=moving_image, fixed_image=fixed_image, ref=ref, from_stitched=from_stitched)
-    # elif moving_image.chip_box.is_available:
-    #     res = chip_align(moving_image=moving_image, fixed_image=fixed_image, from_stitched=from_stitched)
-    # else:
-    #     clog.info('Registration with no feature, cannot go on')
-    #
-    # return res
-
     # TODO 临时兼容性改动
     #  11/22 by lizepeng
     if qc_info[0]:
         res_template = centroid(
-            moving_image=moving_image, fixed_image=fixed_image, ref=ref, from_stitched=from_stitched
+            moving_image=moving_image,
+            fixed_image=fixed_image,
+            ref=ref,
+            from_stitched=from_stitched,
+            flip_flag = flip_flag,
+            rot90_flag = rot90_flag
         )
     else:
         res_template = None
 
     if qc_info[1]:
         res_chip_box = chip_align(
-            moving_image=moving_image, fixed_image=fixed_image, from_stitched=from_stitched
+            moving_image=moving_image,
+            fixed_image=fixed_image,
+            from_stitched=from_stitched,
+            flip_flag = flip_flag,
+            rot90_flag = rot90_flag
         )
     else:
         res_chip_box = None
@@ -115,10 +121,12 @@ def registration(moving_image: ChipFeature,
 
 def get_alignment_00(re_input: RegistrationInput) -> Registration00Output:
     res = template_00pt.template_00pt_align(
-        moving_image=re_input.moving_image,
-        ref=re_input.ref,
-        dst_shape=re_input.dst_shape,
-        from_stitched=re_input.from_stitched
+        moving_image = re_input.moving_image,
+        ref = re_input.ref,
+        dst_shape = re_input.dst_shape,
+        from_stitched = re_input.from_stitched,
+        flip_flag = re_input.flip_flag,
+        rot90_flag = re_input.rot90_flag
     )
     new_res = {
         "rot0": res['offset'][0],

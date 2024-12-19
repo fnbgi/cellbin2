@@ -87,6 +87,7 @@ def pre_registration(
         image_file: ProcFile,
         param_chip: StereoChip,
         channel_image: Union[ipr.ImageChannel, ipr.IFChannel],
+        config: Config,
         output_path: str
 ):
     moving_image = ChipFeature(
@@ -101,7 +102,9 @@ def pre_registration(
         moving_image=moving_image,
         ref=param_chip.fov_template,
         dst_shape=(param_chip.height, param_chip.width),
-        from_stitched=True
+        from_stitched=True,
+        rot90_flag=config.registration.rot90,
+        flip_flag=config.registration.flip
     )
     re_out = get_alignment_00(re_input=re_input)
 
@@ -180,7 +183,8 @@ def run_qc(
                 image_file=image_file,
                 param_chip=param_chip,
                 channel_image=channel_image,
-                output_path=output_path
+                output_path=output_path,
+                config=config
             )
             channel_image.Register.Register00.update(pre_out)
             channel_image.Register.Method = AlignMode.Template00Pt.name

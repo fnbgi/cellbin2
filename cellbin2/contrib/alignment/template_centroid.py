@@ -9,9 +9,17 @@ class TemplateCentroid(Alignment):
     """
     满足CellBin需求，利用模板周期性及组织形态，通过遍历实现变换参数的获取。实现配准，误差约10pix
     """
-    def __init__(self, ref: Tuple[List, List] = ([], [])):
+    def __init__(
+            self,
+            ref: Tuple[List, List] = ([], []),
+            flip_flag: bool = True,
+            rot90_flag: bool = True
+    ):
         super(TemplateCentroid, self).__init__()
         self._reference = ref
+
+        self._hflip = flip_flag
+        self._rot90_flag = rot90_flag
 
     def _mask_process(
             self,
@@ -71,7 +79,6 @@ class TemplateCentroid(Alignment):
                 axis=1
             )
         )
-        # transformed_feature.set_template(moving_image.template)
 
         self.align_transformed(fixed_image, transformed_feature)
 
@@ -102,21 +109,28 @@ class TemplateCentroid(Alignment):
             np.array(fixed_image.template.template_points),
             np.array(moving_image.template.template_points),
             self.hflip,
+            self._rot90_flag,
             new_method=True if moving_image.tech_type == TechType.HE else False
         )
 
 
 def centroid(moving_image: ChipFeature,
              fixed_image: ChipFeature,
-             ref: Tuple[List, List], from_stitched: bool = True):
+             ref: Tuple[List, List],
+             from_stitched: bool = True,
+             flip_flag: bool = True,
+             rot90_flag: bool = True
+             ):
     """
     :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
     :param fixed_image: 固定图，通常是矩阵，支持TIF/GEM/GEF及数组
     :param ref: 模板周期，仅在模板相关配准方法下用到
     :param from_stitched: 从拼接图开始
+    :param flip_flag:
+    :param rot90_flag:
     :return: RegistrationInfo
     """
-    ta = TemplateCentroid(ref=ref)
+    ta = TemplateCentroid(ref=ref, flip_flag=flip_flag, rot90_flag=rot90_flag)
     if moving_image.tech_type is TechType.HE:
         from cellbin2.image.augmentation import f_rgb2hsv
         moving_image.set_mat(mat=f_rgb2hsv(moving_image.mat.image, channel=1, need_not=False))

@@ -326,10 +326,6 @@ class ImageChannel(HDF5):
         )
         return r
 
-    def get_pre_registration(self) -> dict:
-        # TODO
-        pass
-
     def update_basic_info(self, chip_name: str, channel: int, depth: int, height: int, width: int, stain_type: str):
         self.ImageInfo.ChannelCount = channel
         self.ImageInfo.BitDepth = depth

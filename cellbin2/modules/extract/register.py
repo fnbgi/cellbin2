@@ -146,7 +146,9 @@ def run_register(
                 moving_image=moving_image,
                 fixed_image=fixed_image,
                 offset_info=pre_info,
-                fixed_offset=(cm.x_start, cm.y_start)
+                fixed_offset=(cm.x_start, cm.y_start),
+                flip_flag = config.registration.flip,
+                rot90_flag = config.registration.rot90
             )
             info = RegistrationOutput(**_info)
 
@@ -162,7 +164,9 @@ def run_register(
                 fixed_image=fixed_image,
                 ref=param_chip.fov_template,
                 from_stitched=False,
-                qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag)
+                qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag),
+                flip_flag = config.registration.flip,
+                rot90_flag = config.registration.rot90
             )
             clog.info(f"{info}")
             clog.info(f"{temp_info}")

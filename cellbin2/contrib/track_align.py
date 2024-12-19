@@ -329,9 +329,9 @@ class AlignByTrack:
                 offset, score = self.search_fov(np.array([rough_x_offset, rough_y_offset]), angle)
             else:
                 if self.new_method:
-                    offset, score = [], np.Inf
+                    offset, score = [0, 0], np.Inf
                 else:
-                    offset, score = [], 0
+                    offset, score = [0, 0], 0
 
             offset_record.append(offset)
             clog.info(f"Angle: {angle}, Score: {score}")
@@ -368,6 +368,7 @@ class AlignByTrack:
             vision_cp,
             stitch_tc,
             flip,
+            rot90_flag,
             new_method: bool = False
             ):
         """
@@ -378,11 +379,15 @@ class AlignByTrack:
             vision_cp:
             stitch_tc:
             flip:
+            rot90_flag:
             new_method:
 
         Returns:
 
         """
+        if not rot90_flag:
+            self.search_angle_set = tuple([0])
+
         if transformed_image.ndim == 3:
             transformed_image = cv.cvtColor(transformed_image, cv.COLOR_BGR2GRAY)
 
