@@ -28,7 +28,7 @@ TEST_DATA = [
         "Stereo-seq T FF V1.2 R"
     ),
     (
-        # H&E
+        # FF H&E
         "C04042E3",
         "C04042E3/C04042E3_fov_stitched.tif",
         "",
