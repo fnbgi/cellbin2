@@ -3,6 +3,7 @@ import numpy as np
 from typing import List, Tuple, Union, Dict
 from scipy.spatial.distance import cdist
 
+from cellbin2.utils.common import TechType
 from cellbin2.contrib.track_align import AlignByTrack
 from cellbin2.contrib.alignment.basic import Alignment, ChipFeature, transform_points
 from cellbin2.contrib.alignment import AlignMode
@@ -240,6 +241,12 @@ def template_00pt_check(
     Returns:
 
     """
+    if moving_image.tech_type is TechType.HE:
+        from cellbin2.image.augmentation import f_rgb2hsv
+        moving_image.set_mat(
+            mat=f_rgb2hsv(moving_image.mat.image, channel=1, need_not=False)
+        )
+
     if not rot90_flag:
         return {
             'offset': offset_info[0]["offset"],
@@ -333,7 +340,6 @@ if __name__ == '__main__':
     import os
     from cellbin2.image import cbimread, cbimwrite
     from cellbin2.contrib.template.inference import TemplateInfo
-    from cellbin2.utils.common import TechType
     from cellbin2.utils.stereo_chip import StereoChip
     from cellbin2.contrib.chip_detector import ChipParam, detect_chip
 
