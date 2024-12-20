@@ -173,27 +173,27 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="you should add those parameter")
     parser.add_argument('-i', "--input",
-                        default=r"F:\01.users\hedongdong\cellbin2_test_data\test_image\A03599D1_DAPI_fov_stitched.tif",
-                        required=False, help="the input img path")
+                        default=r".\test_image\A03599D1_DAPI_fov_stitched.tif",
+                        required=True, help="the input img path")
     parser.add_argument('-o', "--output",
-                        default=r"F:\01.users\hedongdong\cellbin2_test_data\result_mask\cellbin2\A03599D1_DAPI_fov_stitched.tif",
-                        required=False, help="the output file")
+                        default=r".\result_mask\cellbin2\A03599D1_DAPI_fov_stitched.tif",
+                        required=True, help="the output file")
     parser.add_argument("-p", "--model",
-                        default=r"F:\01.users\hedongdong\cellbin2_test\model\tissueseg_bcdu_SDI_230523_tf.onnx",
-                        required=False, help="model path")
-    parser.add_argument("-s", "--stain", default='DAPI', required=False,
-                        choices=['HE', 'ssDNA', 'DAPI', 'Transcriptomics', 'Protein', 'IF'], help="stain type")
+                        default=r".\model\tissueseg_bcdu_SDI_230523_tf.onnx",
+                        required=True, help="model path")
+    parser.add_argument("-s", "--stain", default='dapi', required=True,
+                        choices=['he', 'ssdna', 'dapi', 'transcriptomics', 'protein', 'if'], help="stain type")
     parser.add_argument("-m", "--mode", default='onnx', choices=['onnx', 'tf'], help="onnx or tf")
     parser.add_argument("-g", "--gpu", default=0, type=int, help="the gpu index")
     args = parser.parse_args()
 
     usr_stype_to_inner = {
-        'ssDNA': TechType.ssDNA,
-        'DAPI': TechType.DAPI,
-        "HE": TechType.HE,
-        "Transcriptomics": TechType.Transcriptomics,
-        'Protein': TechType.Protein,
-        'IF': TechType.IF
+        'ssdna': TechType.ssDNA,
+        'dapi': TechType.DAPI,
+        "he": TechType.HE,
+        "transcriptomics": TechType.Transcriptomics,
+        'protein': TechType.Protein,
+        'if': TechType.IF
     }
 
     input_path = args.input
@@ -208,7 +208,7 @@ def main():
 
     cfg = TissueSegParam()
     if s_type != TechType.IF:
-        setattr(cfg, f"{user_s_type}_weights_path", model_path)
+        setattr(cfg, f"{s_type.name}_weights_path", model_path)
     input_data = TissueSegInputInfo()
 
     input_data.input_path = input_path
