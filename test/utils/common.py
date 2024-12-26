@@ -88,15 +88,18 @@ def dict_compare(ipr_dict: dict, ipr_dict2: dict):
     Returns:
 
     """
+    record = []
     is_same = True
     for k,v in ipr_dict2.items():
         if isinstance(v, dict):
             dict_compare(ipr_dict.get(k), v)
         else:
             if v != ipr_dict.get(k):
-                print(f'the value of attribute < {k} > is different, please check !!!')
+                warning = f'the value of attribute < {k} > is different, please check !!! new is {ipr_dict.get(k)} and comparison is{v} '
+                print(warning)
                 is_same = False
-    return is_same
+                record.append(warning)
+    return is_same, record
 
 
 
