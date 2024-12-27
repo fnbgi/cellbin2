@@ -70,11 +70,15 @@ def file_compare(result_dir: str, compare_dir: str):
     suffix_list = ['.tif', '.tiff', '.rpi', '.TIFF']
     need_files = get_filelist(compare_dir, suffix_list)
     result_files = get_filelist(result_dir, suffix_list)
+    is_complete = True
 
     de_file = set(need_files).difference(result_files)
 
     if len(de_file):
         print(f'Compare with {compare_dir}. Missing file is {de_file}')
+        is_complete = False
+
+    return is_complete, de_file
 
 
 

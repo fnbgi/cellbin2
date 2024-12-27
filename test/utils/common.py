@@ -90,16 +90,38 @@ def dict_compare(ipr_dict: dict, ipr_dict2: dict):
     """
     record = []
     is_same = True
-    for k,v in ipr_dict2.items():
+
+    for k, v in ipr_dict2.items():
         if isinstance(v, dict):
-            dict_compare(ipr_dict.get(k), v)
+            _is_same, _record = dict_compare(ipr_dict.get(k), v)
+            record.extend(_record)
         else:
             if v != ipr_dict.get(k):
-                warning = f'the value of attribute < {k} > is different, please check !!! new is {ipr_dict.get(k)} and comparison is{v} '
+                warning = f'the value of attribute < {k} > is different, ' \
+                          f'please check !!! new is {ipr_dict.get(k)} and comparison is{v} '
                 print(warning)
-                is_same = False
+                _is_same = False
                 record.append(warning)
+            else:
+                _is_same = True
+
+        is_same &= _is_same
+
     return is_same, record
 
 
+def dict2mdtable(data_dict):
+    headers = list(data_dict.keys())
+    rows = zip(*data_dict.values())
 
+    # 生成 Markdown 表格
+    markdown_table = "| " + " | ".join(headers) + " |\n"
+    markdown_table += "| " + " | ".join(["---"] * len(headers)) + " |\n"
+    for row in rows:
+        markdown_table += "| " + " | ".join(map(str, row)) + " |\n"
+
+    return markdown_table
+
+if __name__ == '__main__':
+    type_attributes, ipr_dict = parse_ipr(r"D:\temp\cellbin_test\GOLD\SS200000135TL_D1\SS200000135TL_D1.ipr")
+    print(1)

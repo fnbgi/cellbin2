@@ -4,6 +4,8 @@ import os
 import pytest
 import traceback
 
+from test.utils.module_compare import module_compare_pipeline
+
 CURR_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # CB_PATH = os.path.join(CURR_PATH,)
 print(CURR_PATH)
@@ -11,8 +13,10 @@ sys.path.append(CURR_PATH)
 from cellbin2.cellbin_pipeline import pipeline
 import cellbin2
 from glob import glob
-from utils.file_compare import ipr_compare, file_compare
+from utils.file_compare import ipr_compare
+from utils.common import dict2mdtable
 from datetime import datetime
+
 
 WEIGHTS_ROOT = "/media/Data1/user/dengzhonghan/data/cellbin2/weights"
 TEST_OUTPUT_DIR = "/media/Data1/user/dengzhonghan/data/cellbin2/auto_test"
@@ -67,7 +71,8 @@ TEST_DATA = [
 ]
 
 
-class TestProductVs:
+
+class TestResult:
     @pytest.fixture(scope="class")
     def record_md(self):
         formatted_datetime = datetime.now().strftime("%Y%m%d%H%M")
@@ -121,11 +126,13 @@ class TestProductVs:
         ipr_file_product = glob(os.path.join(saw_result, '*.ipr'))
         ipr_file = glob(os.path.join(cur_out, '*.ipr'))
 
+
         record_md.write('## Ipr compare: \n')
         if len(ipr_file_product) == 0:
             pytest.fail(" Can not find ipr in SAW V8 result dir, forcing test to fail.")
 
         else:
+            # Compare ipr
             type_is_same, value_is_same, type_record, value_record = ipr_compare(ipr_file[0], ipr_file_product[0])
             for i in type_record:
                 record_md.write(f'* {i} \n')
@@ -137,13 +144,11 @@ class TestProductVs:
 
             assert type_is_same
 
-            is_complete, de_file = file_compare(cur_out, saw_result)
-            record_md.write('## Number of file: \n')
-            if len(de_file):
-                record_md.write('* The following files are missing: <br>\n')
-                record_md.write(f'{de_file} <br> \n')
+            # Compare Module
+            result_is_same, result_dict = module_compare_pipeline(cur_out, saw_result)
+            record_md.write('## Module compare: \n')
 
-            else:
-                record_md.write(f'* All documents required for the product are complete. <br>\n')
+            markdown_table = dict2mdtable(result_dict)
+            record_md.write(f"{markdown_table}")
 
-            assert is_complete
+            assert result_is_same
