@@ -6,9 +6,13 @@ import os
 from glob import glob
 from typing import Union
 import h5py
-
+import os
+import sys
+from pathlib import Path
+sys.path.append(Path(__file__).parents[1])
+import config
+from typing import List
 from .common import parse_ipr, dict_compare
-from .. import config
 
 
 def ipr_compare(ipr_file: str, _ipr_file = config.PRODUCT_IPR):
@@ -54,7 +58,7 @@ def ipr_compare(ipr_file: str, _ipr_file = config.PRODUCT_IPR):
     return type_is_same, value_is_same, type_record, value_record
 
 
-def get_filelist(path: str, suffix_list: list[str]):
+def get_filelist(path: str, suffix_list: List[str]):
     file_list = []
     for root, dirs, files in os.walk(path):
         file_list.extend(files)

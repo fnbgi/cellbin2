@@ -96,9 +96,10 @@ def dict_compare(ipr_dict: dict, ipr_dict2: dict):
             _is_same, _record = dict_compare(ipr_dict.get(k), v)
             record.extend(_record)
         else:
-            if v != ipr_dict.get(k):
-                warning = f'the value of attribute < {k} > is different, ' \
-                          f'please check !!! new is {ipr_dict.get(k)} and comparison is{v} '
+            if np.any(v != ipr_dict.get(k)):
+                # warning = f'the value of attribute < {k} > is different, ' \
+                #           f'please check !!! new is {ipr_dict.get(k)} and comparison is{v} '
+                warning = f'the value of attribute < {k} > is different '
                 print(warning)
                 _is_same = False
                 record.append(warning)
@@ -112,7 +113,7 @@ def dict_compare(ipr_dict: dict, ipr_dict2: dict):
 
 def dict2mdtable(data_dict):
     headers = list(data_dict.keys())
-    rows = zip(*data_dict.values())
+    rows = [list(data_dict.values())]
 
     # 生成 Markdown 表格
     markdown_table = "| " + " | ".join(headers) + " |\n"
