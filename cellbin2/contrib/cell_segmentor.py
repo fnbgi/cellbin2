@@ -19,6 +19,7 @@ from cellbin2.utils.pro_monitor import process_decorator
 from cellbin2.contrib.base_module import BaseModule
 from cellbin2.image import cbimread
 from cellbin2.utils.common import fPlaceHolder, iPlaceHolder
+from cellbin2.utils.weights_manager import download_by_names
 
 
 class CellSegParam(BaseModel, BaseModule):
@@ -64,6 +65,12 @@ class CellSegmentation:
         self.cfg = cfg
         self.stain_type = stain_type
         self._model_path = self.cfg.get_weights_path(self.stain_type)
+        if not os.path.exists(self._model_path):
+            clog.info(f"{self._model_path} does not exists, will download automatically. ")
+            download_by_names(
+                save_dir=os.path.dirname(self._model_path),
+                weight_names=[os.path.basename(self._model_path)]
+            )
         # self._model_path = getattr(self.cfg, TechToWeightName[self.stain_type])
         self.model_name, self.mode = os.path.splitext(os.path.basename(self._model_path))
         if self.stain_type not in SUPPORTED_STAIN_TYPE_BY_MODEL[self.model_name]:
@@ -253,10 +260,11 @@ def s_main():
 
     parser = argparse.ArgumentParser(description="you should add those parameter")
     parser.add_argument('-i', "--input", required=True, help="the input img path")
-    parser.add_argument('-o', "--output", required=True, help="the output file")
-    parser.add_argument("-p", "--model", required=True, help="model dir")
+    parser.add_argument('-o', "--output", required=True, help="the output directory")
+    parser.add_argument("-p", "--model", required=True, help="model directory")
     parser.add_argument("-s", "--stain", required=True, choices=['he', 'ssdna', 'dapi', 'scell'], help="stain type")
     parser.add_argument("-f", "--fast", action='store_true', help="if run fast correct")
+    parser.add_argument("-t", "--tissue", action='store_true', help="if run tissue seg")
     parser.add_argument("-m", "--mode", choices=['onnx', 'tf'], help="onnx or tf", default="onnx")
     parser.add_argument("-g", "--gpu", type=int, help="the gpu index", default=0)
     args = parser.parse_args()
@@ -275,14 +283,34 @@ def s_main():
     gpu = args.gpu
     user_s_type = args.stain
     fast = args.fast
+    tc = args.tissue
 
     # stain type from user input to inner type
     s_type = usr_stype_to_inner.get(user_s_type)
 
     # name pattern
     name = os.path.splitext(os.path.basename(input_path))[0]
+    os.makedirs(output_path, exist_ok=True)
     c_mask_path = os.path.join(output_path, f"{name}_v3_mask.tif")
+    t_mask_path = os.path.join(output_path, f"{name}_tissue_mask.tif")
     f_mask_path = os.path.join(output_path, f"{name}_v3_corr_mask.tif")
+
+    # tissue segmentation
+    tm = None
+    if tc:
+        from cellbin2.utils.config import Config
+        from cellbin2.contrib.tissue_segmentor import segment4tissue
+        from cellbin2.contrib.tissue_segmentor import TissueSegInputInfo
+        c_file = os.path.join('../config/cellbin.yaml')
+        conf = Config(c_file, weights_root=model_dir)
+        ti = TissueSegInputInfo(
+            weight_path_cfg=conf.tissue_segmentation,
+            input_path=input_path,
+            stain_type=s_type,
+        )
+        to = segment4tissue(ti)
+        tm = to.tissue_mask
+        cbimwrite(t_mask_path, tm * 255)
 
     # get model path
     cfg = CellSegParam()
@@ -301,11 +329,14 @@ def s_main():
         gpu=gpu,
         fast=fast,
     )
+    if tm is not None:
+        c_mask = tm * c_mask
+        f_mask = tm * f_mask
 
     # save mask
-    cbimwrite(c_mask_path, c_mask)
+    cbimwrite(c_mask_path, c_mask * 255)
     if f_mask is not None:
-        cbimwrite(f_mask_path, f_mask)
+        cbimwrite(f_mask_path, f_mask * 255)
 
 
 def segment4cell(
@@ -315,7 +346,6 @@ def segment4cell(
         gpu: int,
         fast: bool
 ) -> Tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]:
-
     # read user input image
     img = cbimread(input_path, only_np=True)
 

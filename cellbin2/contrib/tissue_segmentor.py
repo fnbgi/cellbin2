@@ -14,6 +14,7 @@ from cellbin2.dnn.tissue_segmentor.postprocess import TissueSegPostprocess
 from cellbin2.dnn.tissue_segmentor.utils import SupportModel
 from cellbin2.contrib.param import TissueSegOutputInfo
 from cellbin2.contrib.base_module import BaseModule
+from cellbin2.utils.weights_manager import download_by_names
 
 
 class TissueSegParam(BaseModel, BaseModule):
@@ -82,6 +83,12 @@ class TissueSegmentation:
         self.num_threads = num_threads
         self.model_path = self.cfg.get_weights_path(self.stain_type)
         self.model_name, self.mode = os.path.splitext(os.path.basename(self.model_path))
+        if not os.path.exists(self.model_path):
+            clog.info(f"{self.model_path} does not exists, will download automatically. ")
+            download_by_names(
+                save_dir=os.path.dirname(self.model_path),
+                weight_names=[os.path.basename(self.model_path)]
+            )
         if self.stain_type not in support_model.SUPPORTED_STAIN_TYPE_BY_MODEL[self.model_name]:
             clog.warning(
                 f"{self.stain_type.name} not in supported list of model: {self.model_name} \n"

@@ -106,6 +106,11 @@ class WeightDownloader(object):
         return 0
 
 
+def download_by_names(save_dir: str, weight_names: List[str]):
+    wd = WeightDownloader(save_dir=save_dir)
+    wd.download_weight_by_names(weight_names=weight_names)
+
+
 if __name__ == '__main__':
     save_dir = r'E:\03.users\liuhuanlin\01.data\cellbin2\weights'
     names = [DNNModuleName.cellseg]
