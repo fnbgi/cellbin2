@@ -5,7 +5,7 @@ import tifffile
 import numpy as np
 import cv2 as cv
 
-from stitch import stitching
+from .modules import stitching
 from typing import Union
 
 
