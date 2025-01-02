@@ -20,7 +20,8 @@ def get_tissue_mask(mask: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     return mask
 
 
-def get_cell_outline(mask: npt.NDArray[np.uint8], line_width=2) -> npt.NDArray[np.uint8]:
+def get_cell_outline(mask: npt.NDArray[np.uint8], line_width=1) -> npt.NDArray[np.uint8]:
+    # TODO: official product -> line_width = 2
     image = np.where(mask != 0, 1, 0).astype(np.uint8)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))  # 椭圆结构
     image = cv2.morphologyEx(image, cv2.MORPH_ERODE, kernel, iterations=None)
@@ -69,7 +70,8 @@ class Image(object):
         self.MinGrayLevel = MinGrayLevel
         self.TrackLayer = TrackLayer
 
-    def pyramid(self, mat: CBImage, mag=(2, 10, 50, 100, 150)):
+    def pyramid(self, mat: CBImage, mag=(1, 10, 50, 100, 150)):
+        # TODO: official product -> mag=(2, 10, 50, 100, 150)
         for bin_siz in tqdm.tqdm(mag, desc='pyramid', file=clog.tqdm_out, mininterval=3):
             down_image = mat.image[::bin_siz, ::bin_siz]
             b = Bin()
