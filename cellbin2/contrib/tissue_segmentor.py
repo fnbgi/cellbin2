@@ -52,7 +52,8 @@ class TissueSegInputInfo(BaseModel):
     weight_path_cfg: TissueSegParam = Field('', description='组织分割不同染色权重配置文件，需要权重的绝对路径')
     input_path: Union[str, Path] = Field('', description='输入图像')
     stain_type: TechType = Field('', description='输入图像的染色类型')
-    threshold_list: Any = Field(None, description='输入阈值的下限和上限，仅针对IF图像')
+    chip_size: List = Field(None, description='芯片的高和宽')
+    threshold_list: List = Field(None, description='输入阈值的下限和上限，仅针对IF图像')
 
 
 class TissueSegmentation:
@@ -63,7 +64,9 @@ class TissueSegmentation:
             stain_type: TechType,
             gpu: int = -1,
             num_threads: int = 0,
-            threshold_list: List = None
+            threshold_list: List = None,
+            chip_size: List = None,
+            is_big_chip: bool = False
     ):
         """
         Args:
@@ -78,6 +81,8 @@ class TissueSegmentation:
         self.stain_type = stain_type
         self.INPUT_SIZE = (512, 512, 1)
         self.threshold_list = threshold_list
+        self.chip_size = chip_size
+        self.is_big_chip = is_big_chip
         self.gpu = gpu
         self.num_threads = num_threads
         self.model_path = self.cfg.get_weights_path(self.stain_type)
@@ -90,8 +95,17 @@ class TissueSegmentation:
             )
             return
 
-        self.pre_process = TissueSegPreprocess(self.model_name, support_model)
-        self.post_process = TissueSegPostprocess(self.model_name, support_model)
+        if self.is_big_chip:
+            from cellbin2.dnn.tissue_segmentor.big_chip_preprocess import BigChipTissueSegPreprocess
+            from cellbin2.dnn.tissue_segmentor.big_chip_postprocess import BigChipTissueSegPostprocess
+
+            self.pre_process = BigChipTissueSegPreprocess(self.model_name, support_model, self.chip_size)
+            self.post_process = BigChipTissueSegPostprocess(self.model_name, support_model)
+        else:
+            from cellbin2.dnn.tissue_segmentor.preprocess import TissueSegPreprocess
+            from cellbin2.dnn.tissue_segmentor.postprocess import TissueSegPostprocess
+            self.pre_process = TissueSegPreprocess(self.model_name, support_model)
+            self.post_process = TissueSegPostprocess(self.model_name, support_model)
 
         self.tissue_seg = TissueSegmentationBcdu(input_size=self.INPUT_SIZE,
                                                  gpu=self.gpu,
@@ -100,7 +114,7 @@ class TissueSegmentation:
                                                  stain_type=self.stain_type,
                                                  threshold_list=self.threshold_list,
                                                  preprocess=self.pre_process,
-                                                 postprocess=self.post_process
+                                                 postprocess=self.post_process,
                                                  )
 
         if self.stain_type != TechType.IF:
@@ -113,10 +127,23 @@ class TissueSegmentation:
     def run(self, img: Union[str, npt.NDArray]) -> TissueSegOutputInfo:
 
         clog.info("start tissue seg")
-        mask = self.tissue_seg.f_predict(img=img)
+        if self.is_big_chip:
+            mask = self.tissue_seg.f_predict_big_chip(img=img, chip_size=self.chip_size)
+        else:
+            mask = self.tissue_seg.f_predict(img=img)
         clog.info("end tissue seg")
 
         return mask
+
+
+def compute_chip_size(input_img: np.ndarray) -> list:
+    input_img = input_img.squeeze()
+    if input_img.shape[0] in [1, 2, 3]:
+        input_img = np.transpose(input_img, [1, 2, 0])
+
+    hei, wid = input_img.shape[0], input_img.shape[1]
+    chip_hei, chip_wid = int(hei/20000), int(wid/20000)
+    return [chip_hei, chip_wid]
 
 
 def segment4tissue(input_data: TissueSegInputInfo) -> TissueSegOutputInfo:
@@ -127,6 +154,7 @@ def segment4tissue(input_data: TissueSegInputInfo) -> TissueSegOutputInfo:
             input_path: 输入图像绝对路径
             stain_type: 输入图像的染色类型
             gpu: gpu编号，默认为-1，使用cpu
+            chip_size: 芯片尺寸，高和宽
             threshold_list: 输入阈值的下限和上限，仅针对IF图像, 可选输入，默认为None；
                             该参数不为None则使用输入的阈值下限和上限对图像进行分割，该参数为None则代表IF图像使用OTSU算法
     Returns:
@@ -138,10 +166,12 @@ def segment4tissue(input_data: TissueSegInputInfo) -> TissueSegOutputInfo:
 
     from cellbin2.image import cbimread
 
+    is_big_chip = False
     input_path = input_data.input_path
     cfg = input_data.weight_path_cfg
     s_type = input_data.stain_type
     gpu = input_data.weight_path_cfg.GPU
+    chip_size = input_data.chip_size
     threshold_list = input_data.threshold_list
 
     clog.info(f"input stain type:{s_type}")
@@ -150,11 +180,16 @@ def segment4tissue(input_data: TissueSegInputInfo) -> TissueSegOutputInfo:
 
     # read user input image
     img = cbimread(input_path, only_np=True)
+    if chip_size is None:
+        clog.warning(f'input chip size is None, compute chip size with image size')
+        chip_size = compute_chip_size(img)  # return chip height and chip width
+    if chip_size[0] > 1 or chip_size[1] > 1:
+        is_big_chip = True
+    clog.info(f'the chip size of the image:{os.path.basename(input_path)}, height:{chip_size[0]}, width:{chip_size[1]}, is_big_chip:{is_big_chip}')
     if len(img.shape) == 3 and s_type != TechType.HE:
         clog.warning(
             'the input image is an RGB image, bug the stain type is not HE,convert the RGB image to GRAY image')
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
     # initialize tissue segmentation model
     tissue_seg = TissueSegmentation(
         support_model=support_model,
@@ -162,7 +197,9 @@ def segment4tissue(input_data: TissueSegInputInfo) -> TissueSegOutputInfo:
         stain_type=s_type,
         gpu=gpu,
         num_threads=0,
-        threshold_list=threshold_list
+        threshold_list=threshold_list,
+        chip_size=chip_size,
+        is_big_chip=is_big_chip
     )
     seg_mask = tissue_seg.run(img=img)
 
