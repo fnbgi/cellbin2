@@ -25,7 +25,7 @@
         "trackline": true,
         "reuse": -1
       },
-      "tissue_segmentation": true,
+      "tissue_segmentation": false,
       "cell_segmentation": false,
       "correct_r": 0,
       "channel_align": -1
@@ -85,7 +85,7 @@
         "trackline": true,
         "reuse": -1
       },
-      "tissue_segmentation": true,
+      "tissue_segmentation": false,
       "cell_segmentation": false,
       "correct_r": 0,
       "channel_align": -1

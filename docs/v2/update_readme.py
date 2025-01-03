@@ -60,7 +60,7 @@ def write_to_readme():
 def input_json_config():
     config_p = "../../cellbin2/config"
     info = []
-    for idx, k in KIT_VERSIONS + KIT_VERSIONS_R:
+    for idx, k in enumerate(KIT_VERSIONS + KIT_VERSIONS_R):
         tech, version = k.split("V")
         if k.endswith("R"):
             tech = tech.strip(" ") + " R"
@@ -86,21 +86,16 @@ def input_json_config():
         'correct_radius', 'channel_align', 'run_qc', 'run_alignment', 'run_matrix_extract', 'run_report',
         'run_annotation'
     ])
-    # df.to_csv("config_corresponds_to_product.csv")
-    # print()
-    # 获取数据框的列名
+
     columns = df.columns.tolist()
 
-    # 开始构建Markdown表格的表头部分
     markdown_table = "| " + " | ".join(columns) + " |\n"
     markdown_table += "| " + " | ".join(["---"] * len(columns)) + " |\n"
 
-    # 逐行添加数据到Markdown表格中
     for index, row in df.iterrows():
         row_data = [str(x) for x in row.tolist()]
         markdown_table += "| " + " | ".join(row_data) + " |\n"
 
-    # 将生成的Markdown表格内容写入到一个文件中（这里示例为markdown_table.md，你可以按需修改文件名）
     with open("config.md", "w") as f:
         f.write(markdown_table)
 

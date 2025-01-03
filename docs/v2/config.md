@@ -30,5 +30,5 @@
 | Stereo-seq N FFPE R | DAPI | True | False | True | True | 10 | -1 | True | True | True | False | False |
 | Stereo-seq N FFPE R | Transcriptomics | False | False | True | False | 0 | -1 | True | True | True | False | False |
 | Stereo-seq N FFPE R | IF | False | False | True | False | 0 | 0 | True | True | True | False | False |
-| Stereo-seq N FFPE R | HE | True | False | True | False | 10 | -1 | True | True | True | False | False |
+| Stereo-seq N FFPE R | HE | True | False | True | True | 10 | -1 | True | True | True | False | False |
 | Stereo-seq N FFPE R | ssDNA | True | False | True | True | 10 | -1 | True | True | True | False | False |
