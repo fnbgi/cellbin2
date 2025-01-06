@@ -1,6 +1,7 @@
 # smoke test
 ## product mode
 
+
 ### case1
 one step run <br>
 use: Stereo-CITE T FF.json, Stereo-seq N FFPE.json, Stereo-seq T FF.json <br>

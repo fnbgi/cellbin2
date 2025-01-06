@@ -34,18 +34,16 @@ def ipr_compare(ipr_file: str, _ipr_file = config.PRODUCT_IPR):
         type_is_same = False
         value_is_same = False
 
+    if type_attributes == _type_attributes:
+        print('The property names and data types of the two files are the same')
     else:
-        if type_attributes == _type_attributes:
-            print('The property names and data types of the two files are the same')
-
-        else:
-            for attr_name in _type_attributes.keys():
-                _attr_type = _type_attributes.get(attr_name, None)
-                attr_type = type_attributes.get(attr_name, None)
-                if attr_type != _attr_type:
-                    warning = f'attribute < {attr_name} > is {attr_type}, and comparison is {_attr_type} !'
-                    print(warning)
-                    type_record.append(warning)
+        for attr_name in _type_attributes.keys():
+            _attr_type = str(_type_attributes.get(attr_name, None)).replace("<", "<`")
+            attr_type = str(type_attributes.get(attr_name, None)).replace("<", "<`")
+            if attr_type != _attr_type:
+                warning = f"attribute {attr_name} is {attr_type}, and comparison is {_attr_type} !"
+                print(warning)
+                type_record.append(warning)
 
 
     #compare values of 2 ipr
@@ -55,7 +53,7 @@ def ipr_compare(ipr_file: str, _ipr_file = config.PRODUCT_IPR):
     else:
         value_is_same, value_record = dict_compare(ipr_dict, _ipr_dict)
 
-    return type_is_same, value_is_same, type_record, value_record
+    return type_is_same, value_is_same, type_record, value_record, de_attrs
 
 
 def get_filelist(path: str, suffix_list: List[str]):

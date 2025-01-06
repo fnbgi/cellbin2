@@ -83,7 +83,7 @@ def count_iou(mask1: np.ndarray, mask2: np.ndarray):
 
 
 def get_mask_area(mask):
-    label = measure.label(mask, connectivity=4)
+    label = measure.label(mask, connectivity=1)
     props = measure.regionprops(label)
     area_lsit = [p['area'] for p in props]
     cellnum = len(area_lsit)
@@ -211,13 +211,13 @@ class CompareModule2(object):
         tissue2 = os.path.join(result2, f'{self.ipr_dict_.STOmicsChipSN}_{self.ipr_dict_.StainType}_tissue_cut.tif')
 
         if os.path.exists(tissue1) and os.path.exists(tissue2):
-            self.CompareTissue = CompareTissue(tissue1, tissue2)
+            self.CompareTissue = CompareTissue2(tissue1, tissue2)
 
         mask1 = os.path.join(result1, f'{self.ipr_dict.STOmicsChipSN}_{self.ipr_dict.StainType}_mask.tif')
         mask2 = os.path.join(result2, f'{self.ipr_dict_.STOmicsChipSN}_{self.ipr_dict_.StainType}_mask.tif')
 
         if os.path.exists(mask1) and os.path.exists(mask2):
-            self.CompareCell = CompareCell(mask1, mask2)
+            self.CompareCell = CompareCell2(mask1, mask2)
 
     def __getattr__(self, name):
         return NoneAttribute()

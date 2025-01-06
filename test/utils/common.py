@@ -4,7 +4,26 @@
 # @File    : common.py
 import h5py
 import numpy as np
+import pandas as pd
 
+def xlsx2json(xlsx_path: str):
+    df = pd.read_excel(xlsx_path, index_col="SN")
+    df = df.fillna(value="/")
+    data_json = df.to_dict(orient="index")
+
+    return data_json
+
+def get_data_info(xlsx_path,
+                *args):
+    data_json = xlsx2json(xlsx_path)
+    run_list = []
+    for sn, info in data_json.items():
+        print(sn)
+        # tmp_list = (sn, data_json.get(sn), env, script, output, mode)
+        tmp_list = (sn, data_json.get(sn)) + args
+        # print(tmp_list)
+        run_list.append(tmp_list)
+    return run_list
 
 class Sample:
     def __init__(self):
