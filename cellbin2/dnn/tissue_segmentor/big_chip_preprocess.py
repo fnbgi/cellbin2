@@ -6,21 +6,19 @@
 # @annotation    :
 import copy
 from typing import Union, List
-
 import cv2
 import numpy as np
 import numpy.typing as npt
-
-
-from cellbin2.image.augmentation import f_rgb2gray, f_ij_auto_contrast, f_ij_auto_contrast_v2, f_ij_16_to_8_v2, f_equalize_adapthist_V2
-from cellbin2.image.augmentation import f_percentile_threshold, f_histogram_normalization, f_equalize_adapthist
+from cellbin2.image.augmentation import f_ij_auto_contrast, f_ij_auto_contrast_v2, f_ij_16_to_8_v2, f_equalize_adapthist_V2
+from cellbin2.image.augmentation import f_histogram_normalization
 from cellbin2.image.augmentation import f_resize
 from cellbin2.utils.common import TechType
 from cellbin2.image import cbimread
 from cellbin2.utils import clog
+from cellbin2.dnn.tissue_segmentor.preprocess import f_pre_if
 
 
-def crop_image(image: np.ndarray, chip_size: List) -> List:
+def crop_image(image: npt.NDArray, chip_size: List) -> List:
     crop_img_list = []
     chip_hei, chip_wid = chip_size
     clog.info(f"chip size: w: {chip_wid}, h: {chip_hei}")
@@ -108,10 +106,6 @@ def f_pre_transcriptomics_protein_220909(img: npt.NDArray, input_size: tuple, ch
 
     img_list = crop_image(image=img, chip_size=chip_size)
     return img_list
-
-
-def f_pre_if(img: npt.NDArray) -> npt.NDArray:
-    return img
 
 
 class BigChipTissueSegPreprocess:

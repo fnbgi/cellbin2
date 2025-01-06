@@ -20,6 +20,7 @@ TEST_DATA = [
         r"/path/to/mask",  # if the input is a folder, the output must also be a folder
         r"/path/to/tissueseg_bcdu_SDI_230523_tf.onnx",  # onnx file path
         "ssdna",  # stain type
+        [3, 3],  # chip size,height and width, if the image path is a folder, this parameter will be used for all the images
         "onnx",  # onnx mode or tf mode, currently only the onnx mode is supported
         "0"  # GPU num, -1 represents the CPU
     ),
@@ -29,6 +30,7 @@ TEST_DATA = [
         r"/path/to/mask",  # if the input is a folder, the output must also be a folder
         r"/path/to/tissueseg_bcdu_SDI_230523_tf.onnx",  # onnx file path
         "dapi",  # stain type
+        [3, 3],  # chip size,height and width, if the image path is a folder, this parameter will be used for all the images
         "onnx",  # onnx mode or tf mode, only the onnx mode is supported currently
         "0"  # GPU num, -1 represents the CPU
     ),
@@ -38,6 +40,7 @@ TEST_DATA = [
         r"/path/to/mask/he.tif",  # output mask  path
         r"/path/to/tissueseg_bcdu_H_20241018_tf.onnx",  # onnx file path
         "he",  # stain type
+        [3, 3],  # chip size,height and width, if the image path is a folder, this parameter will be used for all the images
         "onnx",  # onnx mode or tf mode, currently only the onnx mode is supported
         "0"  # GPU num, -1 represents the CPU
     ),
@@ -47,6 +50,7 @@ TEST_DATA = [
         r"/path/to/image/if.tif",  # output mask path
         r"",
         "if",  # stain type
+        [3, 3],  # chip size,height and width, if the image path is a folder, this parameter will be used for all the images
         "onnx",  # onnx mode or tf mode, currently only the onnx mode is supported
         "0"  # GPU num, -1 represents the CPU
     ),
@@ -55,6 +59,7 @@ TEST_DATA = [
         r"/path/to/mask/rna.tif",  # output mask path
         r"/path/to/tissueseg_bcdu_rna_220909_tf.onnx",
         "transcriptomics",  # stain type
+        [3, 3],  # chip size,height and width, if the image path is a folder, this parameter will be used for all the images
         "onnx",  # onnx mode or tf mode, currently only the onnx mode is supported
         "0"  # GPU num, -1 represents the CPU
     )
@@ -70,12 +75,13 @@ USR_STYPE_TO_INNER = {
     }
 
 class TestTissueSeg:
-    @pytest.mark.parametrize("input_dir, output_dir, model_dir, stain_type, model_mode, gpu_num", TEST_DATA)
+    @pytest.mark.parametrize("input_dir, output_dir, model_dir, stain_type, chip_size, model_mode, gpu_num", TEST_DATA)
     def test_tissue_seg(self,
                         input_dir: str,
                         output_dir: str,
                         model_dir: str,
                         stain_type: str,
+                        chip_size: list,
                         model_mode: str,
                         gpu_num: str
                         ):
@@ -83,6 +89,7 @@ class TestTissueSeg:
         stain_type = USR_STYPE_TO_INNER[stain_type]
         if stain_type != TechType.IF:
             setattr(cfg, f"{stain_type.name}_weights_path", model_dir)
+            setattr(cfg, "GPU", gpu_num)
         print(f"info===> stain type: {stain_type}, set {stain_type} model path:{model_dir}")
 
         if os.path.isdir(input_dir):
@@ -93,7 +100,8 @@ class TestTissueSeg:
                 input_data = TissueSegInputInfo(
                     weight_path_cfg=cfg,
                     input_path=input_path,
-                    stain_type=stain_type
+                    stain_type=stain_type,
+                    chip_size=chip_size
                 )
 
                 seg_result = segment4tissue(input_data=input_data)

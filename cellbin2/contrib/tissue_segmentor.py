@@ -9,8 +9,6 @@ import os
 from cellbin2.utils.common import TechType
 from cellbin2.dnn.tissue_segmentor.detector import TissueSegmentationBcdu
 from cellbin2.utils import clog
-from cellbin2.dnn.tissue_segmentor.preprocess import TissueSegPreprocess
-from cellbin2.dnn.tissue_segmentor.postprocess import TissueSegPostprocess
 from cellbin2.dnn.tissue_segmentor.utils import SupportModel
 from cellbin2.contrib.param import TissueSegOutputInfo
 from cellbin2.contrib.base_module import BaseModule
@@ -88,7 +86,7 @@ class TissueSegmentation:
         self.num_threads = num_threads
         self.model_path = self.cfg.get_weights_path(self.stain_type)
         self.model_name, self.mode = os.path.splitext(os.path.basename(self.model_path))
-        if not os.path.exists(self.model_path):
+        if (not os.path.exists(self.model_path)) and self.stain_type != TechType.IF:
             clog.info(f"{self.model_path} does not exists, will download automatically. ")
             download_by_names(
                 save_dir=os.path.dirname(self.model_path),
@@ -227,6 +225,7 @@ def main():
                         required=True, help="model path")
     parser.add_argument("-s", "--stain", default='dapi', required=True,
                         choices=['he', 'ssdna', 'dapi', 'transcriptomics', 'protein', 'if'], help="stain type")
+    parser.add_argument("-c", "--chip_size", default=None, nargs='+', type=int, help="the height and width of the chip")
     parser.add_argument("-m", "--mode", default='onnx', choices=['onnx', 'tf'], help="onnx or tf")
     parser.add_argument("-g", "--gpu", default=0, type=int, help="the gpu index")
     args = parser.parse_args()
@@ -243,10 +242,9 @@ def main():
     input_path = args.input
     output_path = args.output
     model_path = args.model  # 模型路径，以onnx结尾
-    mode = args.mode
-    gpu = args.gpu
     user_s_type = args.stain
-    support_model = SupportModel()
+    gpu = args.gpu
+    chip_size = args.chip_size
     # stain type from user input to inner type
     s_type = usr_stype_to_inner.get(user_s_type)
 
@@ -258,11 +256,11 @@ def main():
     input_data.input_path = input_path
     input_data.weight_path_cfg = cfg
     input_data.stain_type = s_type
-    # input_data.gpu = gpu
+    input_data.weight_path_cfg.GPU = gpu
+    input_data.chip_size = chip_size
     # input_data.threshold_list = 13000, 60000
 
     clog.info(f"image path:{input_path}")
-    # print(cfg)
     seg_result = segment4tissue(input_data=input_data)
 
     seg_mask = seg_result.tissue_mask
