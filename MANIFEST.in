@@ -1,0 +1,2 @@
+include cellbin2/config/*
+recursive-include cellbin2/modules/report/ *
