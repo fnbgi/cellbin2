@@ -25,19 +25,6 @@ TEST_OUTPUT_DIR = r"D:\temp\cellbin_test\testdata"
 DEMO_DATA_DIR = "/media/Data1/user/dengzhonghan/data/cellbin2/demo_data"
 table_dict = collections.defaultdict()
 
-# TEST_DATA = [
-#     (
-#         # ssDNA
-#         "SS200000135TL_D1",
-#         "SS200000135TL_D1/SS200000135TL_D1_fov_stitched_ssDNA.tif",
-#         "",
-#         "ssDNA",
-#         "SS200000135TL_D1/SS200000135TL_D1.raw.gef",
-#         "",
-#         "Stereo-seq T FF V1.2 R",
-#         r"D:\temp\cellbin_test\GOLD\SS200000135TL_D1"
-#     )
-# ]
 datafile_path = r"D:\temp\cellbin_test\solutions_data.xlsx"
 processed_data = get_data_info(datafile_path)
 

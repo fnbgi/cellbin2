@@ -54,8 +54,12 @@ def get_attributes(file):
         if isinstance(obj, h5py.Group):
             # get all name , type, value of obj
             attrs = obj.attrs.items()
+            parent = obj.parent.name.split('/')[-1]
             for attr_name, attr_value in attrs:
                 type_attributes[attr_name] = type(attr_value)
+                if attr_name == 'Method' and parent == 'Register':
+                    print(attr_name)
+                    continue
                 ipr_dict[attr_name] = attr_value
 
         if isinstance(obj, h5py.Dataset):

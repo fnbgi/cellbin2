@@ -76,7 +76,7 @@ def count_iou(mask1: np.ndarray, mask2: np.ndarray):
     h1, w1 = mask1.shape[:2]
     mask2 = cv2.resize(mask2, (w1, h1))
     iou_result = iou(mask2, mask1)
-    iou_result = round(iou_result, 4) * 100
+    iou_result = round(iou_result, 6) * 100
 
     print(iou_result)
     return iou_result
