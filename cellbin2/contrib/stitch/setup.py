@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
-# with open('requirements.txt') as f:
-#     requires = f.read().splitlines()
+with open('requirements.txt') as f:
+    requires = f.read().splitlines()
 
 # Parse version number from cellbin2/__init__.py:
 with open('stitch/__init__.py') as f:
@@ -15,16 +15,16 @@ print(f"Version: {info['version']}")
 
 
 setup(
-    name='cb-stitch',
+    name='MFWS',
     version=info['version'],
-    description='Stitch modules.',
-    long_description_content_type="text/markdown",
-    long_description=open('README.md').read(),
+    description='Multiple Fast Fourier Transform weighted stitching algorithm.',
+    # long_description_content_type="text/markdown",
+    # long_description=open('README.md').read(),
     packages=find_packages(),
     author='cell bin research group',
     author_email='bgi@genomics.cn',
     url='',
-    # install_requires=requires,
+    install_requires=requires,
     python_requires='==3.8.*',
     include_package_data=True,
     classifiers=[
@@ -32,5 +32,9 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
     ],
-
+    entry_points={
+        'console_scripts': [
+            'stitch=stitch.image_stitch:arg_parser',
+        ]
+    },
   )

@@ -1,11 +1,15 @@
 import os
+import re
 import argparse
 import tifffile
 
 import numpy as np
 import cv2 as cv
 
-from .modules import stitching
+try:
+    from .modules import stitching
+except ImportError:
+    from modules import stitching
 from typing import Union
 
 
@@ -53,6 +57,33 @@ def filename2index(file_name, style='motic', row_len=None):
         return None
 
 
+def chip_qc_filename2index(file_name):
+
+    file_name = os.path.basename(file_name)
+    pat = re.compile(r'C\d+R\d+')
+    res = pat.search(file_name).group(0)
+
+    c = int(res[1:4])
+    r = int(res[5:])
+    return [c, r]
+
+
+def select_row_col(src_fovs, row, col):
+    st_row, end_row = map(int, row.split('_'))
+    st_col, end_col = map(int, col.split('_'))
+
+    new_rows = end_row - st_row
+    new_cols = end_col - st_col
+
+    new_src_fovs = dict()
+    for k, v in src_fovs.items():
+        _r, _c = map(int, k.split('_'))
+        if st_row <= _r < end_row and st_col <= _c < end_col:
+            new_src_fovs[f'{_r - st_row:04}_{_c - st_col:04}'] = v
+
+    return new_src_fovs, new_rows, new_cols
+
+
 def images_path2dict(images_path, style='motic', row_len=None):
     image_support = ['.jpg', '.png', '.tif', '.tiff', '.TIFF']
     fov_images = search_files(images_path, exts=image_support)
@@ -60,6 +91,7 @@ def images_path2dict(images_path, style='motic', row_len=None):
     rows = cols = -1
     for it in fov_images:
         col, row = filename2index(it, style=style, row_len=row_len)
+        # col, row = chip_qc_filename2index(it)
         if row > rows: rows = row
         if col > cols: cols = col
         src_fovs[rc_key(row, col)] = it
@@ -82,31 +114,50 @@ def stitch_image(
         image_path: str = '',
         overlap: float = 0.1,
         name: str = '',
+        fuse_flag: bool = True,
         scope_flag: bool = False,
+        down_size: int = 1,
+        row_slice: str = '-1_-1',
+        col_slice: str = '-1_-1',
         output_path: str = ''
 ) -> Union[None, np.ndarray]:
     """
-    图像拼接函数
-    小图排列格式如下：
+    Image stitch function
+    The format of the small image is as follows：
     -------------------------
        0_0, 0_1, ... , 0_n
        1_0, 1_1, ... , 1_n
        ...
        m_0, m_1, ... , m_n
     -------------------------
-    其中, m 和 n 分别表示 row 和 col
+    Of which, m and n denote row and col
 
     Args:
         image_path:
-        name: 图像命名 可不填
-        overlap: 显微镜预设overlap
-        scope_flag: 是否直接使用显微镜拼接
+        name: image name
+        overlap: scope overlap
+        fuse_flag: whether or not fuse image
+        scope_flag: scope stitch | algorithm stitch
+        down_size: down-simpling size
+        row_slice: means stitch start row and end row,
+             if image has 20 rows and 20 cols, row = '0_10' express only stitch row == 0 -> row == 9,
+             like numpy slice, and other area will not stitch
+        col_slice: same as 'row'
         output_path:
 
     Returns:
 
     """
-    src_fovs, rows, cols = images_path2dict(image_path)  # , style="leica dm6b", row_len=5)
+    if isinstance(image_path, str) and os.path.isdir(image_path):
+        src_fovs, rows, cols = images_path2dict(image_path)  # , style="leica dm6b", row_len=5)
+    elif isinstance(image_path, dict):
+        src_fovs = image_path
+        rows, cols = np.array([list(map(int, k.split('_'))) for k in image_path.keys()]).max(axis = 0) + 1
+    else:
+        raise ImportError("Image path format error.")
+
+    if '-1' not in row_slice and '-1' not in col_slice:
+        src_fovs, rows, cols = select_row_col(src_fovs, row_slice, col_slice)
 
     stitch = stitching.Stitching()
     stitch.set_size(rows, cols)
@@ -122,7 +173,7 @@ def stitch_image(
     if loc is not None:
         stitch.set_global_location(loc)
 
-    stitch.stitch(src_fovs)
+    stitch.stitch(src_fovs, fuse_flag=fuse_flag, down_size=down_size)
     image = stitch.get_image()
     #
     if os.path.isdir(output_path):
@@ -137,7 +188,11 @@ def main(args, para):
         image_path = args.input,
         overlap = args.overlap,
         name = args.name,
+        fuse_flag = args.fuse,
+        down_size = args.down,
         scope_flag = args.scope,
+        row_slice = args.row,
+        col_slice = args.col,
         output_path = args.output
     )
 
@@ -148,10 +203,28 @@ def arg_parser():
 
     parser.add_argument("-i", "--input", action="store", dest="input", type=str, required=True,
                         help="Tar file / Input image dir.")
+
+    # scope overlap
     parser.add_argument("-overlap", "--overlap", action="store", dest="overlap", type=float, required=False,
                         default=0.1, help="Overlap.")
-    parser.add_argument("-s", "--scope", action = "store", dest = "scope", type = bool, required = False,
-                        default = False, help = "Scope stitch.")
+
+    # scope stitch or algorithm stitch
+    parser.add_argument("-s", "--scope", action = "store_true", dest = "scope",
+                        required = False, help = "Scope stitch.")
+
+    # fuse
+    parser.add_argument("-f", "--fuse", action = "store_true", dest = "fuse", required = False, help = "Fuse.")
+
+    # down-sampling
+    parser.add_argument("-d", "--down", action = "store", dest = "down", type = float, required = False,
+                        default = 1, help = "Down-sampling.")
+
+    # block selection
+    parser.add_argument("-row", "--row", action = "store", dest = "row", type = str, required = False,
+                        default = '-1_-1', help = "Image select block - row.")
+    parser.add_argument("-col", "--col", action = "store", dest = "col", type = str, required = False,
+                        default = '-1_-1', help = "Image select block - col.")
+
     parser.add_argument("-n", "--name", action="store", dest="name", type=str, required=False,
                         default = '', help="Name.")
     parser.add_argument("-o", "--output", action="store", dest="output", type=str, required=False,

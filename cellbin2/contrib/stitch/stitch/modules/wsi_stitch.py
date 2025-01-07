@@ -58,18 +58,18 @@ class StitchingWSI(object):
         y1 = np.max(self.fov_location[:, :, 1])
         self.mosaic_width, self.mosaic_height = [x1 + self.fov_width, y1 + self.fov_height]
 
-    def mosaic(self, src_image: dict, loc=None, downsample=1, multi=False):
+    def mosaic(self, src_image: dict, loc=None, downsample=1, multi=False, fuse_flag=True):
 
         k = [i * (90 / self._fuse_size) for i in range(0, self._fuse_size)][::-1]  # 融合比值
 
-        rc = np.array([k.split('_') for k in list(src_image.keys())], dtype=int)
+        # rc = np.array([k.split('_') for k in list(src_image.keys())], dtype=int)
 
         self.fov_rows, self.fov_cols = loc.shape[:2]
         self._init_parm(src_image)
 
         self._set_location(loc)
         img = Image()
-        h, w = (int(self.mosaic_height * downsample), int(self.mosaic_width * downsample))
+        h, w = (int(self.mosaic_height / downsample), int(self.mosaic_width / downsample))
         if self.fov_channel == 1:
             self.buffer = np.zeros((h, w), dtype=self.fov_dtype)
         else:
@@ -91,57 +91,59 @@ class StitchingWSI(object):
                         x_, y_ = (int(x / downsample), int(y / downsample))
 
                         #######融合
-                        if j > 0:
-                            if rc_key(i, j - 1) in src_image.keys():
-                                blend_flag_h = True
-                                _, dif_h = self.fov_location[i, j, ...] - self.fov_location[i, j - 1, ...]
-                                if dif_h >= 0:
-                                    source_h = copy.deepcopy(
-                                        self.buffer[y:y + self.fov_height - dif_h, x:x + self._fuse_size])
-                                else:
-                                    source_h = copy.deepcopy(
-                                        self.buffer[y - dif_h:y + self.fov_height, x:x + self._fuse_size])
+                        if fuse_flag:
+                            if j > 0:
+                                if rc_key(i, j - 1) in src_image.keys():
+                                    blend_flag_h = True
+                                    _, dif_h = self.fov_location[i, j, ...] - self.fov_location[i, j - 1, ...]
+                                    if dif_h >= 0:
+                                        source_h = copy.deepcopy(
+                                            self.buffer[y:y + self.fov_height - dif_h, x:x + self._fuse_size])
+                                    else:
+                                        source_h = copy.deepcopy(
+                                            self.buffer[y - dif_h:y + self.fov_height, x:x + self._fuse_size])
 
-                        if i > 0:
-                            if rc_key(i - 1, j) in src_image.keys():
-                                blend_flag_v = True
-                                dif_v, _ = self.fov_location[i, j, :] - self.fov_location[i - 1, j, :]
-                                if dif_v >= 0:
-                                    source_v = copy.deepcopy(
-                                        self.buffer[y:y + self._fuse_size, x:x + self.fov_width - dif_v])
-                                else:
-                                    source_v = copy.deepcopy(
-                                        self.buffer[y:y + self._fuse_size, x - dif_v:x + self.fov_width])
+                            if i > 0:
+                                if rc_key(i - 1, j) in src_image.keys():
+                                    blend_flag_v = True
+                                    dif_v, _ = self.fov_location[i, j, :] - self.fov_location[i - 1, j, :]
+                                    if dif_v >= 0:
+                                        source_v = copy.deepcopy(
+                                            self.buffer[y:y + self._fuse_size, x:x + self.fov_width - dif_v])
+                                    else:
+                                        source_v = copy.deepcopy(
+                                            self.buffer[y:y + self._fuse_size, x - dif_v:x + self.fov_width])
                         ###########
                         _h, _w = arr.shape[:2]
+                        b_h, b_w = int(_h // downsample), int(_w // downsample)
                         if self.fov_channel == 1:
                             self.buffer[y_: y_ + int(_h // downsample),
                             x_: x_ + int(_w // downsample)] = \
-                                arr[::downsample, ::downsample]
+                                arr[::downsample, ::downsample][:b_h, :b_w]
                         else:
                             self.buffer[y_: y_ + int(_h // downsample),
                             x_: x_ + int(_w // downsample), :] = \
-                                arr[::downsample, ::downsample, :]
+                                arr[::downsample, ::downsample, :][:b_h, :b_w]
 
                         ###########
-                        try:
-                            if blend_flag_h:
-                                result_h, _y = self.blend_image_h(arr, source_h, x, y, dif_h, k, self._fuse_size)
-                                _h, _w = result_h.shape[:2]
-                                self.buffer[_y:_y + _h, x:x + _w, ...] = result_h
+                        if fuse_flag:
+                            try:
+                                if blend_flag_h:
+                                    result_h, _y = self.blend_image_h(arr, source_h, x, y, dif_h, k, self._fuse_size)
+                                    _h, _w = result_h.shape[:2]
+                                    self.buffer[_y:_y + _h, x:x + _w, ...] = result_h
 
-                                if dif_h >= 0:
-                                    arr[:_h, :_w] = result_h
-                                else:
-                                    arr[-dif_h:, :_w] = result_h
+                                    if dif_h >= 0:
+                                        arr[:_h, :_w] = result_h
+                                    else:
+                                        arr[-dif_h:, :_w] = result_h
 
-                            if blend_flag_v:
-                                result_v, _x = self.blend_image_v(arr, source_v, x, y, dif_v, k, self._fuse_size)
-                                _h, _w = result_v.shape[:2]
-                                self.buffer[y:y + _h, _x:_x + _w] = result_v
-                        except Exception as e:
-                            pass
-                            ###########
+                                if blend_flag_v:
+                                    result_v, _x = self.blend_image_v(arr, source_v, x, y, dif_v, k, self._fuse_size)
+                                    _h, _w = result_v.shape[:2]
+                                    self.buffer[y:y + _h, _x:_x + _w] = result_v
+                            except Exception: pass
+                        ###########
 
     def save(self, output_path, compression=False):
         img = Image()
