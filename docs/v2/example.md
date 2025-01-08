@@ -50,3 +50,11 @@ ssDNA
 -o /media/Data/dzh/data/cellbin2/test/SS200000135TL_D1 
 -k "Stereo-seq T FF V1.2"
 ```
+
+case 4: Create bin1 matrix image
+```shell
+cd cellbin2/matrix
+python matrix.py \
+-i {SN.gem.gz/SN.gef file path}
+-o {output_folder}
+```
