@@ -6,6 +6,7 @@ import numpy as np
 import warnings
 import gzip
 from pathlib import Path
+import argparse
 
 from numba import njit, prange
 from cellbin2.utils import clog
@@ -352,5 +353,23 @@ def main():
     #                  "/media/Data/dzh/data/cellbin2/demo_data/C04144D5/C04144D5.gef")
 
 
+def create_martix_image(args):
+    cm = cMatrix()
+    cm.read(file_path=Path(args.input))
+    matrix_name = os.path.basename(args.input).split('.')[0]
+    output = os.path.join(args.output, f"{matrix_name}_Transcriptomics.tif")
+    cbimwrite(output, cm._gene_mat)
+
+
 if __name__ == '__main__':
-    main()
+    # main()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-i", "--input", action="store", dest="input", type=str, required=True,
+                        help="Image file.")
+    parser.add_argument("-o", "--output", action="store", dest="output", type=str, required=True,
+                        help="Result output dir.")
+
+    parser.set_defaults(func=create_martix_image)
+    (para, args) = parser.parse_known_args()
+    para.func(para)
