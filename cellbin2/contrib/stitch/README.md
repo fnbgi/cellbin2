@@ -7,8 +7,8 @@
 ## Installation
 As an independent module, stitch modules can be directly referenced by cellbin-v2 or installed by wheel
 
-referenced by cellbin-v2
-```shell
+### Referenced by cellbin-v2
+```python
 from cellbin2.contrib.stitch.stitch import stitch_image
 
 # 
@@ -16,61 +16,156 @@ def stitch_image(
         image_path: str = '',
         overlap: float = 0.1,
         name: str = '',
+        fuse_flag: bool = True,
         scope_flag: bool = False,
+        down_size: int = 1,
+        row_slice: str = '-1_-1',
+        col_slice: str = '-1_-1',
         output_path: str = ''
 ) -> Union[None, np.ndarray]:
     """
-    图像拼接函数
-    小图排列格式如下：
+    Image stitch function
+    The format of the small image is as follows：
     -------------------------
        0_0, 0_1, ... , 0_n
        1_0, 1_1, ... , 1_n
        ...
        m_0, m_1, ... , m_n
     -------------------------
-    其中, m 和 n 分别表示 row 和 col
+    Of which, m and n denote row and col
 
     Args:
-        image_path: {'0000_0000': '*.tif', ...}
-        name: 图像命名 可不填
-        overlap: 显微镜预设overlap
-        scope_flag: 是否直接使用显微镜拼接
+        image_path:
+        name: image name
+        overlap: scope overlap
+        fuse_flag: whether or not fuse image
+        scope_flag: scope stitch | algorithm stitch
+        down_size: down-simpling size
+        row_slice: means stitch start row and end row,
+             if image has 20 rows and 20 cols, row = '0_10' express only stitch row == 0 -> row == 9,
+             like numpy slice, and other area will not stitch
+        col_slice: same as 'row'
         output_path:
 
     Returns:
 
     """
 ```
-used wheel
-```shell
-from stitch import stitch_image
+### Wheel used 
+```python
+from MFWS.stitch import stitch_image
 
 # call method as above
 ```
 
+### Console used 
+
+#### command description
+```python
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-i", "--input", action="store", dest="input", type=str, required=True,
+                    help="Tar file / Input image dir.")
+
+# scope overlap
+parser.add_argument("-overlap", "--overlap", action="store", dest="overlap", type=float, required=False,
+                    default=0.1, help="Overlap.")
+
+# scope stitch or algorithm stitch
+parser.add_argument("-s", "--scope", action = "store_true", dest = "scope",
+                    required = False, help = "Scope stitch.")
+
+# fuse
+parser.add_argument("-f", "--fuse", action = "store_true", dest = "fuse", required = False, help = "Fuse.")
+
+# down-sampling
+parser.add_argument("-d", "--down", action = "store", dest = "down", type = float, required = False,
+                    default = 1, help = "Down-sampling.")
+
+# block selection
+parser.add_argument("-row", "--row", action = "store", dest = "row", type = str, required = False,
+                    default = '-1_-1', help = "Image select block - row.")
+parser.add_argument("-col", "--col", action = "store", dest = "col", type = str, required = False,
+                    default = '-1_-1', help = "Image select block - col.")
+
+parser.add_argument("-n", "--name", action="store", dest="name", type=str, required=False,
+                    default = '', help="Name.")
+parser.add_argument("-o", "--output", action="store", dest="output", type=str, required=False,
+                    default = '', help="Result output dir.")
+```
+
+
 ## Example
-```shell
-image_path_dict = {
-  '0000_0000': '1.tif',
-  '0000_0001': '2.tif',
-  '0001_0000': '3.tif',
-  '0001_0001': '4.tif',
+
+### Using cellbin-v2 or wheel import
+```python
+# Data format -- dict
+image_path = {
+    '0000_0000': '1.tif', '0000_0001': '2.tif',
+    '0001_0000': '3.tif', '0001_0001': '4.tif',
+    '0002_0000': '5.tif', '0002_0001': '6.tif',
+    '0003_0000': '7.tif', '0003_0001': '8.tif',
 }
+
+# Data format -- absolute path
+image_path = '/data/image_path'
+# the directory format is as follows
+'''
+    - 0000_0000.tif
+    - 0000_0001.tif
+    - 0001_0000.tif
+    - 0001_0001.tif
+    - 0002_0000.tif
+    - 0002_0001.tif
+    - 0003_0000.tif
+    - 0003_0001.tif
+'''
 
 # if scope_flag is False, will using cellbin-stitch modules, otherwise using microscope stitch
 # Overlap -- Please fill in according to the preset parameters of the microscope
 image = stitch_image(
-    image_path = image_path_dict,
+    image_path = image_path,
     overlap = 0.1,
     scope_flag = False
 )
 
 # if want to save image and custom image name 
 stitch_image(
-    image_path = image_path_dict,
+    image_path = image_path,
     overlap = 0.1,
     name = 'image',
     scope_flag = False,
     output_path = "*.tif"
 )
+
+# if want to slice image, only using scope coordinate stitch 1_0, 1_1, 2_2, 2_1, 
+# and not need fuse image.
+stitch_image(
+    image_path = image_path,
+    overlap = 0.1,
+    name = 'image',
+    scope_flag = True,
+    row = '1_3',
+    col = '0_2',
+    fuse = False,
+    output_path = "*.tif"
+)
+```
+
+### Using console
+```python
+# if want using console stitch image
+
+# Only supports image path input
+
+stitch 
+-i '/data/image_path' 
+-o '/data/output_path' 
+-overlap 0.1
+-s  # if not need scope stitch, just not need to fill in
+-f  # if not need fuse image, just not need to fill in
+-n image 
+-row 1_3 
+-col 0_2
+-d 2
 ```

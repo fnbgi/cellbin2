@@ -176,12 +176,22 @@ class Stitching:
         else:
             print("Have location coord, skip this mode.")
 
-    def stitch(self, src_fovs: dict, stitch=True, fft_channel=0):
+    def stitch(
+            self,
+            src_fovs: dict,
+            stitch=True,
+            fft_channel=0,
+            fuse_flag=True,
+            down_size=1.0,
+
+    ):
         """
         Args:
             src_fovs: {'row_col':'image_path'}
             stitch: 是否拼接图像
             fft_channel: 选择fft特征通道
+            fuse_flag:
+            down_size:
         """
 
         self._init_parm(src_fovs)
@@ -200,8 +210,13 @@ class Stitching:
                 print('Start stitch mode.')
                 wsi = StitchingWSI()
                 wsi.set_overlap(self._overlap)
-                wsi.mosaic(src_fovs, self.fov_location, multi=False)
-                # wsi.save(os.path.join(output_path, 'fov_stitched.tif'), compression=True)  # 统一放到外面io @dzh
+                wsi.mosaic(
+                    src_fovs,
+                    self.fov_location,
+                    multi=False,
+                    fuse_flag=fuse_flag,
+                    downsample=down_size
+                )
                 end_time = time.time()
                 print("Stitch image time -- {}s".format(end_time - start_time))
 
