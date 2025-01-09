@@ -269,22 +269,28 @@ def get_view_image(
         image: Union[np.ndarray, str],
         points: np.ndarray,
         is_matrix: bool = False,
-        output_path: str = "",
-        size: int = 500,
+        downsample_size: int = 2048,
+        crop_size: int = 500,
         color: tuple = (0, 0, 255),
         radius: int = 10,
-        thickness: int = 1
+        thickness: int = 1,
+        scale_line_pixels: int = 5,
+        scale_line_length: int = 3,
+        output_path: str = "",
 ):
     """
 
     Args:
-        image:
-        points:
+        image: input image or image path
+        points: detected chip box points
         is_matrix:
-        size:
-        color:
-        radius:
+        downsample_size: enhanced image downsample size
+        crop_size: crop image size
+        color: chip box color,(B, G, R)
+        radius: circle radius, it must be a multiple of scale_line_pixels pixels
         thickness:
+        scale_line_pixels:  units of scale line
+        scale_line_length: # scale line length
         output_path:
 
     Returns:
@@ -292,35 +298,43 @@ def get_view_image(
     """
     if isinstance(image, str):
         image = tifffile.imread(image)
-
-    image = f_ij_16_to_8(image)
-
-    if is_matrix:
-        size *= 2
-        radius *= 2
-
     image_list = list()
+    image = f_ij_16_to_8(image)
+    if is_matrix:
+        image_enhance = cv.filter2D(image, -1, np.ones((21, 21), np.float32))
+        image_enhance = (image_enhance > 0).astype(np.uint8) * 255
+        crop_size *= 2
+        radius *= 2
+    elif image.ndim == 3:  # HE image
+        image_enhance = cv.cvtColor(cv.bitwise_not(cv.cvtColor(image, cv.COLOR_BGR2GRAY)), cv.COLOR_GRAY2BGR)
+    else:
+        image_enhance = cv2.equalizeHist(image)
+        image_enhance = cv2.cvtColor(image_enhance, cv2.COLOR_GRAY2BGR)
+
+    image_enhance = cv2.resize(image_enhance, (downsample_size, downsample_size), interpolation=cv2.INTER_NEAREST)
+    image_list.append(image_enhance)  # save enhance and resize image
+
     for fp in points:
         x, y = map(lambda k: int(k), fp)
-        _x = _y = size
+        _x = _y = crop_size
 
-        if x < size:
+        if x < crop_size:
             _x = x
-            x = size
+            x = crop_size
 
-        if y < size:
+        if y < crop_size:
             _y = y
-            y = size
+            y = crop_size
 
-        if x > image.shape[1] - size:
-            _x = 2 * size + x - image.shape[1]
-            x = image.shape[1] - size
+        if x > image.shape[1] - crop_size:
+            _x = 2 * crop_size + x - image.shape[1]
+            x = image.shape[1] - crop_size
 
-        if y > image.shape[0] - size:
-            _y = 2 * size + y - image.shape[0]
-            y = image.shape[0] - size
+        if y > image.shape[0] - crop_size:
+            _y = 2 * crop_size + y - image.shape[0]
+            y = image.shape[0] - crop_size
 
-        _image = image[y - size: y + size, x - size: x + size]
+        _image = image[y - crop_size: y + crop_size, x - crop_size: x + crop_size]
         if not is_matrix:
             if _image.ndim == 3:
                 _image = cv.cvtColor(cv.bitwise_not(cv.cvtColor(_image, cv.COLOR_BGR2GRAY)), cv.COLOR_GRAY2BGR)
@@ -331,18 +345,26 @@ def get_view_image(
             _image = (_image > 0).astype(np.uint8) * 255
             _image = cv.cvtColor(_image, cv.COLOR_GRAY2BGR)
 
-        line1 = np.array([[_x, _y - radius], [_x, _y + radius]], np.int32).reshape((-1, 1, 2))
-        line2 = np.array([[_x - radius, _y], [_x + radius, _y]], np.int32).reshape((-1, 1, 2))
+        scale_line_list = []
+        line1 = np.array([[_x, _y - 2*radius], [_x, _y + 2*radius]], np.int32).reshape((-1, 1, 2))
+        for tmp_y in range(_y-radius, _y+radius, scale_line_pixels):
+            scale_line_list.append(np.array([[_x, tmp_y], [_x+scale_line_length, tmp_y]], np.int32).reshape((-1, 1, 2)))
+        line2 = np.array([[_x - 2*radius, _y], [_x + 2*radius, _y]], np.int32).reshape((-1, 1, 2))
+        for tmp_x in range(_x-radius, _x+radius, scale_line_pixels):
+            scale_line_list.append(np.array([[tmp_x, _y], [tmp_x, _y-scale_line_length]], np.int32).reshape((-1, 1, 2)))
 
-        cv.circle(_image, [_x, _y], radius // 2, color[::-1], thickness)
+        cv.circle(_image, [_x, _y], radius, color[::-1], thickness)
+        cv2.putText(_image, f'r={radius}', (_x+5, _y-5), cv2.FONT_HERSHEY_DUPLEX, 0.4, (255, 255, 255), 1)
 
         cv.polylines(_image, pts=[line1, line2], isClosed=False,
                      color=color, thickness=thickness, lineType=cv.LINE_8)
+        cv.polylines(_image, pts=scale_line_list, isClosed=False,
+                     color=color, thickness=1, lineType=cv.LINE_8)
 
         image_list.append(_image)
 
     if os.path.isdir(output_path):
-        name_list = ["left_up", "left_down", "right_down", "right_up"]
+        name_list = ["enhance", "left_up", "left_down", "right_down", "right_up"]
         for name, im in zip(name_list, image_list):
             cv.imwrite(os.path.join(output_path, f"{name}.tif"), im)
 
