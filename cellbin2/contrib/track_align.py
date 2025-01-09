@@ -176,14 +176,14 @@ class AlignByTrack:
         2023/09/20 @fxzhao 使用切片代替padding操作,加速并降低内存
         """
         if method:
+            left_x = int(round(abs(offset[0])))
             if offset[0] < 0:
-                left_x = int(round(abs(offset[0])))
                 vision_image = f_padding(vision_image, 0, 0, left_x, 0)
             else:
                 vision_image = vision_image[:, int(round(offset[0])):]
 
+            up_y = int(round(abs(offset[1])))
             if offset[1] < 0:
-                up_y = int(round(abs(offset[1])))
                 vision_image = f_padding(vision_image, up_y, 0, 0, 0)
             else:
                 vision_image = vision_image[int(round(offset[1])):, :]
@@ -192,12 +192,12 @@ class AlignByTrack:
             shape_transform = np.shape(transformed_image)
 
             if shape_vision[0] > shape_transform[0]:
-                vision_image = vision_image[:shape_transform[0], :]
+                transformed_image = f_padding(transformed_image, 0, shape_vision[0] - shape_transform[0], 0, 0)
             else:
                 vision_image = f_padding(vision_image, 0, shape_transform[0] - shape_vision[0], 0, 0)
 
             if shape_vision[1] > shape_transform[1]:
-                vision_image = vision_image[:, :shape_transform[1]]
+                transformed_image = f_padding(transformed_image, 0, 0, 0, shape_vision[1] - shape_transform[1])
             else:
                 vision_image = f_padding(vision_image, 0, 0, 0, shape_transform[1] - shape_vision[1])
             # score = np.sum(np.multiply(vision_image, transformed_image))
