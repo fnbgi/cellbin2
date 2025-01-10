@@ -43,7 +43,7 @@ class ProcFile(BaseModel):
     correct_r: int
     channel_align: int
     registration: ProcRegistration
-    _supported_matrix = ['.gef', '.gem.gz']
+    _supported_matrix = ['.gef', '.gz', '.gem']
     _supported_image = ['.tif', '.tiff', '.TIF', '.TIFF']
 
     @property
