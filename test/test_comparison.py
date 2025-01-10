@@ -21,7 +21,7 @@ import pandas as pd
 
 
 WEIGHTS_ROOT = r"D:\StereoImage-cellbin\fengning_presonal_gitlab\no_matrix_17\weights"
-TEST_OUTPUT_DIR = r"D:\temp\cellbin_test\testdata"
+TEST_OUTPUT_DIR = r"D:\temp\cellbin_test\cellbin_v2"
 DEMO_DATA_DIR = "/media/Data1/user/dengzhonghan/data/cellbin2/demo_data"
 table_dict = collections.defaultdict()
 
@@ -30,7 +30,7 @@ processed_data = get_data_info(datafile_path)
 
 def fold(record_md, list):
     record_md.write('<details>\n')
-    record_md.write('<summary>Type different detail </summary> \n')
+    record_md.write('<summary>Type/Value different detail </summary> \n')
     for i in list:
         record_md.write(f'* {i}<br> \n')
     record_md.write('</details> \n\n')

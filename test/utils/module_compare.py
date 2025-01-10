@@ -96,7 +96,7 @@ def get_mask_area(mask):
 class CompareQC(object):
     def __init__(self, ipr_dict: dict2class, ipr_dict_: dict2class):
         self.comment = 'QC is same!'
-        self.QcPassFlag_result = subtract(ipr_dict.QcPassFlag, ipr_dict_.QcPassFlag)  # 目前暂时还是先用这个
+        self.QcPassFlag_result = subtract(ipr_dict.QCPassFlag, ipr_dict_.QCPassFlag)
         self.TrackCrossQCFlag_result = subtract(ipr_dict.TrackCrossQCPassFlag, ipr_dict_.TrackCrossQCPassFlag)
         self.ChipDetectQCPassFlag_result = subtract(ipr_dict.ChipDetectQCPassFlag,ipr_dict_.ChipDetectQCPassFlag)
         self.TrackLineScore = subtract(ipr_dict.TrackLineScore, ipr_dict_.TrackLineScore)
@@ -131,7 +131,7 @@ class CompareRegist(object):
     def __init__(self, ipr_dict: dict2class, ipr_dict_: dict2class):
         self.comment = 'SAME'
 
-        Compare_QCresult = subtract(ipr_dict.QcPassFlag, ipr_dict_.QcPassFlag)  # 这里的QC先用小c
+        Compare_QCresult = subtract(ipr_dict.QCPassFlag, ipr_dict_.QCPassFlag)  # 这里的QC先用小c
         Compare_offsetX = subtract(ipr_dict.OffsetX, ipr_dict_.OffsetX)
         Compare_offsetY = subtract(ipr_dict.OffsetY, ipr_dict_.OffsetY)
 
