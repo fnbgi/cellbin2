@@ -12,8 +12,18 @@ from pathlib import Path
 sys.path.append(Path(__file__).parents[1])
 import config
 from typing import List
-from .common import parse_ipr, dict_compare
+from .common import parse_ipr, dict_compare, create_crosspoint, compare_points
 
+
+def compare_Crosspoint(ipr_dict, _ipr_dict):
+    if ipr_dict['StitchedImage'] == _ipr_dict['StitchedImage']:
+        point1 = create_crosspoint(ipr_dict)
+        point2 = create_crosspoint(_ipr_dict)
+        warning = compare_points(point1, point2)
+    else:
+        warning = 'The input Images is different,one is fov folders ,Other is Stitched Image!'
+
+    return warning
 
 def ipr_compare(ipr_file: str, _ipr_file = config.PRODUCT_IPR):
     """
@@ -52,6 +62,8 @@ def ipr_compare(ipr_file: str, _ipr_file = config.PRODUCT_IPR):
 
     else:
         value_is_same, value_record = dict_compare(ipr_dict, _ipr_dict)
+        new_warning = compare_Crosspoint(ipr_dict, _ipr_dict)
+        value_record.append(new_warning)
 
     return type_is_same, value_is_same, type_record, value_record, de_attrs
 
@@ -81,9 +93,4 @@ def file_compare(result_dir: str, compare_dir: str):
         is_complete = False
 
     return is_complete, de_file
-
-
-
-
-
 

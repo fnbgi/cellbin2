@@ -21,7 +21,7 @@ import pandas as pd
 
 
 WEIGHTS_ROOT = r"D:\StereoImage-cellbin\fengning_presonal_gitlab\no_matrix_17\weights"
-TEST_OUTPUT_DIR = r"D:\temp\cellbin_test\cellbin_v2"
+TEST_OUTPUT_DIR = r"D:\temp\cellbin_test\testdata"
 DEMO_DATA_DIR = "/media/Data1/user/dengzhonghan/data/cellbin2/demo_data"
 table_dict = collections.defaultdict()
 

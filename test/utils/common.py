@@ -6,6 +6,22 @@ import h5py
 import numpy as np
 import pandas as pd
 
+import sys
+from pathlib import Path
+sys.path.append(Path(__file__).parents[2])
+
+from cellbin2.image.augmentation import  dapi_enhance, he_enhance
+from cellbin2.contrib.template.inferencev1 import TemplateReferenceV1
+
+pt_enhance_method = {
+    'ssDNA': dapi_enhance,
+    'DAPI': dapi_enhance,
+    'HE': he_enhance
+}
+
+stain_list = ['ssDNA', 'DAPI', 'HE']
+
+
 def xlsx2json(xlsx_path: str):
     df = pd.read_excel(xlsx_path, index_col="SN")
     df = df.fillna(value="/")
@@ -115,14 +131,20 @@ def dict_compare(ipr_dict: dict, ipr_dict2: dict):
     is_same = True
 
     for k, v in ipr_dict2.items():
+        if k.startswith('fov_'):
+            continue
+
         if isinstance(v, dict):
             _is_same, _record = dict_compare(ipr_dict.get(k), v)
             record.extend(_record)
         else:
             if np.any(v != ipr_dict.get(k)):
-                # warning = f'the value of attribute < {k} > is different, ' \
-                #           f'please check !!! new is {ipr_dict.get(k)} and comparison is{v} '
-                warning = f'the value of attribute < {k} > is different '
+                if isinstance(v, np.ndarray):
+                    warning = f'the value of attribute < {k} > is different '
+                else:
+                    warning = f'the value of attribute < {k} > is different, ' \
+                              f'please check !!! new is {ipr_dict.get(k)} and comparison is {v} '
+                # warning = f'the value of attribute < {k} > is different '
                 print(warning)
                 _is_same = False
                 record.append(warning)
@@ -145,6 +167,37 @@ def dict2mdtable(data_dict):
         markdown_table += "| " + " | ".join(map(str, row)) + " |\n"
 
     return markdown_table
+
+def create_crosspoint(ipr_dict: dict):
+    _points = np.ones([0, 4])
+    if len(ipr_dict['GlobalLoc']):
+        for k, v in ipr_dict['CrossPoints'].items():
+            if v.shape[1] == 3:
+                v = np.concatenate((v[:, :2], np.zeros([v.shape[0], 2])), axis=1)
+            r, c = map(int, k.split("_")[-2:])
+            _loc = ipr_dict['GlobalLoc'][r, c]
+            v[:, :2] = v[:, :2] + _loc
+            _points = np.concatenate((_points, v), axis=0)
+    else:
+        for k, v in ipr_dict['CrossPoints'].items():
+            _points = np.concatenate((_points, v), axis=0)
+
+    return _points
+
+def compare_points(
+        points1: np.ndarray,
+        points2: np.ndarray,
+        k: int = 10
+):
+
+    _temp, _track = TemplateReferenceV1.pair_to_template(
+        points1[:, :2], points1[:, :2], threshold = k
+    )
+    warning = f"New DATA QC detects {len(points1)} points, " \
+              f" compared to {len(points2)} points, " \
+              f"{len(_temp)} pairs of points within 10pixels "
+    print(warning)
+    return warning
 
 if __name__ == '__main__':
     type_attributes, ipr_dict = parse_ipr(r"D:\temp\cellbin_test\GOLD\SS200000135TL_D1\SS200000135TL_D1.ipr")
