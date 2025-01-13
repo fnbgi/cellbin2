@@ -7,6 +7,7 @@ from cellbin2.utils.config import Config
 from cellbin2.modules.metadata import ProcFile
 from cellbin2.utils.rle import RLEncode
 from cellbin2.utils import ipr
+from cellbin2.utils.stereo_chip import StereoChip
 
 
 def run_tissue_seg(
@@ -14,6 +15,7 @@ def run_tissue_seg(
         image_path: Path,
         save_path: Path,
         config: Config,
+        chip_info: StereoChip,
         channel_image: Optional[Union[ipr.ImageChannel, ipr.IFChannel]] = None
 ):
     from cellbin2.contrib.tissue_segmentor import segment4tissue
@@ -21,6 +23,7 @@ def run_tissue_seg(
         weight_path_cfg=config.tissue_segmentation,
         input_path=image_path,
         stain_type=image_file.tech,
+        chip_size=chip_info.chip_specif
     )
     tissue_mask_output = segment4tissue(tissue_input)
     tissue_mask = tissue_mask_output.tissue_mask

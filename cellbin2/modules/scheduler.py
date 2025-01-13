@@ -160,6 +160,7 @@ class Scheduler(object):
                 image_path=im_path,
                 save_path=ts_raw_save_path,
                 config=self.config,
+                chip_info=self.param_chip,
                 channel_image=cur_c_image
             )
             final_tissue_mask = tissue_mask
@@ -276,6 +277,7 @@ class Scheduler(object):
                             image_file=f,
                             image_path=cur_m_naming.heatmap,
                             save_path=cur_m_naming.tissue_mask,
+                            chip_info=self.param_chip,
                             config=self.config,
                         )
                     if f.cell_segmentation:

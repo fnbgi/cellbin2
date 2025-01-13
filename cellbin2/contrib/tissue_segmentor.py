@@ -51,7 +51,7 @@ class TissueSegInputInfo(BaseModel):
     weight_path_cfg: TissueSegParam = Field('', description='组织分割不同染色权重配置文件，需要权重的绝对路径')
     input_path: Union[str, Path] = Field('', description='输入图像')
     stain_type: TechType = Field('', description='输入图像的染色类型')
-    chip_size: List = Field(None, description='芯片的高和宽')
+    chip_size: List[Union[float, int]] = Field(None, description='芯片的高和宽')  # S0.5 -> float; S1 -> int
     threshold_list: List = Field(None, description='输入阈值的下限和上限，仅针对IF图像')
 
 
