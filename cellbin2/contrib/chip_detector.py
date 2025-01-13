@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from cellbin2.utils import clog
 from pydantic import BaseModel, Field
 from scipy.spatial.distance import cdist
@@ -15,7 +15,7 @@ from typing import Union
 from cellbin2.image import CBImage
 from cellbin2.contrib.alignment.basic import transform_points, ChipBoxInfo
 from cellbin2.contrib.base_module import BaseModule
-from cellbin2.utils.plot_funcsjin import get_view_image
+from cellbin2.utils.plot_funcs import get_view_image
 
 SUPPORTED_STAIN_TYPE = (TechType.ssDNA, TechType.DAPI, TechType.HE)
 weight_name_ext = '_weights_path'
@@ -353,7 +353,7 @@ def detect_chip(file_path: Union[str, np.ndarray],
                 cfg: ChipParam,
                 stain_type: TechType,
                 actual_size: Tuple[int, int],
-                is_debug: bool) -> Tuple[ChipBoxInfo, list]:
+                is_debug: bool) -> Tuple[ChipBoxInfo, Dict[str, np.ndarray]]:
     """
 
     Args:
@@ -366,7 +366,7 @@ def detect_chip(file_path: Union[str, np.ndarray],
     Returns:
 
     """
-    debug_image_list = []
+    debug_image_dic = {}
     cd = ChipDetector(cfg=cfg, stain_type=stain_type)
     cd.detect(file_path, actual_size=actual_size)
     info = {
@@ -375,31 +375,33 @@ def detect_chip(file_path: Union[str, np.ndarray],
         'ScaleX': cd.scale_x, 'ScaleY': cd.scale_y, 'Rotation': cd.rotation,
         'ChipSize': cd.chip_size, 'IsAvailable': cd.is_available
     }
-    # if debug is False, the returned list debug_image_list is empty
+    # if is_debug is False, the returned dic debug_image_dic is empty
     if is_debug:
-        points = [cd.left_top, cd.left_bottom, cd.right_bottom, cd.right_top]
-        debug_image_list = get_view_image(image=file_path,
-                                          points=points,
-                                          is_matrix=False,
-                                          radius=50)
-    return ChipBoxInfo(**info), debug_image_list
+        points = np.array([cd.left_top, cd.left_bottom, cd.right_bottom, cd.right_top])
+        debug_image_dic = get_view_image(image=file_path,
+                                         points=points,
+                                         is_matrix=False,
+                                         radius=50)
+    return ChipBoxInfo(**info), debug_image_dic
 
 
 def main():
     cfg = ChipParam(
         **{"stage1_weights_path":
-            r"C:\Users\87393\Downloads\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
+            r"D:\hedongdong1\Workspace\01.chip_box_detect\algorithm_develop\old_model\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
             "stage2_weights_path":
-            r"D:\01.code\cellbin2\weights\chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx"})
+            r"D:\hedongdong1\Workspace\01.chip_box_detect\algorithm_develop\old_model\chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx"})
 
-    file_path = r"D:\02.data\temp\A03599D1\fov_stitched_DAPI.tif"
-    info = detect_chip(file_path, cfg=cfg, stain_type=TechType.DAPI, actual_size=(19992, 19992))
-    print(info.is_available)
+    file_path = r"D:\hedongdong1\Workspace\01.chip_box_detect\show_interface\test_data\C04144G513_ssDNA_stitch.tif"
+    info, debug_dic = detect_chip(file_path, cfg=cfg, stain_type=TechType.ssDNA, actual_size=(19992, 19992), is_debug=True)
+    print(info.IsAvailable)
 
 
 if __name__ == '__main__':
-    points = np.loadtxt(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\B03025E4\B03025E4_DAPI_stitch.txt")
+    # points = np.loadtxt(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\B03025E4\B03025E4_DAPI_stitch.txt")
+    #
+    # cd = ChipDetector(cfg = None, stain_type = "DAPI")
+    # cd.set_corner_points(points)
+    # cd.detect(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\A00792D3\label.tif", (19992, 19992))
 
-    cd = ChipDetector(cfg = None, stain_type = "DAPI")
-    cd.set_corner_points(points)
-    cd.detect(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\A00792D3\label.tif", (19992, 19992))
+    main()

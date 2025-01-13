@@ -14,6 +14,7 @@ from cellbin2.contrib.alignment.basic import transform_points
 from cellbin2.image.augmentation import f_ij_16_to_8, dapi_enhance, he_enhance
 from cellbin2.contrib.alignment.basic import TemplateInfo, ChipBoxInfo
 from cellbin2.contrib.template.inferencev1 import TemplateReferenceV1
+from typing import Dict
 
 pt_enhance_method = {
     'ssDNA': dapi_enhance,
@@ -277,7 +278,7 @@ def get_view_image(
         scale_line_pixels: int = 5,
         scale_line_length: int = 3,
         output_path: str = "",
-):
+        ) -> Dict[str, np.ndarray]:
     """
 
     Args:
@@ -299,6 +300,7 @@ def get_view_image(
     if isinstance(image, str):
         image = tifffile.imread(image)
     image_list = list()
+    output_dic = {}
     image = f_ij_16_to_8(image)
     if is_matrix:
         image_enhance = cv.filter2D(image, -1, np.ones((21, 21), np.float32))
@@ -361,23 +363,24 @@ def get_view_image(
         cv.polylines(_image, pts=scale_line_list, isClosed=False,
                      color=color, thickness=1, lineType=cv.LINE_8)
 
-        image_list.append(_image)
+        image_list.append(np.array(_image))
 
-    if os.path.isdir(output_path):
-        name_list = ["enhance", "left_up", "left_down", "right_down", "right_up"]
-        for name, im in zip(name_list, image_list):
+    name_list = ["enhance", "left_up", "left_down", "right_down", "right_up"]
+    for name, im in zip(name_list, image_list):
+        if os.path.isdir(output_path):
             cv.imwrite(os.path.join(output_path, f"{name}.tif"), im)
-
-    return image_list
+        output_dic[name] = im
+    return output_dic
 
 
 if __name__ == '__main__':
     import h5py
     from cellbin2.image import cbimwrite
 
-    get_view_image(image = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\A00792D3\A00792D3_DAPI_stitch.tif",
-                   points = np.loadtxt(r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\A00792D3\A00792D3_DAPI_stitch.txt"),
-                   output_path = r"D:\02.data\temp\temp_cellbin2_test\trans_data_1\A00792D3")
+    image_dic = get_view_image(image = r"D:\hedongdong1\Workspace\01.chip_box_detect\show_interface\test_data\C04144G513_ssDNA_stitch.tif",
+                   points = np.loadtxt(r"D:\hedongdong1\Workspace\01.chip_box_detect\show_interface\test_data\C04144G513_ssDNA_stitch.txt"),
+                   output_path = r"D:\hedongdong1\Workspace\01.chip_box_detect\show_interface\test_result")
+    print(len(image_dic))
 
     # register_img = "/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1_ssDNA_regist.tif"
     # tissue_cut = "/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1_ssDNA_tissue_cut.tif"

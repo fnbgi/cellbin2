@@ -1,6 +1,6 @@
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 import os
-
+import numpy as np
 from cellbin2.image import CBImage, cbimread
 from cellbin2.utils.common import TechType
 from cellbin2.utils import ipr
@@ -42,15 +42,15 @@ def detect_chip(
         param_chip: StereoChip,
         config: Config,
         debug: bool
-) -> Tuple[ChipBoxInfo, list]:
+) -> Tuple[ChipBoxInfo, Dict[str, np.ndarray]]:
     actual_size = param_chip.norm_chip_size
-    # if debug is False, the returned list debug_image_list is empty
-    info, debug_image_list = chip_detector.detect_chip(file_path=image_file.file_path,
-                                                       cfg=config.chip_detector,
-                                                       stain_type=image_file.tech,
-                                                       actual_size=actual_size,
-                                                       is_debug=debug)
-    return info, debug_image_list
+    # if debug is False, the returned dic debug_image_dic is empty
+    info, debug_image_dic = chip_detector.detect_chip(file_path=image_file.file_path,
+                                                      cfg=config.chip_detector,
+                                                      stain_type=image_file.tech,
+                                                      actual_size=actual_size,
+                                                      is_debug=debug)
+    return info, debug_image_dic
 
 
 def run_clarity(
