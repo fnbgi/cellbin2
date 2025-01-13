@@ -110,7 +110,7 @@ class ImageQC(object):
                 s[0], image.channel, image.depth))
         return 0
 
-    def run(self, chip_no: str, input_image: str, stain_type: str, param_file: str, output_path: str):
+    def run(self, chip_no: str, input_image: str, stain_type: str, param_file: str, output_path: str, debug: bool):
         """ Phase1: 输入准备工作 """
         # 芯片信息加载
         self.param_chip.parse_info(chip_no)
@@ -153,7 +153,8 @@ class ImageQC(object):
                     image_file=f,
                     param_chip=self.param_chip,
                     config=self.config,
-                    output_path=output_path
+                    output_path=output_path,
+                    debug=debug
                 )
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
             elif f.channel_align != -1:
@@ -183,7 +184,7 @@ def image_quality_control(weights_root: str, chip_no: str, input_image: str,
 
     iqc = ImageQC(config_file=config_file, chip_mask_file=chip_mask_file, weights_root=weights_root)
     return iqc.run(chip_no=chip_no, input_image=input_image, stain_type=stain_type, param_file=param_file,
-                   output_path=output_path)
+                   output_path=output_path, debug=debug)
 
 
 def main(args, para):

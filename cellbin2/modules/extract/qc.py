@@ -15,6 +15,7 @@ from cellbin2.contrib import inference
 from cellbin2.contrib.template.point_detector import TrackPointsInfo
 from cellbin2.contrib.alignment import ChipFeature, RegistrationInput, get_alignment_00
 from cellbin2.contrib.alignment.basic import AlignMode
+from cellbin2.utils.plot_funcs import get_view_image
 
 
 def scale_estimate(image_file, param_chip):
@@ -39,7 +40,8 @@ def estimate_fov_size(
 def detect_chip(
         image_file: ProcFile,
         param_chip: StereoChip,
-        config: Config
+        config: Config,
+        debug: bool
 ) -> ChipBoxInfo:
     actual_size = param_chip.norm_chip_size
     info = chip_detector.detect_chip(file_path=image_file.file_path,
@@ -116,6 +118,7 @@ def run_qc(
         param_chip: StereoChip,
         config: Config,
         output_path,
+        debug: bool,
         fov_wh=(2000, 2000),
 ) -> Union[ipr.ImageChannel, ipr.IFChannel]:
     image = cbimread(image_file.file_path)
@@ -143,7 +146,8 @@ def run_qc(
         chip_info: ChipBoxInfo = detect_chip(
             image_file=image_file,
             param_chip=param_chip,
-            config=config
+            config=config,
+            debug=debug
         )
         channel_image.QCInfo.ChipBBox.update(box=chip_info)
         channel_image.QCInfo.ChipDetectQCPassFlag = 1 if chip_info.IsAvailable else 0
