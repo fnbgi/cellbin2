@@ -331,11 +331,11 @@ def s_main():
     )
     if tm is not None:
         c_mask = tm * c_mask
-        f_mask = tm * f_mask
 
     # save mask
     cbimwrite(c_mask_path, c_mask * 255)
     if f_mask is not None:
+        f_mask = tm * f_mask
         cbimwrite(f_mask_path, f_mask * 255)
 
 
