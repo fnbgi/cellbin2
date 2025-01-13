@@ -15,6 +15,7 @@ from typing import Union
 from cellbin2.image import CBImage
 from cellbin2.contrib.alignment.basic import transform_points, ChipBoxInfo
 from cellbin2.contrib.base_module import BaseModule
+from cellbin2.utils.plot_funcsjin import get_view_image
 
 SUPPORTED_STAIN_TYPE = (TechType.ssDNA, TechType.DAPI, TechType.HE)
 weight_name_ext = '_weights_path'
@@ -351,7 +352,8 @@ class ChipDetector(object):
 def detect_chip(file_path: Union[str, np.ndarray],
                 cfg: ChipParam,
                 stain_type: TechType,
-                actual_size: Tuple[int, int]) -> ChipBoxInfo:
+                actual_size: Tuple[int, int],
+                is_debug: bool) -> Tuple[ChipBoxInfo, list]:
     """
 
     Args:
@@ -359,10 +361,12 @@ def detect_chip(file_path: Union[str, np.ndarray],
         cfg:
         stain_type: 染色类型 （ssDNA | DAPI | HE | IF）
         actual_size: 芯片原始标准大小 500nm/pixel尺度下 例S1芯片(19992, 19992)
+        is_debug: is debug mode or not
 
     Returns:
 
     """
+    debug_image_list = []
     cd = ChipDetector(cfg=cfg, stain_type=stain_type)
     cd.detect(file_path, actual_size=actual_size)
     info = {
@@ -371,8 +375,14 @@ def detect_chip(file_path: Union[str, np.ndarray],
         'ScaleX': cd.scale_x, 'ScaleY': cd.scale_y, 'Rotation': cd.rotation,
         'ChipSize': cd.chip_size, 'IsAvailable': cd.is_available
     }
-
-    return ChipBoxInfo(**info)
+    # if debug is False, the returned list debug_image_list is empty
+    if is_debug:
+        points = [cd.left_top, cd.left_bottom, cd.right_bottom, cd.right_top]
+        debug_image_list = get_view_image(image=file_path,
+                                          points=points,
+                                          is_matrix=False,
+                                          radius=50)
+    return ChipBoxInfo(**info), debug_image_list
 
 
 def main():

@@ -42,13 +42,15 @@ def detect_chip(
         param_chip: StereoChip,
         config: Config,
         debug: bool
-) -> ChipBoxInfo:
+) -> Tuple[ChipBoxInfo, list]:
     actual_size = param_chip.norm_chip_size
-    info = chip_detector.detect_chip(file_path=image_file.file_path,
-                                     cfg=config.chip_detector,
-                                     stain_type=image_file.tech,
-                                     actual_size=actual_size)
-    return info
+    # if debug is False, the returned list debug_image_list is empty
+    info, debug_image_list = chip_detector.detect_chip(file_path=image_file.file_path,
+                                                       cfg=config.chip_detector,
+                                                       stain_type=image_file.tech,
+                                                       actual_size=actual_size,
+                                                       is_debug=debug)
+    return info, debug_image_list
 
 
 def run_clarity(
