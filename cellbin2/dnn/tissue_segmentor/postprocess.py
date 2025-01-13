@@ -1,19 +1,16 @@
-from typing import Tuple, Any
-
+from typing import Tuple
 import numpy as np
 import numpy.typing as npt
-from cv2 import Mat
-from numpy import ndarray, dtype, generic
-from typing import List
+from numpy import ndarray
 from skimage.exposure import rescale_intensity
 from skimage.morphology import remove_small_objects
 import cv2
 from cellbin2.image.augmentation import f_resize
 from cellbin2.image.morphology import f_fill_holes
 from cellbin2.image.threshold import f_th_li, f_th_sauvola
-
 from cellbin2.utils.common import TechType
 from cellbin2.utils import clog
+
 
 def transfer_16bit_to_8bit(image_16bit: np.ndarray) -> np.ndarray:
     """
