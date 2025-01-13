@@ -7,6 +7,9 @@ from cellbin2.utils import clog
 from tqdm import tqdm
 
 from cellbin2.utils.ipr import sPlaceHolder
+CURR_DIR = os.path.dirname(os.path.realpath(__file__))
+CB2_DIR = os.path.dirname(CURR_DIR)
+DEFAULT_WEIGHTS_DIR = os.path.join(CB2_DIR, "weights")
 
 
 class DNNModuleName(Enum):
@@ -91,7 +94,7 @@ class WeightDownloader(object):
 
         return 0
 
-    def download_module_weight(self, module_name: Union[DNNModuleName, list]):
+    def download_module_weight(self, module_name: Union[DNNModuleName, list] = None):
         weights_to_download = []
         if isinstance(module_name, DNNModuleName):
             weights_to_download = [module_name]
@@ -99,7 +102,7 @@ class WeightDownloader(object):
             weights_to_download = module_name
         elif module_name is None:
             # 如果不给这个参数，默认就全部下载
-            weights_to_download = DNNModuleName.__members__.keys()
+            weights_to_download = DNNModuleName.__members__.values()
         for module_name in weights_to_download:
             for model_name in self._WEIGHTS[module_name.name].keys():
                 self.download_weights(module_name, model_name)
@@ -114,18 +117,26 @@ def download_by_names(save_dir: str, weight_names: List[str]):
 if __name__ == '__main__':
     save_dir = r'E:\03.users\liuhuanlin\01.data\cellbin2\weights'
     names = [DNNModuleName.cellseg]
+def download_all_weights(save_dir: str = None):
+    if save_dir is None:
+        save_dir = DEFAULT_WEIGHTS_DIR
     wd = WeightDownloader(save_dir)
+    wd.download_module_weight()
 
-    # 通过模块下载
-    wd.download_module_weight(names)
 
-    # 通过模块/模型名字下载
-    wd.download_weights(names[0], 'cellseg_bcdu_SHDI_221008_tf.onnx')
-    wd.download_weights(names[0], 'points_detect_yolov5obb_SSDNA_20220513_pytorch.onnx')
-
-    # 通过模型名字列表下载
-    wd.download_weight_by_names(['chip_detect_yolov5obb_SSDNA_20241001_pytorch.onnx',
-                                 'tissueseg_yolo_SH_20230131_th.onnx'])
-
-    """
-    """
+if __name__ == '__main__':
+    save_dir = '/media/Data1/user/dengzhonghan/data/tmp/test_weights_2'
+    download_all_weights()
+    # names = [DNNModuleName.cellseg]
+    # wd = WeightDownloader(save_dir)
+    #
+    # # 通过模块下载
+    # wd.download_module_weight(names)
+    #
+    # # 通过模块/模型名字下载
+    # wd.download_weights(names[0], 'cellseg_bcdu_SHDI_221008_tf.onnx')
+    # wd.download_weights(names[0], 'points_detect_yolov5obb_SSDNA_20220513_pytorch.onnx')
+    #
+    # # 通过模型名字列表下载
+    # wd.download_weight_by_names(['chip_detect_yolov5obb_SSDNA_20241001_pytorch.onnx',
+    #                              'tissueseg_yolo_SH_20230131_th.onnx'])

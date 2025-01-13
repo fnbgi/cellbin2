@@ -8,3 +8,9 @@ python3 -m pytest # 一定要这样执行，不然会找不到cellbin
 pytest test/test_cellbin_pipeline.py --html=/media/Data1/user/dengzhonghan/data/cellbin2/auto_test/0.0.1/report/0.01.html --self-contained-html
 ```
 
+deploy
+```shell
+pip install git+https://github.com/STOmics/cellbin2.git@main
+python -c "from cellbin2.utils.weights_manager import download_all_weights; download_all_weights()"
+```
+
