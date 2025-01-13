@@ -145,7 +145,7 @@ def run_qc(
     )
 
     if image_file.chip_detect:
-        chip_info: ChipBoxInfo = detect_chip(
+        chip_info, debug_image_dic = detect_chip(
             image_file=image_file,
             param_chip=param_chip,
             config=config,

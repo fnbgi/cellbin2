@@ -148,8 +148,14 @@ class StereoChip(object):
                            points_finish.transpose(1, 0).tolist())
         _x = np.array(x_set)[1:] - np.array(x_set)[:-1]
         _y = np.array(y_set)[1:] - np.array(y_set)[:-1]
-        zero_x = x_set[np.where(_x == max(self.fov_template[0]))[0][0] + 1]
-        zero_y = x_set[np.where(_x == max(self.fov_template[0]))[0][0] + 1]
+
+        _x_index = np.where(_x == max(self.fov_template[0]))[0][0]
+        _y_index = np.where(_y == max(self.fov_template[0]))[0][0]
+
+        _x_index, _y_index = map(lambda x: -1 if x == 8 else x, (_x_index, _y_index))
+
+        zero_x = x_set[_x_index + 1]
+        zero_y = y_set[_y_index + 1]
 
         # 补充00点距芯片角距离
         index = np.where(((points_finish[:, 0] == zero_x) & (points_finish[:, 1] == zero_y)) == True)[0][0]
@@ -297,15 +303,25 @@ if __name__ == '__main__':
     # main()
     curr_path = os.path.dirname(os.path.realpath(__file__))
     sc = StereoChip(chip_mask_file = os.path.join(curr_path, r'../config/chip_mask.json'))
-    sc.parse_info(chip_no = 'A03599D1')
+    # sc.parse_info(chip_no = 'D05106E2')
+    # print(1)
+    word = 'ACDEFGHJKLMNP'
+    num = '123456789ACDE'
+
+    points_list = []
+
+    for i in range(len(word)):
+        for j in range(len(num)):
+            for k in range(4):
+                sc.parse_info(chip_no='Y03950' + word[i] + num[j] + f'1{k + 1}')
+                # zz = sc.zero_zero_point
+                # print(zz)
+                # print("***************")
+                # print(np.array(sc.zero_zero_point))
+                points_list.append(np.array(sc.zero_zero_chip_point))
+                # print(np.array(sc.zero_zero_chip_point))
+                # print(2940 - np.array(sc.zero_zero_chip_point))
+
     print(1)
-    # word = 'ACDEFGHJKLMNP'
-    # num = '123456789ACDE'
-    # for i in range(13):
-    #     for j in range(13):
-    #         sc.parse_info(chip_no='Y03950' + word[i] + num[j])
-    #         # zz = sc.zero_zero_point
-    #         # print(zz)
-    #         print("***************")
-    #         print(np.array(sc.zero_zero_chip_point))
-    #         print(2940 - np.array(sc.zero_zero_chip_point))
+    np.savetxt(r"G:\temp\S13_small.txt", points_list)
+
