@@ -28,12 +28,23 @@ table_dict = collections.defaultdict()
 datafile_path = r"D:\temp\cellbin_test\solutions_data.xlsx"
 processed_data = get_data_info(datafile_path)
 
-def fold(record_md, list):
+def fold(record_md, record: (list, tuple)):
     record_md.write('<details>\n')
-    record_md.write('<summary>Type/Value different detail </summary> \n')
-    for i in list:
-        record_md.write(f'* {i}<br> \n')
-    record_md.write('</details> \n\n')
+    record_md.write('<summary>Record different detail </summary> \n')
+
+    if isinstance(record, list):
+        for i in record:
+            record_md.write(f'* {i}<br> \n')
+        record_md.write('</details> \n\n')
+
+    if isinstance(record, dict):
+        for k, v in record.items():
+            record_md.write(f'*   <br> \n')
+            record_md.write(f'* >>>>>>>>>>>>>>>>>>>>>>>>>>>>> {k} Module >>>>>>>>>>>>>>>>>>>>>> <br> \n')
+            record_md.write(f'*  \n')
+            for r in v:
+                record_md.write(f'* {r} <br> \n')
+        record_md.write('</details> \n\n')
 
 
 def pytest_addoption(parser):

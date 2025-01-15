@@ -12,6 +12,7 @@ sys.path.append(Path(__file__).parents[2])
 
 from cellbin2.image.augmentation import  dapi_enhance, he_enhance
 from cellbin2.contrib.template.inferencev1 import TemplateReferenceV1
+from cellbin2.utils.ipr import read
 
 pt_enhance_method = {
     'ssDNA': dapi_enhance,
@@ -20,7 +21,6 @@ pt_enhance_method = {
 }
 
 stain_list = ['ssDNA', 'DAPI', 'HE']
-
 
 def xlsx2json(xlsx_path: str):
     df = pd.read_excel(xlsx_path, index_col="SN")
@@ -46,7 +46,17 @@ class Sample:
         pass
 
     def __getattr__(self, name):
-        # 如果属性不存在，返回 None
+        # If the property does not exist, return None
+        return None
+
+
+class Wrapper:
+    def __init__(self, obj):
+        self._obj = obj
+
+    def __getattr__(self, name):
+        if hasattr(self._obj, name):
+            return getattr(self._obj, name)
         return None
 
 
@@ -61,60 +71,71 @@ def dict2class(dct):
     return sample
 
 
-def get_attributes(file):
-    type_attributes = {}
-    ipr_dict = {}
-    CrossPoints_dict = {}
+def wrapper_class(obj):
+    wrapper = Wrapper(obj)
+    for k in obj.__dict__:
+        # print(k)
+        if hasattr(obj.__dict__[k], "__dict__"):
+            wrapper.__dict__[k] = wrapper_class(obj.__dict__[k])
 
-    def visit_group(name, obj):
-        if isinstance(obj, h5py.Group):
-            # get all name , type, value of obj
-            attrs = obj.attrs.items()
-            parent = obj.parent.name.split('/')[-1]
-            for attr_name, attr_value in attrs:
-                type_attributes[attr_name] = type(attr_value)
-                if attr_name == 'Method' and parent == 'Register':
-                    print(attr_name)
-                    continue
-                ipr_dict[attr_name] = attr_value
+        else:
+            wrapper.__dict__[k] = obj.__dict__[k]
+    return wrapper
 
-        if isinstance(obj, h5py.Dataset):
-            # set dataset of obj to array
-            new_name = name.split('/')[-1]
-            parent = obj.parent.name.split('/')[-1]
-            if parent == 'CrossPoints':
-                CrossPoints_dict['fov_' + new_name] = obj[()]
-            else:
-                ipr_dict[new_name] = obj[()]
+# def get_attributes(file):
+#     type_attributes = {}
+#     ipr_dict = {}
+#     CrossPoints_dict = {}
+#
+#     def visit_group(name, obj):
+#         if isinstance(obj, h5py.Group):
+#             # get all name , type, value of obj
+#             attrs = obj.attrs.items()
+#             parent = obj.parent.name.split('/')[-1]
+#             for attr_name, attr_value in attrs:
+#                 type_attributes[attr_name] = type(attr_value)
+#                 if attr_name in ['Method', 'OffsetX', 'OffsetY', 'ScaleX', 'ScaleY'] and parent in ['Register', 'QCInfo']:
+#                     # print(attr_name)
+#                     continue
+#                 ipr_dict[attr_name] = attr_value
+#
+#         if isinstance(obj, h5py.Dataset):
+#             # set dataset of obj to array
+#             new_name = name.split('/')[-1]
+#             parent = obj.parent.name.split('/')[-1]
+#             if parent == 'CrossPoints':
+#                 CrossPoints_dict['fov_' + new_name] = obj[()]
+#             else:
+#                 ipr_dict[new_name] = obj[()]
+#
+#         ipr_dict['CrossPoints'] = CrossPoints_dict
+#
+#     file.visititems(visit_group)
+#     return type_attributes, ipr_dict
 
-        ipr_dict['CrossPoints'] = CrossPoints_dict
 
-    file.visititems(visit_group)
-    return type_attributes, ipr_dict
-
-
-def parse_ipr(ipr_file):
-    ipr_if_dict = {}
-
-    with h5py.File(ipr_file, 'r') as f:
-        stain_list = ('ssDNA', 'DAPI', 'HE')
-        set_ = ('ManualState', 'StereoResepSwitch', 'Preview', 'Research')
-        if_group = list(set(f.keys()).difference(set_ + stain_list))
-
-        if len(set(f.keys()).intersection(stain_list)) == 0:
-            raise Exception('This ipr is not legal, break!')
-
-        for group in f.keys():
-            if group in stain_list:
-                type_attributes, ipr_dict = get_attributes(f[group])
-
-        for fluo in if_group:
-            type_attributes_, ipr_dict_ = get_attributes(f[fluo])
-            ipr_if_dict[fluo] = ipr_dict_
-
-        ipr_dict['IF'] = ipr_if_dict
-
-        return type_attributes, ipr_dict
+# def parse_ipr(ipr_file):
+#     ipr_if_dict = {}
+#
+#     with h5py.File(ipr_file, 'r') as f:
+#         stain_list = ('ssDNA', 'DAPI', 'HE')
+#         set_ = ('ManualState', 'StereoResepSwitch', 'Preview', 'Research')
+#         if_group = list(set(f.keys()).difference(set_ + stain_list))
+#
+#         if len(set(f.keys()).intersection(stain_list)) == 0:
+#             raise Exception('This ipr is not legal, break!')
+#
+#         for group in f.keys():
+#             if group in stain_list:
+#                 type_attributes, ipr_dict = get_attributes(f[group])
+#
+#         for fluo in if_group:
+#             type_attributes_, ipr_dict_ = get_attributes(f[fluo])
+#             ipr_if_dict[fluo] = ipr_dict_
+#
+#         ipr_dict['IF'] = ipr_if_dict
+#
+#         return type_attributes, ipr_dict
 
 
 def dict_compare(ipr_dict: dict, ipr_dict2: dict):
@@ -168,18 +189,19 @@ def dict2mdtable(data_dict):
 
     return markdown_table
 
-def create_crosspoint(ipr_dict: dict):
+def create_crosspoint(image_dct):
     _points = np.ones([0, 4])
-    if len(ipr_dict['GlobalLoc']):
-        for k, v in ipr_dict['CrossPoints'].items():
+    loc = image_dct.Stitch.ScopeStitch.GlobalLoc
+    if len(loc):
+        for k,v in vars(image_dct.QCInfo.CrossPoints).items():
             if v.shape[1] == 3:
                 v = np.concatenate((v[:, :2], np.zeros([v.shape[0], 2])), axis=1)
             r, c = map(int, k.split("_")[-2:])
-            _loc = ipr_dict['GlobalLoc'][r, c]
+            _loc = loc[r, c]
             v[:, :2] = v[:, :2] + _loc
             _points = np.concatenate((_points, v), axis=0)
     else:
-        for k, v in ipr_dict['CrossPoints'].items():
+        for k, v in vars(image_dct.QCInfo.CrossPoints).items():
             _points = np.concatenate((_points, v), axis=0)
 
     return _points
@@ -200,5 +222,5 @@ def compare_points(
     return warning
 
 if __name__ == '__main__':
-    type_attributes, ipr_dict = parse_ipr(r"D:\temp\cellbin_test\GOLD\SS200000135TL_D1\SS200000135TL_D1.ipr")
-    print(1)
+    ipr, image_dct = read(r"D:\temp\cellbin_test\GOLD\SS200000135TL_D1\SS200000135TL_D1_SC_20241030_151054_4.1.0.ipr")
+    wrapper_class(image_dct['ssDNA'])
