@@ -265,7 +265,10 @@ def template_00pt_check(
     rd_x, rd_y = map(int, fixed_image.chip_box.chip_box[2] / down_size)
     _gene_image = fixed_image.mat.image[::down_size, ::down_size][lu_y: rd_y, lu_x:rd_x]
 
-    if flip_flag: mm = moving_image.mat.trans_image(flip_lr = True)
+    temp_cbi = CBImage(Alignment._fill_image(moving_image.mat.image, moving_image.chip_box.chip_box))
+    moving_image.mat = temp_cbi
+
+    if flip_flag: mm = moving_image.mat.trans_image(flip_ud = True)
     else: mm = moving_image.mat
 
     register_info = dict()
@@ -292,7 +295,7 @@ def template_00pt_check(
         'offset': best_info[1]["offset"],
         'flip': flip_flag,
         'register_score': best_info[1]["score"],
-        'counter_rot90': best_info[0],
+        'counter_rot90': (best_info[0] + 2) % 4,
         # 'register_mat': tpa.registration_image(moving_image.mat),
         'method': AlignMode.Template00Pt,
         'dst_shape': (fixed_image.mat.shape[0], fixed_image.mat.shape[1])
