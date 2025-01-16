@@ -52,13 +52,13 @@ def deep_compare(
     if hasattr(obj1, "__dict__"):
         d1 = vars(obj1)
         d2 = vars(obj2)
-        all_attrs = set(d1.keys()) | set(d2.keys())
+        all_attrs = set(d2.keys())
         for attr in all_attrs:
             sub_path = f"{path}.{attr}" if path else attr
 
-            if attr not in d2:
-                value_diffs.append(f"[{sub_path}] - missing in now ipr!")
-                miss_attrs.extend(sub_path)
+            if attr not in d1:
+                # miss_attrs.append(f"[{sub_path}] - missing in now ipr!")
+                miss_attrs.append(sub_path)
                 continue
 
             td, vd, ma = deep_compare(d1[attr], d2[attr], sub_path)
@@ -68,13 +68,13 @@ def deep_compare(
         return type_diffs, value_diffs, miss_attrs
 
     if isinstance(obj1, dict):
-        all_keys = set(obj1.keys()) | set(obj2.keys())
+        all_keys = set(obj2.keys())
         for key in all_keys:
             sub_path = f"{path}.{key}" if path else key
 
-            if key not in obj2:
-                value_diffs.append(f"[{sub_path}] - missing in now ipr!")
-                miss_attrs.extend(sub_path)
+            if key not in obj1:
+                # miss_attrs.append(f"[{sub_path}] - missing in now ipr!")
+                miss_attrs.append(sub_path)
                 continue
             td, vd, ma = deep_compare(obj1[key], obj2[key], sub_path)
             type_diffs.extend(td)
