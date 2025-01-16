@@ -43,7 +43,7 @@ def detect_chip(
         config: Config,
         debug: bool,
         output_path: str,
-) -> Tuple[ChipBoxInfo, Dict[str, np.ndarray]]:
+) -> ChipBoxInfo:
     actual_size = param_chip.norm_chip_size
     # if debug is False, the returned dic debug_image_dic is empty
     info, debug_image_dic = chip_detector.detect_chip(file_path=image_file.file_path,
@@ -152,7 +152,7 @@ def run_qc(
     )
 
     if image_file.chip_detect:
-        chip_info, debug_image_dic = detect_chip(
+        chip_info = detect_chip(
             image_file=image_file,
             param_chip=param_chip,
             config=config,
