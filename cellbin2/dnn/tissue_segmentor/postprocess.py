@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 import numpy as np
 import numpy.typing as npt
 from numpy import ndarray
@@ -91,7 +91,7 @@ def f_post_transcriptomics_protein_220909(img: npt.NDArray, src_shape: tuple) ->
     return img
 
 
-def f_post_if(img: npt.NDArray, threshold_list: Tuple[float, float]) -> Tuple[Tuple[float, float], ndarray]:
+def f_post_if(img: npt.NDArray, threshold_list: Tuple[int, int]) -> Tuple[Tuple[Union[float, int], Union[float, int]], ndarray]:
     clog.info("postprocessing data type: IF")
     clog.info(f"threshold_list: {threshold_list}")
     if threshold_list:

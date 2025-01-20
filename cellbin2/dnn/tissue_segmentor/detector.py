@@ -5,7 +5,7 @@ from cellbin2.dnn.tissue_segmentor.big_chip_preprocess import BigChipTissueSegPr
 from cellbin2.dnn.tissue_segmentor.big_chip_postprocess import BigChipTissueSegPostprocess
 from cellbin2.dnn.tissue_segmentor.processing import f_preformat, f_postformat
 from cellbin2.image.augmentation import f_resize
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Tuple
 from cellbin2.utils.common import TechType
 from cellbin2.utils import clog
 from cellbin2.contrib.param import TissueSegOutputInfo
@@ -38,7 +38,7 @@ class TissueSegmentationBcdu(object):
     def __init__(self,
                  input_size: tuple = (512, 512, 1),
                  stain_type: TechType = '',
-                 threshold_list: List = None,
+                 threshold_list: Tuple[int, int] = None,
                  gpu: int = -1,
                  mode: str = "onnx",
                  num_threads: int = 0,

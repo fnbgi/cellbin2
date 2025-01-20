@@ -291,11 +291,14 @@ def template_00pt_check(
 
     best_info = sorted(register_info.items(), key = lambda x: x[1]["score"], reverse = True)[0]
 
+    rot90_count = best_info[0]
+    rot90_count = rot90_count if rot90_count % 2 == 1 else np.abs(rot90_count - 2)
+
     check_info = {
         'offset': best_info[1]["offset"],
         'flip': flip_flag,
         'register_score': best_info[1]["score"],
-        'counter_rot90': (best_info[0] + 2) % 4,
+        'counter_rot90': rot90_count,
         # 'register_mat': tpa.registration_image(moving_image.mat),
         'method': AlignMode.Template00Pt,
         'dst_shape': (fixed_image.mat.shape[0], fixed_image.mat.shape[1])

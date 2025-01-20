@@ -30,7 +30,7 @@ TEST_DATA = [
         r"/path/to/mask",  # if the input is a folder, the output must also be a folder
         r"/path/to/tissueseg_bcdu_SDI_230523_tf.onnx",  # onnx file path
         "dapi",  # stain type
-        [3, 3],  # chip size,height and width, if the image path is a folder, this parameter will be used for all the images
+        [],  # set empty list,if do not know chip size
         "onnx",  # onnx mode or tf mode, only the onnx mode is supported currently
         "0"  # GPU num, -1 represents the CPU
     ),
@@ -50,7 +50,7 @@ TEST_DATA = [
         r"/path/to/image/if.tif",  # output mask path
         r"",
         "if",  # stain type
-        [3, 3],  # chip size,height and width, if the image path is a folder, this parameter will be used for all the images
+        [2, 2],  # chip size,height and width, if the image path is a folder, this parameter will be used for all the images
         "onnx",  # onnx mode or tf mode, currently only the onnx mode is supported
         "0"  # GPU num, -1 represents the CPU
     ),
@@ -91,18 +91,24 @@ class TestTissueSeg:
             setattr(cfg, f"{stain_type.name}_weights_path", model_dir)
             setattr(cfg, "GPU", gpu_num)
         print(f"info===> stain type: {stain_type}, set {stain_type} model path:{model_dir}")
-
         if os.path.isdir(input_dir):
             assert os.path.isdir(output_dir), 'the input path is a folder, so the output path should also be a folder'
             for tmp in os.listdir(input_dir):
                 input_path = os.path.join(input_dir, tmp)
                 output_path = os.path.join(output_dir, tmp)
-                input_data = TissueSegInputInfo(
-                    weight_path_cfg=cfg,
-                    input_path=input_path,
-                    stain_type=stain_type,
-                    chip_size=chip_size
-                )
+                if isinstance(chip_size, list) and len(chip_size) == 2:
+                    input_data = TissueSegInputInfo(
+                        weight_path_cfg=cfg,
+                        input_path=input_path,
+                        stain_type=stain_type,
+                        chip_size=chip_size
+                    )
+                else:
+                    input_data = TissueSegInputInfo(
+                        weight_path_cfg=cfg,
+                        input_path=input_path,
+                        stain_type=stain_type
+                    )
 
                 seg_result = segment4tissue(input_data=input_data)
                 seg_mask = seg_result.tissue_mask
@@ -112,11 +118,19 @@ class TestTissueSeg:
                 seg_mask[seg_mask > 0] = 255
                 tifffile.imwrite(output_path, seg_mask, compression='zlib')
         else:
-            input_data = TissueSegInputInfo(
-                weight_path_cfg=cfg,
-                input_path=input_dir,
-                stain_type=stain_type
-            )
+            if isinstance(chip_size, list) and len(chip_size) == 2:
+                input_data = TissueSegInputInfo(
+                    weight_path_cfg=cfg,
+                    input_path=input_dir,
+                    stain_type=stain_type,
+                    chip_size=chip_size
+                )
+            else:
+                input_data = TissueSegInputInfo(
+                    weight_path_cfg=cfg,
+                    input_path=input_dir,
+                    stain_type=stain_type
+                )
 
             seg_result = segment4tissue(input_data=input_data)
             seg_mask = seg_result.tissue_mask
