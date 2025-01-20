@@ -27,6 +27,11 @@ class Fast:
         self.processes = process
         self.distance = distance
         self.mask = mask.copy()
+        num_cpus = mp.cpu_count()
+        if self.processes > num_cpus:
+            clog.info(f"cpu counts on current machine: {num_cpus}")
+            self.processes = int(num_cpus // 2)
+            clog.info(f"adjust process to: {self.processes}")
 
     @staticmethod
     def getNeighborLabels8(label, x, y, width, height):
