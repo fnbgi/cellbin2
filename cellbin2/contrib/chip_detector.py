@@ -107,7 +107,7 @@ class ChipDetector(object):
     def control(
             self,
             threshold_length_rate: float = 0.05,
-            threshold_rotate: float = 1,
+            threshold_rotate: float = 2,
     ):
         """
 

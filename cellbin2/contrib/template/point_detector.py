@@ -267,10 +267,14 @@ class TrackPointQC(object):
                     continue
                 self.track_result[key] = [cp, angle]
 
-        if self.cfg.conf_filter >= 0:
+        # TODO -- HE fixed 2025.01.20
+        if self.stain_type == TechType.HE:
+            self.cfg.conf_filter = 0
+
+        if self.cfg.conf_filter > 0:
             self.track_filter(track_conf=self.cfg.conf_filter)
         else:
-            clog.info(f"conf_filer < 0, skip track filter")
+            clog.info(f"conf_filer <= 0, skip track filter")
         self.track_eval()
 
     def track_eval(self, ):

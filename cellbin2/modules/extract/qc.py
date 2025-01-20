@@ -1,7 +1,7 @@
 from typing import Tuple, Union, Dict
 import os
 import numpy as np
-from cellbin2.image import CBImage, cbimread
+from cellbin2.image import CBImage, cbimread, cbimwrite
 from cellbin2.utils.common import TechType
 from cellbin2.utils import ipr
 from cellbin2.utils import clog
@@ -41,8 +41,9 @@ def detect_chip(
         image_file: ProcFile,
         param_chip: StereoChip,
         config: Config,
-        debug: bool
-) -> Tuple[ChipBoxInfo, Dict[str, np.ndarray]]:
+        debug: bool,
+        output_path: str,
+) -> ChipBoxInfo:
     actual_size = param_chip.norm_chip_size
     # if debug is False, the returned dic debug_image_dic is empty
     info, debug_image_dic = chip_detector.detect_chip(file_path=image_file.file_path,
@@ -50,7 +51,13 @@ def detect_chip(
                                                       stain_type=image_file.tech,
                                                       actual_size=actual_size,
                                                       is_debug=debug)
-    return info, debug_image_dic
+    if debug and len(debug_image_dic) != 0:
+        # TODO: 图片太多了，整合到一起后再保存。@hdd
+        pass
+        # for i, v in debug_image_dic.items():
+        #     cbimwrite(os.path.join(output_path, i + ".tif"), v)
+
+    return info
 
 
 def run_clarity(
@@ -145,11 +152,12 @@ def run_qc(
     )
 
     if image_file.chip_detect:
-        chip_info, debug_image_dic = detect_chip(
+        chip_info = detect_chip(
             image_file=image_file,
             param_chip=param_chip,
             config=config,
-            debug=debug
+            debug=debug,
+            output_path=output_path
         )
         channel_image.QCInfo.ChipBBox.update(box=chip_info)
         channel_image.QCInfo.ChipDetectQCPassFlag = 1 if chip_info.IsAvailable else 0
