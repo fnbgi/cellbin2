@@ -1,7 +1,7 @@
 import os
 import sys
 from copy import deepcopy
-from typing import  Dict
+from typing import Dict
 
 CURR_PATH = os.path.dirname(os.path.realpath(__file__))
 CB2_PATH = os.path.dirname(CURR_PATH)
