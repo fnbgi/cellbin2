@@ -22,11 +22,10 @@ import pandas as pd
 
 WEIGHTS_ROOT = r"D:\StereoImage-cellbin\fengning_presonal_gitlab\no_matrix_17\weights"
 TEST_OUTPUT_DIR = r"D:\temp\cellbin_test\testdata"
-DEMO_DATA_DIR = "/media/Data1/user/dengzhonghan/data/cellbin2/demo_data"
 table_dict = collections.defaultdict()
 
-datafile_path = r"D:\temp\cellbin_test\solutions_data.xlsx"
-processed_data = get_data_info(datafile_path)
+datafile_path = r"D:\temp\cellbin_test\Cellbin2_TESTDATA.xlsx"
+processed_data = get_data_info(datafile_path, 'Smoke')
 
 def fold(record_md, record: (list, tuple)):
     record_md.write('<details>\n')
@@ -88,7 +87,7 @@ class TestCompare:
             if_path = info_dict.get("IF_image")
             if if_path != "/":
                 pps = if_path.split(",")
-                pps_ = [os.path.join(DEMO_DATA_DIR, i) for i in pps]
+                pps_ = [i for i in pps]
                 if_path = ",".join(pps_)
             else:
                 if_path = None
@@ -100,7 +99,7 @@ class TestCompare:
                 p_gef = None
 
             s_type = info_dict.get("track_stain_type")
-            kit_type = info_dict.get("kit_type")
+            kit_type = info_dict.get("use_kit")
             print(sn, im_path, if_path, s_type, trans_gef, p_gef, kit_type)
             pipeline(
                 chip_no=sn,

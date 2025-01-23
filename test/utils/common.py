@@ -5,7 +5,7 @@
 import h5py
 import numpy as np
 import pandas as pd
-
+from typing import Union, Literal
 import sys
 from pathlib import Path
 sys.path.append(Path(__file__).parents[2])
@@ -29,17 +29,40 @@ def xlsx2json(xlsx_path: str):
 
     return data_json
 
-def get_data_info(xlsx_path,
-                *args):
-    data_json = xlsx2json(xlsx_path)
-    run_list = []
-    for sn, info in data_json.items():
-        print(sn)
-        # tmp_list = (sn, data_json.get(sn), env, script, output, mode)
-        tmp_list = (sn, data_json.get(sn)) + args
-        # print(tmp_list)
-        run_list.append(tmp_list)
-    return run_list
+
+def get_data_info(
+        xlsx_path: str,
+        run_module: Union[list, str],
+        use_path: str = 'ztron_path'
+):
+    basic_info_df = pd.read_excel(xlsx_path, sheet_name='basic_info')
+    basic_info_df = basic_info_df.fillna(value="/")
+
+    path_info_df = pd.read_excel(xlsx_path, sheet_name=use_path)
+    path_info_df = path_info_df.fillna(value="/")
+
+    if isinstance(run_module, str):
+        run_info = pd.read_excel(xlsx_path, sheet_name=run_module)
+        run_list = set(run_info[run_info["RUN"] == 1]['SN'].tolist())
+
+    elif isinstance(run_module, list):
+        run_list = set()
+        for module in run_module:
+            run_info = pd.read_excel(xlsx_path, sheet_name=module)
+            run_list = run_list | set(run_info[run_info["RUN"] == 1]['SN'].tolist())
+
+    result = []
+    for sn in run_list:
+        basic_info = basic_info_df[basic_info_df["SN"] == sn]
+        path_info = path_info_df[path_info_df["SN"] == sn]
+
+        if not basic_info.empty and not path_info.empty:
+            merge_info = pd.merge(basic_info, path_info, on='SN').to_dict(orient='records')[0]
+            tmp_tup = (sn, merge_info)
+            result.append(tmp_tup)
+
+    return result
+
 
 class Sample:
     def __init__(self):
