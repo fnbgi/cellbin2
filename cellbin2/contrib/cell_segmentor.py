@@ -301,7 +301,8 @@ def s_main():
         from cellbin2.utils.config import Config
         from cellbin2.contrib.tissue_segmentor import segment4tissue
         from cellbin2.contrib.tissue_segmentor import TissueSegInputInfo
-        c_file = os.path.join('../config/cellbin.yaml')
+        from cellbin2 import CB2_DIR
+        c_file = os.path.join(CB2_DIR, 'cellbin2/config/cellbin.yaml')
         conf = Config(c_file, weights_root=model_dir)
         ti = TissueSegInputInfo(
             weight_path_cfg=conf.tissue_segmentation,

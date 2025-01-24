@@ -51,8 +51,8 @@ class TissueSegInputInfo(BaseModel):
     weight_path_cfg: TissueSegParam = Field('', description='组织分割不同染色权重配置文件，需要权重的绝对路径')
     input_path: Union[str, Path] = Field('', description='输入图像')
     stain_type: TechType = Field('', description='输入图像的染色类型')
-    chip_size: List[Union[float, int]] = Field(None, description='芯片的高和宽')  # S0.5 -> float; S1 -> int
-    threshold_list: List = Field(None, description='输入阈值的下限和上限，仅针对IF图像')
+    chip_size: Tuple[Union[float, int], Union[float, int]] = Field(None, description='芯片的高和宽')  # S0.5 -> float; S1 -> int
+    threshold_list: Tuple[int, int] = Field(None, description='输入阈值的下限和上限，仅针对IF图像')
 
 
 class TissueSegmentation:
@@ -63,7 +63,7 @@ class TissueSegmentation:
             stain_type: TechType,
             gpu: int = -1,
             num_threads: int = 0,
-            threshold_list: List = None,
+            threshold_list: Tuple[int, int] = None,
             chip_size: List = None,
             is_big_chip: bool = False
     ):
@@ -258,7 +258,7 @@ def main():
     input_data.stain_type = s_type
     input_data.weight_path_cfg.GPU = gpu
     input_data.chip_size = chip_size
-    # input_data.threshold_list = 13000, 60000
+    # input_data.threshold_list = 34, 60
 
     clog.info(f"image path:{input_path}")
     seg_result = segment4tissue(input_data=input_data)
