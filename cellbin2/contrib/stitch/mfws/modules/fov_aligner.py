@@ -1,15 +1,21 @@
-'''
+"""
 Matcher provide the way to get overlap/offset from neighbor FOV.
-'''
-
-import numpy as np
-import cv2 as cv
-import tifffile
-import itertools
-from tqdm import tqdm
-from multiprocessing import Process, Manager, Pool, cpu_count
+"""
+import glog
 import copy
 import time
+import tifffile
+import itertools
+
+import cv2 as cv
+import numpy as np
+from tqdm import tqdm
+
+from multiprocessing import Process, Manager, Pool, cpu_count
+try:
+    from .jitter_correct import JitterCorrect
+except ImportError:
+    from jitter_correct import JitterCorrect
 
 try:
     from .image import Image
@@ -22,11 +28,11 @@ def rc_key(row: int, col: int):
 
 
 class FOVAligner(object):
-    '''
+    """
     计算出所有图像的偏移量
-    '''
+    """
     def __init__(self, images_path, rows, cols, mode='FFT', multi=True,
-                 channel=0, overlap=0.1, i_shape=[None, None]):
+                 channel=0, overlap=[0.1, 0.1], i_shape=[None, None]):
         self.images_path = None
         self.channel = 0
         self.rows = self.cols = None
@@ -35,19 +41,22 @@ class FOVAligner(object):
         self.set_images_path(images_path)
         self.set_channel(channel)
         self.multi = multi  # TODO 多进程选项
-        self.matcher = FFTMatcher(overlap) if mode == 'FFT' else SIFTMatcher(overlap)
+
         self.num = 5
-        self.overlap = overlap
+        self.overlap_x, self.overlap_y = overlap
         self.__init_value = 999
         self.i_shape = i_shape
+
+        _overlap = max(self.overlap_x, self.overlap_y)
+        self.matcher = FFTMatcher(_overlap) if mode == 'FFT' else SIFTMatcher(_overlap)
 
         self.horizontal_jitter = np.zeros((self.rows, self.cols, 2), dtype=int) + self.__init_value
         self.vertical_jitter = np.zeros((self.rows, self.cols, 2), dtype=int) + self.__init_value
         self.fov_mask = np.zeros((self.rows, self.cols, 3))
 
     def set_overlap(self, overlap):
-        assert isinstance(overlap, float), "Overlap type error."
-        self.overlap = overlap
+        # assert isinstance(overlap, float), "Overlap type error."
+        self.overlap_x, self.overlap_y = overlap
 
     def set_channel(self, channel):
         assert isinstance(channel, int), "Channel type error."
@@ -131,9 +140,9 @@ class FOVAligner(object):
         return jitter
 
     def create_jitter(self, overlap_dis=0.05):
-        '''
+        """
         Scan image and create offset.
-        '''
+        """
         confi_mask = np.zeros((self.rows, self.cols, 2)) - 1
         ncc_confi_mask = np.zeros((self.rows, self.cols, 2)) - 1
 
@@ -152,7 +161,7 @@ class FOVAligner(object):
                 # process_list = []
                 # num = int(cpu_count() / 2)
                 # num = 10
-                print(f"stitch using {self.num} process")
+                glog.info(f"stitch using {self.num} process")
                 pool = Pool(processes=self.num)
 
                 for tesk in tesk_list:
@@ -180,7 +189,7 @@ class FOVAligner(object):
                     self.vertical_jitter[row, col, :] = v_j[key]
                     confi_mask[row, col, 1] = confi_v[key]
         else:
-            print("Scan Row by Row.")
+            glog.info("Scan Row by Row.")
             for i in tqdm(range(self.rows), desc='RowByRow'):
                 train = self._get_image(i, 0)
                 for j in range(1, self.cols):
@@ -193,7 +202,7 @@ class FOVAligner(object):
                             ncc_confi_mask[i, j, 0] = b[3]
                     train = query
 
-            print("Scan Col by Col.")
+            glog.info("Scan Col by Col.")
             for j in tqdm(range(self.cols), desc='ColByCol'):
                 train = self._get_image(0, j)
                 for i in range(1, self.rows):
@@ -214,23 +223,22 @@ class FOVAligner(object):
                                                                                    confi_mask[:, :, 1],
                                                                                    thread=5)
 
+        if self.overlap_x == 0:
+            self.horizontal_jitter[:, 1:] = 0
+
+        if self.overlap_y == 0:
+            self.vertical_jitter[1:, :] = 0
+
         self.fov_mask[:, :, :2] = confi_mask
         self.fov_mask[:, :, 2] = np.max(confi_mask, axis=2)
         self.fov_mask[:, :, 2][np.where(self.fov_mask[:, :, 2] >= 99)] = 99
 
-        # shape = np.array(self.i_shape)
-        # self.horizontal_jitter = self.jitter_correct(
-        #     self.horizontal_jitter,
-        #     overlap_dis=[shape[1] * np.array([-overlap_dis, -(overlap_dis + self.overlap)]),
-        #                  shape[0] * np.array([-overlap_dis, overlap_dis])])
-        # self.vertical_jitter = self.jitter_correct(
-        #     self.vertical_jitter,
-        #     overlap_dis=[shape[1] * np.array([-overlap_dis, overlap_dis]),
-        #                  shape[0] * np.array([-overlap_dis, -(overlap_dis + self.overlap)])])
+        jc = JitterCorrect([self.horizontal_jitter, self.vertical_jitter], image_size = self.i_shape)
+        self.horizontal_jitter, self.vertical_jitter = jc.correct()
 
-        print("Scan image done!")
+        glog.info("Scan image done!")
 
-    def _offset_eval(self, height, width, overlap=0.1):
+    def offset_eval(self, height, width, overlap=[0.1, 0.1]):
         """
         :param height: fov image height
         :param width: fov image width
@@ -239,15 +247,16 @@ class FOVAligner(object):
         """
         h_j = copy.deepcopy(self.horizontal_jitter)
         v_j = copy.deepcopy(self.vertical_jitter)
+        overlap_x, overlap_y = overlap
 
         for r in range(self.rows):
             for c in range(self.cols):
                 if h_j[r, c, 0] != -self.__init_value and \
                         h_j[r, c, 0] != self.__init_value:
-                    h_j[r, c, 0] += int(width * overlap)
+                    h_j[r, c, 0] += int(width * overlap_x)
                 if v_j[r, c, 1] != -self.__init_value and \
                         v_j[r, c, 1] != self.__init_value:
-                    v_j[r, c, 1] += int(height * overlap)
+                    v_j[r, c, 1] += int(height * overlap_y)
 
         h_e = (h_j[:, :, 0] ** 2 + h_j[:, :, 1] ** 2) ** 0.5
         h_e[np.where(h_e >= self.__init_value)] = -1
@@ -280,7 +289,7 @@ class FOVAligner(object):
                     confi[rc_key(row_index, col)] = b[2]
                 train = query
         else:
-            print("axis value error.")
+            glog.info("axis value error.")
 
     def _get_image(self, row, col):
         """
@@ -294,9 +303,8 @@ class FOVAligner(object):
         if type(self.images_path) is dict:
             if key not in self.images_path.keys():
                 return None
-            img = Image()
-            img.read(self.images_path[key])
-            arr = img.image
+            img = self.images_path[key]
+            arr = img.get_image()
             if arr.ndim == 3:
                 arr = arr[:, :, self.channel]
             return arr
@@ -980,5 +988,5 @@ if __name__ == '__main__':
     match.overlap = 0.1
     result0 = match.neighbor_match(dst_img, src_img, axis=0)
     # result = match.neighbor_match_v1(dst_img, src_img)
-    print('ok')
+    glog.info('ok')
     pass

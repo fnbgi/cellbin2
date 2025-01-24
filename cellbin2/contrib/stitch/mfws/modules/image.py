@@ -2,6 +2,7 @@ import numpy as np
 import tifffile
 import os
 import cv2
+import glog
 
 
 class Image(object):
@@ -77,8 +78,8 @@ class Image(object):
             else:
                 tifffile.imwrite(output_path, image)
         except Exception as e:
-            print(e)
-            print("Write image has some error, will write without compression.")
+            glog.warning(e)
+            glog.warning("Write image has some error, will write without compression.")
             tifffile.imwrite(output_path, image)
 
     def get_channel(self, ch):
