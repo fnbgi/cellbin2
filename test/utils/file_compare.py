@@ -111,7 +111,7 @@ def deep_compare(
 
     if obj1 != obj2:
         value_diffs.append(
-            f"[{path}] - 值不一致: {obj1} vs. {obj2}"
+            f"[{path}] - value different: {obj1} vs. {obj2}"
         )
 
     return type_diffs, value_diffs, miss_attrs
