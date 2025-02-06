@@ -56,7 +56,7 @@ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -c SS200000045_M5 \
 -i /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_fov_stitched.tif \
 -s DAPI \
--if /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_ATP_IF_fov_stitched.tif,/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_CD31_IF_fov_stitched.tif,/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_NeuN_IF_fov_stitched.tif \
+-imf /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_ATP_IF_fov_stitched.tif,/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_CD31_IF_fov_stitched.tif,/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_NeuN_IF_fov_stitched.tif \
 -m /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5.raw.gef \
 -o /media/Data/dzh/data/cellbin2/test/SS200000045_M5_11 \
 -k "Stereo-seq T FF V1.2"
@@ -95,7 +95,7 @@ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -c A02677B5 \
 -i /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5.tif \
 -s DAPI \
--if /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5_IF.tif \
+-imf /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5_IF.tif \
 -m /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5.raw.gef \
 -o /media/Data/dzh/data/cellbin2/test/A02677B5 \
 -k "Stereo-CITE T FF V1.1 R"
@@ -121,7 +121,7 @@ DAPI + IF + trans gef + protein gef
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -c A03599D1 \ # chip number
 -i /media/Data/A03599D1_DAPI_fov_stitched.tif \  # ssDNA, DAPI, HE data path
--if /media/Data/A03599D1_IF_fov_stitched.tif \  # IF data path
+-imf /media/Data/A03599D1_IF_fov_stitched.tif \  # IF data path
 -s DAPI \  # stain type，(ssDNA, DAPI, HE)
 -m /media/Data/A03599D1.raw.gef \  # Transcriptomics gef path
 -pr /media/Data/A03599D1.protein.raw.gef \  # protein gef path

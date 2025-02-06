@@ -18,7 +18,6 @@ from cellbin2.modules import naming, run_state
 from cellbin2.modules.metadata import ProcParam, ProcFile, read_param_file
 from cellbin2.contrib.fast_correct import run_fast_correct
 from cellbin2.utils.pro_monitor import process_decorator
-from cellbin2.utils.common import ErrorCode
 from cellbin2.modules.extract.register import run_register, transform_to_register
 from cellbin2.modules.extract.transform import run_transform
 from cellbin2.modules.extract.tissue_seg import run_tissue_seg

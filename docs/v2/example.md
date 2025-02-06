@@ -1,5 +1,5 @@
 case1: only qc <br>
-If kit type is Stereo-CITE T FF V1.0, you find Stereo-CITE T FF.json under cellbin2/config <br>
+Find cellbin2/Stereo-CITE T FF.json<br>
 change run like follows
    
 ```shell
@@ -11,22 +11,43 @@ change run like follows
     "annotation": false
   }
 ```
+run command like below
 ```shell
--c
-A03599D1
--i
-/media/Data1/user/dengzhonghan/data/cellbin2/demo_data/A03599D1/A03599D1_DAPI_fov_stitched.tif
--if
-/media/Data1/user/dengzhonghan/data/cellbin2/demo_data/A03599D1/A03599D1_IF_fov_stitched.tif
--s
-DAPI
--o
-/media/Data1/user/dengzhonghan/data/cellbin2/random_test/A03599D1
--k
-"Stereo-CITE T FF V1.0"
+python cellbin2/cellbin_pipeline.py \
+-c A02677B5 \
+-i A02677B5.tif \
+-imf A02677B5_IF.tif \
+-o result/A02677B5 \
+-s DAPI 
 ```
-
-case2: only alignment & matrix extract <br>
+---
+case2: only alignment with registration <br>
+This mode assumes you have already done qc <br>
+Find corresponding json, change run like follows <br>
+   
+```shell
+"run": {
+    "qc": false,
+    "alignment": true,
+    "matrix_extract": false,
+    "report": false,
+    "annotation": false
+  }
+```
+run command like below <br>
+-o path should be the same as qc
+```shell
+python cellbin2/cellbin_pipeline.py \
+-c A02677B5 \
+-i A02677B5.tif \
+-s DAPI \
+-imf A02677B5_IF.tif \
+-m A02677B5.raw.gef \
+-k "Stereo-CITE T FF V1.0" \
+-o result/A02677B5 
+```
+---
+case3: only alignment without registration & matrix extract <br>
 This mode assumes the input image is aligned, so only run tissue and cell seg <br>
 If kit type is Stereo-CITE T FF V1.0, you find Stereo-CITE T FF.json under cellbin2/config <br>
 change run like follows
@@ -39,8 +60,8 @@ change run like follows
     "annotation": false
   }
 ```
-
-case 3: No matrix <br>
+---
+case 4: No matrix <br>
 Stereo-seq T FF
 ssDNA
 ```shell
@@ -50,8 +71,8 @@ ssDNA
 -o /media/Data/dzh/data/cellbin2/test/SS200000135TL_D1 
 -k "Stereo-seq T FF V1.2"
 ```
-
-case 4: Create bin1 matrix image
+---
+case 5: Create bin1 matrix image
 ```shell
 cd cellbin2/matrix
 python matrix.py \

@@ -202,6 +202,13 @@ class ProcParam(BaseModel):
         return files
 
 
+def print_main_modules(pp: ProcParam, sn: str):
+    show_table = PrettyTable()
+    show_table.field_names = ["SN", "QC", "Alignment", "Matrix_extract", "Report", "Annotation"]
+    show_table.add_row([sn, pp.run.qc, pp.run.alignment, pp.run.matrix_extract, pp.run.report, pp.run.annotation])
+    clog.info(f"\n {show_table}")
+
+
 def read_param_file(file_path: str, cfg: Config, out_path: Optional[str] = None) -> ProcParam:
     """
     :param file_path:
@@ -217,25 +224,27 @@ def read_param_file(file_path: str, cfg: Config, out_path: Optional[str] = None)
 
 
 def main():
-    param_file = '/media/Data/dzh/code/cellbin2/cellbin2/config/default_param.json'
-    cfg_file = "/media/Data/dzh/code/cellbin2/cellbin2/config/cellbin.yaml"
+    param_file = "/media/Data1/user/dengzhonghan/code/cellbin2dev/cellbin2/demo_data/qc_result/A02677B5/A02677B5_params.json"
+    cfg_file = "/media/Data1/user/dengzhonghan/code/cellbin2dev/cellbin2/cellbin2/config/cellbin.yaml"
+    sn = "A02677B5"
     cfg = Config(cfg_file)
-    out = "/media/Data/dzh/data/cellbin2/tmp"
-    im_path = "/media/Data/dzh/data/cellbin2/demo_data/C04042E3/C04042E3_fov_stitched.tif"
-    track_s_type = "HE"
-    matrix_path = "/media/Data/dzh/data/cellbin2/demo_data/C04042E3/C04042E3.raw.gef"
+    # out = "/media/Data/dzh/data/cellbin2/tmp"
+    # im_path = "/media/Data/dzh/data/cellbin2/demo_data/C04042E3/C04042E3_fov_stitched.tif"
+    # track_s_type = "HE"
+    # matrix_path = "/media/Data/dzh/data/cellbin2/demo_data/C04042E3/C04042E3.raw.gef"
     # if_path = "/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_ATP_IF_fov_stitched.tif," \
     #           "/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_CD31_IF_fov_stitched.tif," \
     #           "/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_NeuN_IF_fov_stitched.tif"
     with open(param_file, 'r') as fd:
         dct = json.load(fd)
-    pp = read_param_file(file_path=param_file, cfg=cfg, out_path=out)
-    template = getattr(pp.image_process, track_s_type)
-    template.file_path = im_path
-
-    trans_tp = pp.image_process['Transcriptomics']
-    trans_tp.file_path = matrix_path
-    print()
+    pp = read_param_file(file_path=param_file, cfg=cfg)
+    print_main_modules(pp, sn)
+    # template = getattr(pp.image_process, track_s_type)
+    # template.file_path = im_path
+    #
+    # trans_tp = pp.image_process['Transcriptomics']
+    # trans_tp.file_path = matrix_path
+    # print()
     # print(pp.analysis.report)
 
 

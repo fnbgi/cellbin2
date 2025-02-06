@@ -11,15 +11,16 @@ from cellbin2.modules import naming
 from cellbin2.utils import clog
 import cellbin2
 from cellbin2.utils import ipr
-from cellbin2.modules.metadata import read_param_file, ProcParam, ProcFile
+from cellbin2.modules.metadata import read_param_file, ProcParam, ProcFile, print_main_modules
 from cellbin2.utils.config import Config
 from cellbin2.modules.metrics import ImageSource
 from cellbin2.utils import dict2json
 from cellbin2.utils.common import KIT_VERSIONS, KIT_VERSIONS_R, sPlaceHolder, bPlaceHolder
 from cellbin2.utils.pro_monitor import process_decorator
+from cellbin2.utils.weights_manager import DEFAULT_WEIGHTS_DIR
 
 CONFIG_PATH = os.path.join(CURR_PATH, 'config')
-DEFAULT_WEIGHTS_DIR = os.path.join(CURR_PATH, "weights")
+# DEFAULT_WEIGHTS_DIR = os.path.join(CURR_PATH, "weights")
 
 CONFIG_FILE = os.path.join(CONFIG_PATH, 'cellbin.yaml')
 CHIP_MASK_FILE = os.path.join(CONFIG_PATH, 'chip_mask.json')
@@ -250,6 +251,7 @@ class CellBinPipeline(object):
                 file_path=self._param_file,
                 cfg=self.config
             )
+        print_main_modules(self.pp, self._chip_no)
 
     def run(self, chip_no: str, input_image: str, if_image: str,
             stain_type: str, param_file: str,
@@ -389,7 +391,7 @@ if __name__ == '__main__':  # main()
     parser.add_argument("-s", "--stain_type", action="store", type=str,
                         choices=SUPPORTED_STAINED_TYPES,
                         help=f"The stain type of input image, choices are {{{','.join(SUPPORTED_STAINED_TYPES)}}}.")
-    parser.add_argument("-if", "--input_image_if", action="store", type=str,
+    parser.add_argument("-imf", "--input_image_if", action="store", type=str,
                         help="The path of IF input file.")
     parser.add_argument("-m", "--matrix_file", action="store", type=str,
                         help="The path of transcriptomics matrix file.")
