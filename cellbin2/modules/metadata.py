@@ -84,9 +84,11 @@ class ProcFile(BaseModel):
             middle = self.tag[start_index: end_index]
             middle = middle.strip("_")
             if middle:
+                # SN_Protein_IF_xxx.tif
                 g_name = middle + "_" + self.tech.name
             else:
-                g_name = self.tech.name
+                # SN_IF_xxx.tif
+                g_name = sn + "_" + self.tech.name
         else:
             g_name = self.tech.name
         return g_name

@@ -130,19 +130,10 @@ def run_qc(
         debug: bool,
         fov_wh=(2000, 2000),
 ) -> Union[ipr.ImageChannel, ipr.IFChannel]:
-    image = cbimread(image_file.file_path)
     if image_file.tech is TechType.IF:
         channel_image = ipr.IFChannel()
     else:
         channel_image = ipr.ImageChannel()
-    channel_image.update_basic_info(
-        chip_name=param_chip.chip_name,
-        channel=image.channel,
-        width=image.width,
-        height=image.height,
-        stain_type=image_file.tech_type,
-        depth=image.depth
-    )
 
     # 估计 & 第一次更新裁图尺寸
     cut_siz, est_scale = estimate_fov_size(

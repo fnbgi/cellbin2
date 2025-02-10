@@ -7,7 +7,9 @@ from pathlib import Path
 import numpy as np
 
 from cellbin2.utils.config import Config
-from cellbin2.utils.common import TechType, FILES_TO_KEEP, ErrorCode
+from cellbin2.utils.common import TechType, FILES_TO_KEEP, ErrorCode, FILES_TO_KEEP_RESEARCH
+from cellbin2.utils.stereo import generate_stereo_file
+from cellbin2.utils.tar import update_ipr_in_tar
 from cellbin2.utils import clog
 from cellbin2.image import cbimread, CBImage
 from cellbin2.utils.stereo_chip import StereoChip
@@ -41,6 +43,7 @@ class Scheduler(object):
         self._output_path: str = ''
 
         self.p_naming: naming.DumpPipelineFileNaming = None
+        self.matrix_file = None
         # self._image_naming: naming.DumpImageFileNaming
         # self._matrix_naming: naming.DumpMatrixFileNaming
 
@@ -57,21 +60,17 @@ class Scheduler(object):
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
                 n = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name, stain_type=g_name, save_dir=self._output_path)
-                # c_mask_path = n.cell_mask
-                # c_raw_mask_path = n.cell_mask_raw
-                # register_path = n.registration_image
-                # t_mask_path = n.tissue_mask
-                # t_raw_mask_path = n.tissue_mask_raw
+
                 data[g_name] = {}
                 if os.path.exists(n.cell_mask):
                     data[g_name]['CellMask'] = n.cell_mask
                 elif os.path.exists(n.transform_cell_mask):
                     data[g_name]['CellMaskTransform'] = n.transform_cell_mask
-
-                if os.path.exists(n.cell_mask_raw):
-                    data[g_name]['CellMaskRaw'] = n.cell_mask_raw
-                elif os.path.exists(n.transform_cell_mask_raw):
-                    data[g_name]['CellMaskRawTransform'] = n.transform_cell_mask_raw
+                if self.debug:
+                    if os.path.exists(n.cell_mask_raw):
+                        data[g_name]['CellMaskRaw'] = n.cell_mask_raw
+                    elif os.path.exists(n.transform_cell_mask_raw):
+                        data[g_name]['CellMaskRawTransform'] = n.transform_cell_mask_raw
 
                 if os.path.exists(n.registration_image):
                     data[g_name]['Image'] = n.registration_image
@@ -83,10 +82,11 @@ class Scheduler(object):
                 elif os.path.exists(n.transform_tissue_mask):
                     data[g_name]['TissueMaskTransform'] = n.transform_tissue_mask
 
-                if os.path.exists(n.tissue_mask_raw):
-                    data[g_name]['TissueMaskRaw'] = n.tissue_mask_raw
-                elif os.path.exists(n.transform_tissue_mask_raw):
-                    data[g_name]['TissueMaskRawTransform'] = n.transform_tissue_mask_raw
+                if self.debug:
+                    if os.path.exists(n.tissue_mask_raw):
+                        data[g_name]['TissueMaskRaw'] = n.tissue_mask_raw
+                    elif os.path.exists(n.transform_tissue_mask_raw):
+                        data[g_name]['TissueMaskRawTransform'] = n.transform_tissue_mask_raw
         data['final'] = {}
         data['final']['CellMask'] = self.p_naming.final_nuclear_mask
         data['final']['TissueMask'] = self.p_naming.final_tissue_mask
@@ -290,8 +290,8 @@ class Scheduler(object):
     def run_mul_image(self):
         # 这里涉及多张图的配合，因为是配准。所以默认但张图的处理都结束了
         for idx, f in self._files.items():
-            clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
             if f.is_image:
+                clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
                 cur_f_name = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name,
@@ -314,6 +314,10 @@ class Scheduler(object):
                         config=self.config,
                         debug=self.debug
                     )
+                    if f.registration.fixed_image != -1:
+                        fixed = self._files[f.registration.fixed_image]
+                        if fixed.is_matrix:
+                            self.matrix_file = self._files[f.registration.fixed_image]
                 else:
                     transform_to_register(
                         cur_f_name=cur_f_name
@@ -375,7 +379,7 @@ class Scheduler(object):
     def run(self, chip_no: str, input_image: str,
             stain_type: str, param_file: str,
             output_path: str, ipr_path: str,
-            matrix_path: str, kit: str, debug: bool):
+            matrix_path: str, kit: str, debug: bool, research_mode: bool):
 
         self._output_path = output_path
         self.debug = debug
@@ -420,10 +424,35 @@ class Scheduler(object):
 
         if flag1 == 0:
             self._dump_rpi(self.p_naming.rpi)
-        if not self.debug:
-            self.del_files()
+        if research_mode:
 
-    def del_files(self):
+            update_ipr_in_tar(
+                tar_path=self.p_naming.tar_gz,
+                ipr_path=self.p_naming.ipr,
+            )
+
+            if self.matrix_file is not None:
+                matrix_naming = naming.DumpMatrixFileNaming(
+                    sn=chip_no,
+                    m_type=self.matrix_file.tech.name,
+                    save_dir=output_path
+                )
+                matrix_template = matrix_naming.matrix_template
+            else:
+                matrix_template = ""
+
+            generate_stereo_file(
+                registered_image=self.p_naming.rpi,
+                compressed_image=self.p_naming.tar_gz,
+                matrix_template=matrix_template,
+                save_path=self.p_naming.stereo,
+                sn=chip_no
+            )
+        if not self.debug:
+            f_to_keep = FILES_TO_KEEP_RESEARCH if research_mode else FILES_TO_KEEP
+            self.del_files(f_to_keep)
+
+    def del_files(self, f_to_keep):
         all_ = []
         k_ = []
         remove_ = []
@@ -446,9 +475,7 @@ class Scheduler(object):
                 pt = f_name.__class__.__dict__.get(p)
                 if isinstance(pt, property) and att.exists():
                     all_.append(att)
-                    if f.is_matrix:
-                        remove_.append(att)
-                    elif pt not in FILES_TO_KEEP:
+                    if pt not in f_to_keep:
                         remove_.append(att)
                     else:
                         k_.append(att)
@@ -457,7 +484,7 @@ class Scheduler(object):
             p_pt = self.p_naming.__class__.__dict__.get(p_p)
             if isinstance(p_pt, property) and p_att.exists():
                 all_.append(p_att)
-                if p_pt not in FILES_TO_KEEP:
+                if p_pt not in f_to_keep:
                     remove_.append(p_att)
                 else:
                     k_.append(p_att)
@@ -469,7 +496,7 @@ class Scheduler(object):
 
 def scheduler_pipeline(weights_root: str, chip_no: str, input_image: str, stain_type: str,
                        param_file: str, output_path: str, matrix_path: str, ipr_path: str,
-                       kit: str, debug: bool = False):
+                       kit: str, debug: bool = False, research_mode=False):
     """
     :param weights_root: CNN权重文件本地存储目录路径
     :param chip_no: 样本芯片号
@@ -493,7 +520,7 @@ def scheduler_pipeline(weights_root: str, chip_no: str, input_image: str, stain_
             param_file=param_file,
             output_path=output_path,
             ipr_path=ipr_path,
-            matrix_path=matrix_path, kit=kit, debug=debug)
+            matrix_path=matrix_path, kit=kit, debug=debug, research_mode=research_mode)
 
 
 def main(args, para):

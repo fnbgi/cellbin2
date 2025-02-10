@@ -15,13 +15,15 @@ from cellbin2.modules.metadata import read_param_file, ProcFile, ProcParam
 from cellbin2.utils import ipr
 from cellbin2.modules import naming
 from cellbin2.modules.extract.qc import run_qc
-from cellbin2.utils.common import ErrorCode
+from cellbin2.utils.common import ErrorCode, TechType
+from cellbin2.utils.tar import save_tar
 
 
 class ImageQC(object):
     """
         入参合法性、模板推导（点/线识别）、芯片检测、清晰度、校准
     """
+
     def __init__(self, config_file: str, chip_mask_file: str, weights_root: str):
         self.weights_root = weights_root
         self.param_chip = StereoChip(chip_mask_file)
@@ -110,7 +112,16 @@ class ImageQC(object):
                 s[0], image.channel, image.depth))
         return 0
 
-    def run(self, chip_no: str, input_image: str, stain_type: str, param_file: str, output_path: str, debug: bool):
+    def run(
+            self,
+            chip_no: str,
+            input_image: str,
+            stain_type: str,
+            param_file: str,
+            output_path: str,
+            debug: bool,
+            research_mode: bool
+    ):
         """ Phase1: 输入准备工作 """
         # 芯片信息加载
         self.param_chip.parse_info(chip_no)
@@ -146,6 +157,7 @@ class ImageQC(object):
         if len(self._files) == 0:
             clog.info('Finished with no data do imageQC')
             return 0
+        files = []  # contain files which will be compressed into tar.gz
         for idx, f in self._files.items():
             clog.info('======>  Image[{}] QC, {}'.format(idx, f.file_path))
             if f.registration.trackline:
@@ -157,18 +169,43 @@ class ImageQC(object):
                     debug=debug
                 )
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
+                files.append((f.file_path, f"{f.tech.name}/{f.tag}.tif"))
             elif f.channel_align != -1:
                 channel_image = ipr.IFChannel()
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
                 self._align_channels(f)
+                files.append((f.file_path, f"{f.tech.name}/{chip_no}_{f.tech.name}/{f.tag}.tif"))
+            else:
+                channel_image = ipr.ImageChannel()
+            image = cbimread(f.file_path)
+            if f.tech == TechType.IF:  # 产品是这样处理的，SN_IF.tif -> ipr stain_type = SN_IF
+                s_type = f.get_group_name(sn=self.param_chip.chip_name)
+            else:
+                s_type = f.tech_type
+            channel_image.update_basic_info(
+                chip_name=chip_no,
+                channel=image.channel,
+                width=image.width,
+                height=image.height,
+                stain_type=s_type,
+                depth=image.depth
+            )
+
         """ Phase3: 输出 """
         self._dump_ipr(self.p_naming.ipr)
+        if research_mode:
+            files.append((self.p_naming.ipr, os.path.basename(self.p_naming.ipr)))
+            clog.info(f"Research mode, start to compress results into {self.p_naming.tar_gz}")
+            save_tar(
+                save_path=self.p_naming.tar_gz,
+                files=files
+            )
         clog.info(f"ImageQC finished")
         return 0
 
 
 def image_quality_control(weights_root: str, chip_no: str, input_image: str,
-                          stain_type: str, param_file: str, output_path: str, debug: bool=False):
+                          stain_type: str, param_file: str, output_path: str, debug: bool = False, research_mode=False):
     """
     :param weights_root: CNN权重文件本地存储目录路径
     :param chip_no: 样本芯片号
@@ -184,7 +221,7 @@ def image_quality_control(weights_root: str, chip_no: str, input_image: str,
 
     iqc = ImageQC(config_file=config_file, chip_mask_file=chip_mask_file, weights_root=weights_root)
     return iqc.run(chip_no=chip_no, input_image=input_image, stain_type=stain_type, param_file=param_file,
-                   output_path=output_path, debug=debug)
+                   output_path=output_path, debug=debug, research_mode=research_mode)
 
 
 def main(args, para):

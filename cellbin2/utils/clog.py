@@ -162,3 +162,5 @@ warning = logger.warning
 error = logger.error
 critical = logger.critical
 tqdm_out = TqdmToLogger(logger)
+exception = logger.exception
+

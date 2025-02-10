@@ -3,7 +3,6 @@ from typing import Union, Callable
 from cellbin2 import __version__
 
 
-
 def my_property_dec(func: Callable[..., str]) -> property:
     def wrapper(self) -> Path:
         result = func(self)
@@ -209,6 +208,15 @@ class DumpPipelineFileNaming(object):
     def input_json(self):
         """CellBin 2.0 input params"""
         return f"{self._chip_no}_params.json"
+
+    @my_property_dec
+    def tar_gz(self):
+        """tar.gz file"""
+        return f"{self._chip_no}.tar.gz"
+
+    @my_property_dec
+    def stereo(self):
+        return f"{self._chip_no}.stereo"
 
 
 def main():

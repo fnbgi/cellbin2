@@ -8,6 +8,7 @@ from cellbin2.modules import naming
 from cellbin2.matrix.matrix import cMatrix
 from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.utils.config import Config
+from cellbin2.utils import clog
 
 
 def extract4stitched(
@@ -23,7 +24,8 @@ def extract4stitched(
     if detect_feature:
         cm.detect_feature(ref=param_chip.fov_template,
                           chip_size=min(param_chip.chip_specif))
-        np.savetxt(m_naming.matrix_template, cm.template.template_points)
+        gene_tps = cm.template.template_points[:, :2]  # StereoMap is only compatible with n×2
+        np.savetxt(m_naming.matrix_template, gene_tps)
     cbimwrite(m_naming.heatmap, cm.heatmap)
     return cm
 
@@ -46,6 +48,8 @@ def extract4matrix(
             tissue_mask_path,
         )
         c_inp = m_naming.tissue_bin_matrix
+    else:
+        clog.info(f"{tissue_mask_path} not exists, skip tissue gef generation")
     if c_inp is None:
         c_inp = image_file.file_path
     if Path(cell_mask_path).exists():
@@ -53,12 +57,16 @@ def extract4matrix(
             c_inp,
             str(m_naming.cell_bin_matrix),
             cell_mask_path)
+    else:
+        clog.info(f"{cell_mask_path} not exists, skip nuclear gef generation")
     if Path(cell_correct_mask_path).exists():
         save_cell_bin_data(
             c_inp,
             str(m_naming.cell_correct_bin_matrix),
             cell_correct_mask_path
         )
+    else:
+        clog.info(f"{cell_mask_path} not exists, skip cellbin gef generation")
 
 
 def main():

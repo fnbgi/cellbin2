@@ -14,6 +14,7 @@ from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.utils.config import Config
 from cellbin2.contrib.alignment.basic import transform_points
 from cellbin2.image import cbimread, cbimwrite
+from cellbin2.utils.rle import RLEncode
 
 
 class RegistrationParam(BaseModel):
@@ -67,6 +68,18 @@ def transform_to_register(
                         flip_lr=info.flip, rot90=info.counter_rot90, offset=info.offset,
                         dst_size=info.dst_shape)
                     cbimwrite(dst_path, dst_image)
+        if os.path.exists(cur_f_name.tissue_mask):
+            tissue_mask = cbimread(cur_f_name.tissue_mask, only_np=True)
+            cur_c_image.TissueSeg.TissueSegShape = list(tissue_mask.shape)
+            bmr = RLEncode()
+            t_mask_encode = bmr.encode(tissue_mask)
+            cur_c_image.TissueSeg.TissueMask = t_mask_encode
+        if os.path.exists(cur_f_name.cell_mask):
+            cell_mask = cbimread(cur_f_name.cell_mask, only_np=True)
+            cur_c_image.CellSeg.CellSegShape = list(cell_mask.shape)
+            bmr = RLEncode()
+            c_mask_encode = bmr.encode(cell_mask)
+            cur_c_image.CellSeg.CellMask = c_mask_encode
 
 
 def run_register(
@@ -147,8 +160,8 @@ def run_register(
                 fixed_image=fixed_image,
                 offset_info=pre_info,
                 fixed_offset=(cm.x_start, cm.y_start),
-                flip_flag = config.registration.flip,
-                rot90_flag = config.registration.rot90
+                flip_flag=config.registration.flip,
+                rot90_flag=config.registration.rot90
             )
             info = RegistrationOutput(**_info)
 
@@ -165,8 +178,8 @@ def run_register(
                 ref=param_chip.fov_template,
                 from_stitched=False,
                 qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag),
-                flip_flag = config.registration.flip,
-                rot90_flag = config.registration.rot90
+                flip_flag=config.registration.flip,
+                rot90_flag=config.registration.rot90
             )
             clog.info(f"{info}")
             clog.info(f"{temp_info}")

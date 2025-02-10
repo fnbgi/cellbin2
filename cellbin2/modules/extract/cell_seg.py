@@ -32,10 +32,11 @@ def run_cell_seg(
             gpu=0
         )
     cbimwrite(str(save_path), cell_mask)
-    if channel_image is not None:
-        channel_image.CellSeg.CellSegShape = list(cell_mask.shape)
-        # channel_image.CellSeg.CellSegTrace =
-        bmr = RLEncode()
-        c_mask_encode = bmr.encode(cell_mask)
-        channel_image.CellSeg.CellMask = c_mask_encode
+    # 这里不保存了，后面保存基于配准图的mask
+    # if channel_image is not None:
+    #     channel_image.CellSeg.CellSegShape = list(cell_mask.shape)
+    #     # channel_image.CellSeg.CellSegTrace =
+    #     bmr = RLEncode()
+    #     c_mask_encode = bmr.encode(cell_mask)
+    #     channel_image.CellSeg.CellMask = c_mask_encode
     return cell_mask
