@@ -2,6 +2,7 @@
 求解拼接坐标
 """
 import os
+import glog
 import numpy as np
 
 from sklearn.linear_model import LinearRegression
@@ -13,7 +14,7 @@ class GlobalLocation(object):
     只接收偏移量矩阵并求解最终拼接坐标
     """
     def __init__(self):
-        self.overlap = 0.1
+        self.overlap_x = self.overlap_y = 0.1
         self.fov_loc_array = None
         self.offset_diff = None
         self.__init_value = 999
@@ -23,6 +24,19 @@ class GlobalLocation(object):
         self.fov_width = None
         self.rows = None
         self.cols = None
+
+    def set_overlap(self, overlap_x, overlap_y):
+        """
+
+        Args:
+            overlap_x:
+            overlap_y:
+
+        Returns:
+
+        """
+        self.overlap_x = overlap_x
+        self.overlap_y = overlap_y
 
     def set_jitter(self, h_j, v_j):
         assert h_j.shape == v_j.shape, "Jitter ndim is diffient."
@@ -50,12 +64,26 @@ class GlobalLocation(object):
         if mode == 'cd':
             coord_model = CenterLrDiffuseStitch(self.rows, self.cols)
             coord_model.set_jitter(self.horizontal_jitter, self.vertical_jitter)
-            coord_model.set_scope_loc_by_overlap(self.fov_height, self.fov_width, self.overlap)
+            coord_model.set_scope_loc_by_overlap(self.fov_height, self.fov_width, self.overlap_x, self.overlap_y)
             coord_model.multi_connect_domain_center()
             coord_model.multi_center_2_global_loc(center_start=False)
 
             self.offset_diff = coord_model.offset_diff
             self.fov_loc_array = coord_model.global_loc
+        elif 'LS' in mode:
+            if mode == 'LS-H':
+                lsh = LineScanStitch(self.rows, self.cols, ls = 0)
+            elif mode == 'LS-V':
+                lsv = LineScanStitch(self.rows, self.cols, ls = 1)
+            else:
+                raise ValueError("Stitch method name error.")
+
+            lsv.set_jitter(self.horizontal_jitter, self.vertical_jitter)
+            lsv.set_overlap(self.overlap_x, self.overlap_y)
+            lsv.set_scope_loc_by_overlap(self.fov_height, self.fov_width)
+            new_location = lsv.get_location()
+            self.fov_loc_array = new_location
+
         else:
             pass
 
@@ -63,7 +91,118 @@ class GlobalLocation(object):
 ##################################
 """坐标生成方法"""
 ##################################
+class LineScanStitch:
+    """
+    线扫拼接，在某一方位无overlap或者恒定一个overlap
+    """
 
+    def __init__(self, rows, cols, ls = 0):
+        # 线扫方位 0表示水平 1表示竖直
+        self.line_scan = ls
+
+        self.overlap_x = self.overlap_y = 0.1
+        self.scope_global_loc = None
+        self.rows = rows
+        self.cols = cols
+        self.fov_height = None
+        self.fov_width = None
+
+        self.horizontal_jitter = None
+        self.vertical_jitter = None
+
+        self._placeholder = 999
+
+    def set_jitter(self, h_j, v_j):
+        '''set jitter matrix'''
+        assert h_j.shape == v_j.shape, "jitter ndim is diffient."
+        self.horizontal_jitter = h_j
+        self.vertical_jitter = v_j
+
+    def set_fov_size(self, fov_height, fov_width):
+        """set fov size"""
+        self.fov_height = fov_height
+        self.fov_width = fov_width
+
+    def set_overlap(self, overlap_x, overlap_y):
+        """
+
+        Args:
+            overlap_x:
+            overlap_y:
+
+        Returns:
+
+        """
+        self.overlap_x = overlap_x
+        self.overlap_y = overlap_y
+
+    def set_scope_loc_by_overlap(self, h, w):
+        """计算显微镜的原始拼接坐标"""
+        scope_global_loc = np.zeros(shape=(self.rows, self.cols, 2), dtype=np.int32)
+        self.fov_height = h
+        self.fov_width = w
+        for i in range(self.rows):
+            for j in range(self.cols):
+                scope_global_loc[i, j, 0] = j * (w - int(w * self.overlap_x))
+                scope_global_loc[i, j, 1] = i * (h - int(h * self.overlap_y))
+        self.scope_global_loc = scope_global_loc
+
+    def get_offset_by_jitter(self, jit):
+        if self.line_scan == 0:
+            offset = []
+        else:
+            offset = np.zeros([jit.shape[1], 2], dtype = np.int_) + self._placeholder
+            for c in range(jit.shape[1]):
+                jit_x, jit_y = map(
+                    lambda x: [i for i in list(jit[:, c, x].ravel()) if i != self._placeholder],
+                    (0, 1)
+                )
+
+                jit_x, jit_y = map(
+                    lambda x: [self._placeholder] if len(x) == 0 else x,
+                    (jit_x, jit_y)
+                )
+
+                offset[c] = [int(np.median(jit_x)), int(np.median(jit_y))]
+
+            offset_odd = np.round(np.mean(
+                [i for i in list(offset[1::2,:]) if i[0] != self._placeholder], axis = 0)
+            )
+            offset_even = np.round(np.mean(
+                [i for i in list(offset[::2,:]) if i[0] != self._placeholder], axis = 0)
+            )
+
+            for c in range(1, offset.shape[0]):
+                if offset[c][0] == self._placeholder or \
+                        offset[c][1] == self._placeholder:
+                    if c % 2 == 0: offset[c] = offset_even
+                    else: offset[c] = offset_odd
+
+        return offset
+
+
+    def get_location(self):
+        """
+
+        Returns:
+
+        """
+        new_location = self.scope_global_loc.copy()
+        if self.line_scan == 0:
+            pass
+        else:
+            offset = self.get_offset_by_jitter(self.horizontal_jitter)
+            for c in range(1, self.cols):
+                if c == 1:
+                    new_location[:, c] = new_location[:, c] + \
+                                         offset[c] + \
+                                         [int(self.fov_width * self.overlap_x), 0]
+                else:
+                    new_location[:, c] = new_location[:, c - 1] + \
+                                         offset[c] + \
+                                         [self.fov_width, 0]
+
+        return new_location
 
 class CenterLrDiffuseStitch:
     '''
@@ -119,15 +258,15 @@ class CenterLrDiffuseStitch:
         self.fov_height = fov_height
         self.fov_width = fov_width
 
-    def set_scope_loc_by_overlap(self, h, w, overlap):
+    def set_scope_loc_by_overlap(self, h, w, overlap_x, overlap_y):
         """计算显微镜的原始拼接坐标"""
         scope_global_loc = np.zeros(shape=(self.rows, self.cols, 2), dtype=np.int32)
         self.fov_height = h
         self.fov_width = w
         for i in range(self.rows):
             for j in range(self.cols):
-                scope_global_loc[i, j, 0] = j * (w - int(w * overlap))
-                scope_global_loc[i, j, 1] = i * (h - int(h * overlap))
+                scope_global_loc[i, j, 0] = j * (w - int(w * overlap_x))
+                scope_global_loc[i, j, 1] = i * (h - int(h * overlap_y))
         self.scope_global_loc = scope_global_loc
 
     def neighbor(self, row, col, mask: np.ndarray = None):
@@ -536,7 +675,7 @@ class CenterLrDiffuseStitch:
                         self.offset_diff[row, col] = np.around(np.linalg.norm(ptp))
                 else:
                     stitch_list.append(item)
-                    # print("{}:{} no stitch neighbor".format(row, col))
+                    # glog.info("{}:{} no stitch neighbor".format(row, col))
         # 将最近邻连通域的FOV的位置调整到预测位置
         if nearest_domain_fov is not None:
             nearest_fov_scope_loc = self.scope_global_loc[nearest_domain_fov[0], nearest_domain_fov[1]]
@@ -583,7 +722,7 @@ class CenterLrDiffuseStitch:
                     loc_list = np.array(loc_list)
                     self.global_loc[row, col] = np.mean(loc_list, axis=0)
                 # else:
-                #     print("{}:{} no stitch neighbor".format(row, col))
+                #     glog.info("{}:{} no stitch neighbor".format(row, col))
 
         self.global_loc[:, :, 0] -= np.min(self.global_loc[:, :, 0])
         self.global_loc[:, :, 1] -= np.min(self.global_loc[:, :, 1])
@@ -678,7 +817,7 @@ class CenterLrDiffuseStitch:
                             x0, y0 = self.global_loc[src[0], src[1]] + [self.fov_width, 0] + h_mean
                             tem_loc.append([x0, y0])
                         else:
-                            print('[{}-{}] fix_loc error!'.format(dst[0], dst[1]))
+                            glog.info('[{}-{}] fix_loc error!'.format(dst[0], dst[1]))
                     if len(tem_loc) > 0:
                         self.global_loc[dst[0], dst[1]] = np.mean(tem_loc, axis=0)
                         self.stitch_masked[dst[0], dst[1]] = 1
@@ -691,3 +830,16 @@ class CenterLrDiffuseStitch:
 
         self.global_loc[:, :, 0] -= np.min(self.global_loc[:, :, 0])
         self.global_loc[:, :, 1] -= np.min(self.global_loc[:, :, 1])
+
+
+if __name__ == "__main__":
+    x_jitter = np.load(r"D:\02.data\temp\temp\x_c.npy")
+    y_jitter = np.load(r"D:\02.data\temp\temp\y.npy")
+
+    location_model = GlobalLocation()
+    location_model.set_size(25, 28)
+    location_model.set_image_shape(6105, 4608)
+    location_model.set_overlap(0.1, 0)
+    location_model.set_jitter(x_jitter, y_jitter)
+    # 'cd' 'LS-H' 'LS-V'
+    location_model.create_location('LS-V')

@@ -2,6 +2,8 @@ import numpy as np
 import copy
 import math
 import tqdm
+import cv2 as cv
+import glog
 
 from .image import Image
 
@@ -17,19 +19,20 @@ class StitchingWSI(object):
         self.fov_height = self.fov_width = 0
         self.fov_channel = self.fov_dtype = 0
         self.fov_location = None
-        self._overlap = 0.1
+        self._overlap_x = self._overlap_y = 0.1
         self.buffer = None
         self.mosaic_width = self.mosaic_height = None
         self._fuse_size = 50
 
     def set_overlap(self, overlap):
-        self._overlap = overlap
+        self._overlap_x, self._overlap_y = overlap
 
     def set_fuse_size(self, fuse_size):
         self._fuse_size = fuse_size
 
     def _init_parm(self, src_image: dict):
         test_image_path = list(src_image.values())[0]
+        test_image_path = test_image_path.image
         img = Image()
         img.read(test_image_path)
 
@@ -44,12 +47,14 @@ class StitchingWSI(object):
             assert (h == self.fov_rows and w == self.fov_cols)
             self.fov_location = loc
         else:
-            self.fov_location = np.zeros((self.fov_rows, self.fov_cols, 2), dtype=int)
+            self.fov_location = np.zeros((self.fov_rows, self.fov_cols, 2), dtype = int)
             for i in range(self.fov_rows):
                 for j in range(self.fov_cols):
                     self.fov_location[i, j] = [
-                        int(i * self.fov_height * (1 - self._overlap)),
-                        int(j * self.fov_width * (1 - self._overlap))]
+                        int(j * self.fov_width * (1 - self._overlap_x)),
+                        int(i * self.fov_height * (1 - self._overlap_y))
+                    ]
+
         x0 = np.min(self.fov_location[:, :, 0])
         y0 = np.min(self.fov_location[:, :, 1])
         self.fov_location[:, :, 0] -= x0
@@ -58,39 +63,37 @@ class StitchingWSI(object):
         y1 = np.max(self.fov_location[:, :, 1])
         self.mosaic_width, self.mosaic_height = [x1 + self.fov_width, y1 + self.fov_height]
 
-    def mosaic(self, src_image: dict, loc=None, downsample=1, multi=False, fuse_flag=True):
+    def mosaic(self, src_image: dict, loc = None, down_sample = 1, multi = False, fuse_flag = True):
 
         k = [i * (90 / self._fuse_size) for i in range(0, self._fuse_size)][::-1]  # 融合比值
-
-        # rc = np.array([k.split('_') for k in list(src_image.keys())], dtype=int)
 
         self.fov_rows, self.fov_cols = loc.shape[:2]
         self._init_parm(src_image)
 
         self._set_location(loc)
-        img = Image()
-        h, w = (int(self.mosaic_height / downsample), int(self.mosaic_width / downsample))
+        h, w = (int(self.mosaic_height / down_sample), int(self.mosaic_width / down_sample))
         if self.fov_channel == 1:
-            self.buffer = np.zeros((h, w), dtype=self.fov_dtype)
+            self.buffer = np.zeros((h + 1, w + 1), dtype = self.fov_dtype)
         else:
-            self.buffer = np.zeros((h, w, self.fov_channel), dtype=self.fov_dtype)
+            self.buffer = np.zeros((h + 1, w + 1, self.fov_channel), dtype = self.fov_dtype)
 
         if multi:
             pass
         else:
-            for i in tqdm.tqdm(range(self.fov_rows), desc='FOVs Stitching', mininterval=5):
+            for i in tqdm.tqdm(range(self.fov_rows), desc = 'FOVs Stitching', mininterval = 5):
                 for j in range(self.fov_cols):
 
                     blend_flag_h = False
                     blend_flag_v = False
 
                     if rc_key(i, j) in src_image.keys():
-                        img.read(src_image[rc_key(i, j)])
-                        arr = img.image
-                        x, y = self.fov_location[i, j]
-                        x_, y_ = (int(x / downsample), int(y / downsample))
+                        img = src_image[rc_key(i, j)]
+                        arr = img.get_image()
 
-                        #######融合
+                        x, y = self.fov_location[i, j]
+                        x_, y_ = (int(x / down_sample), int(y / down_sample))
+
+                        # ------------- 融合
                         if fuse_flag:
                             if j > 0:
                                 if rc_key(i, j - 1) in src_image.keys():
@@ -115,15 +118,12 @@ class StitchingWSI(object):
                                             self.buffer[y:y + self._fuse_size, x - dif_v:x + self.fov_width])
                         ###########
                         _h, _w = arr.shape[:2]
-                        b_h, b_w = int(_h // downsample), int(_w // downsample)
+                        b_h, b_w = int(_h // down_sample), int(_w // down_sample)
+                        _arr = cv.resize(arr, (b_w, b_h))
                         if self.fov_channel == 1:
-                            self.buffer[y_: y_ + int(_h // downsample),
-                            x_: x_ + int(_w // downsample)] = \
-                                arr[::downsample, ::downsample][:b_h, :b_w]
+                            self.buffer[y_: y_ + b_h, x_: x_ + b_w] = _arr
                         else:
-                            self.buffer[y_: y_ + int(_h // downsample),
-                            x_: x_ + int(_w // downsample), :] = \
-                                arr[::downsample, ::downsample, :][:b_h, :b_w]
+                            self.buffer[y_: y_ + b_h, x_: x_ + b_w, :] = _arr
 
                         ###########
                         if fuse_flag:
@@ -142,15 +142,17 @@ class StitchingWSI(object):
                                     result_v, _x = self.blend_image_v(arr, source_v, x, y, dif_v, k, self._fuse_size)
                                     _h, _w = result_v.shape[:2]
                                     self.buffer[y:y + _h, _x:_x + _w] = result_v
-                            except Exception: pass
+                            except Exception as e:
+                                glog.warning(f"{e}")
+                                pass
                         ###########
 
-    def save(self, output_path, compression=False):
+    def save(self, output_path, compression = False):
         img = Image()
         img.image = self.buffer
-        img.write(output_path, compression=compression)
+        img.write(output_path, compression = compression)
 
-    def _multi_set_index(self, k=2):
+    def _multi_set_index(self, k = 2):
         pass
 
     def _multi_set_image(self, src_image, index):
@@ -192,10 +194,10 @@ class StitchingWSI(object):
                     1 - math.sin(math.radians(k[i])))
         return result, _x
 
-    def save(self, output_path, compression=False):
+    def save(self, output_path, compression = False):
         img = Image()
         img.image = self.buffer
-        img.write(output_path, compression=compression)
+        img.write(output_path, compression = compression)
 
 
 def main():
