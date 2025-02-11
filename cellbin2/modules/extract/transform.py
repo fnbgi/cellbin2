@@ -17,18 +17,24 @@ def read_transform(
         image_file: ProcFile,
         param_chip: StereoChip,
         channel_images: Dict[str, Union[IFChannel, ImageChannel]],
-        files: Dict[int, ProcFile]
+        files: Dict[int, ProcFile],
+        research_mode: bool
 ):
     c_name = image_file.get_group_name(sn=param_chip.chip_name)
-    if image_file.channel_align != -1:  # 如果该图是校准图，则先切换到其对齐图上
-        if channel_images[c_name].Calibration.CalibrationQCPassFlag:  # 校准通过
-            # 先平移
-            offset = (channel_images[c_name].Calibration.Scope.OffsetX,
-                      channel_images[c_name].Calibration.Scope.OffsetY)
-        else:  # 校准不通过，不贸然操作
+    if research_mode:
+        clog.info(f"Research mode, calibration operation is considered")
+        if image_file.channel_align != -1:  # 如果该图是校准图，则先切换到其对齐图上
+            if channel_images[c_name].Calibration.CalibrationQCPassFlag:  # 校准通过
+                clog.info(f"Research mode, calibration qc flag passed, will perform calibration")
+                # 先平移
+                offset = (channel_images[c_name].Calibration.Scope.OffsetX,
+                          channel_images[c_name].Calibration.Scope.OffsetY)
+            else:  # 校准不通过，不贸然操作
+                offset = (0, 0)
+        else:
             offset = (0, 0)
     else:
-        offset = (0, 0)
+        clog.info(f"Product mode, no calibration operation is performed ")
     s = (1., 1.)  # default
     r = 0.  # default
     if image_file.tech != TechType.IF:
@@ -60,14 +66,16 @@ def run_transform(
         param_chip: StereoChip,
         files: Dict[int, ProcFile],
         cur_f_name: naming.DumpImageFileNaming,
-        if_track: bool
+        if_track: bool,
+        research_mode: bool
 ):
     clog.info(f"Running transform module")
     scale, rotation, offset = read_transform(
         image_file=file,
         param_chip=param_chip,
         channel_images=channel_images,
-        files=files
+        files=files,
+        research_mode=research_mode,
     )
     transform_image = cbimread(file.file_path).trans_image(
         scale=scale, rotate=rotation, offset=offset

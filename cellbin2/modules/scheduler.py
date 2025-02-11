@@ -99,12 +99,10 @@ class Scheduler(object):
         for idx, f in self._files.items():
             if f.cell_segmentation:
                 wp = self.config.cell_segmentation.get_weights_path(f.tech)
-                if wp is None: return 1
                 weights.append(os.path.basename(wp))
 
             if f.tissue_segmentation:
                 wp = self.config.tissue_segmentation.get_weights_path(f.tech)
-                if wp is None: return 1
                 weights.append(os.path.basename(wp))
 
         weights = list(set(weights))
@@ -234,7 +232,8 @@ class Scheduler(object):
                         param_chip=self.param_chip,
                         files=self._files,
                         cur_f_name=cur_f_name,
-                        if_track=f.registration.trackline
+                        if_track=f.registration.trackline,
+                        research_mode=self.research_mode,
                     )
                     self.run_segmentation(
                         f=f,
@@ -383,6 +382,7 @@ class Scheduler(object):
 
         self._output_path = output_path
         self.debug = debug
+        self.research_mode = research_mode
         # 芯片信息加载
         self.param_chip.parse_info(chip_no)
         self.p_naming = naming.DumpPipelineFileNaming(chip_no=chip_no, save_dir=self._output_path)

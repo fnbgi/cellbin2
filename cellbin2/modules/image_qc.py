@@ -174,7 +174,7 @@ class ImageQC(object):
                 channel_image = ipr.IFChannel()
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
                 self._align_channels(f)
-                files.append((f.file_path, f"{f.tech.name}/{chip_no}_{f.tech.name}/{f.tag}.tif"))
+                files.append((f.file_path, f"{f.tech.name}/{f.get_group_name(sn=self.param_chip.chip_name)}/{f.tag}.tif"))
             else:
                 channel_image = ipr.ImageChannel()
             image = cbimread(f.file_path)

@@ -10,74 +10,74 @@ def generate_stereo_file(
         compressed_image: pathlib.PosixPath = "",
         matrix_template: pathlib.PosixPath = "",
         gef: pathlib.PosixPath = "",
-        cellbin_gef="",
+        cellbin_gef: pathlib.PosixPath="",
         sn="",
 ):
     import json
-    stereo_data = {
-        "file_version": "1.0.0",
-        "minor_StereoMap_version": "4.0.0",
-        "SAW_version": f"{__version__}",
-        "pipeline": "cellbin2",
-        "task_id": "",
-        "run_start_time": "",
-        "run_end_time": "",
-        "analysis_uuid": "",
-        "product_kit": "",
-        "sequencing_type": "",
-        "sn": f"{sn}",
-        "omics": ["transcriptomics"],
-        "chip_resolution": "",
-        "organism": "",
-        "tissue": "",
-
-        "images": {
-            "registered_image": str(registered_image.name),
-            "compressed_image": str(compressed_image.name),
-            "matrix_template": str(matrix_template.name),
-        },
-
-        "statistics": {
-            "transcriptomics": {
-                "bin_list": [
-                    "1",
-                    "10",
-                    "100",
-                    "150",
-                    "20",
-                    "200",
-                    "5",
-                    "50",
-                    "cellbin"
-                ],
-                "cell_count": "",
-                "feature_count": "",
-            },
-        },
-        "StereoMap_explorer_files": {
-            "transcriptomics": {
-                "gef": [str(gef)],
-                "cellbin_gef": [str(cellbin_gef)],
-                "h5ad": [],
-                "cellbin_h5ad": [],
-                "diffexp_csv": [],
-                "cellbin_diffexp_csv": [],
-            },
-        },
-    }
     if not exists(save_path):
-        with open(str(save_path), 'w') as fh:
-            fh.write(json.dumps(stereo_data, indent=4))
+        stereo_data = {
+            "file_version": "1.0.0",
+            "minor_StereoMap_version": "4.0.0",
+            "SAW_version": f"{__version__}",
+            "pipeline": "cellbin2",
+            "task_id": "",
+            "run_start_time": "",
+            "run_end_time": "",
+            "analysis_uuid": "",
+            "product_kit": "",
+            "sequencing_type": "",
+            "sn": f"{sn}",
+            "omics": ["transcriptomics"],
+            "chip_resolution": "",
+            "organism": "",
+            "tissue": "",
+
+            "images": {
+                "registered_image": str(registered_image.name),
+                "compressed_image": str(compressed_image.name),
+                "matrix_template": str(matrix_template.name),
+            },
+
+            "statistics": {
+                "transcriptomics": {
+                    "bin_list": [
+                        "1",
+                        "10",
+                        "100",
+                        "150",
+                        "20",
+                        "200",
+                        "5",
+                        "50",
+                        "cellbin"
+                    ],
+                    "cell_count": "",
+                    "feature_count": "",
+                },
+            },
+            "StereoMap_explorer_files": {
+                "transcriptomics": {
+                    "gef": [str(gef.name)],
+                    "cellbin_gef": [str(cellbin_gef.name)],
+                    "h5ad": [],
+                    "cellbin_h5ad": [],
+                    "diffexp_csv": [],
+                    "cellbin_diffexp_csv": [],
+                },
+            },
+        }
     else:
         with save_path.open("r") as f:
             stereo_data = json.load(f)
         if registered_image != "":
-            stereo_data["images"]["registered_image"] = str(registered_image)
+            stereo_data["images"]["registered_image"] = str(registered_image.name)
         if compressed_image != "":
-            stereo_data["images"]["compressed_image"] = str(compressed_image)
+            stereo_data["images"]["compressed_image"] = str(compressed_image.name)
         if matrix_template != "":
-            stereo_data["images"]["matrix_template"] = str(matrix_template)
+            stereo_data["images"]["matrix_template"] = str(matrix_template.name)
         if gef != "":
-            stereo_data["StereoMap_explorer_files"]["transcriptomics"]["gef"] = str(gef)
+            stereo_data["StereoMap_explorer_files"]["transcriptomics"]["gef"] = [str(gef.name)]
         if cellbin_gef != "":
-            stereo_data["StereoMap_explorer_files"]["transcriptomics"]["cellbin_gef"] = str(cellbin_gef)
+            stereo_data["StereoMap_explorer_files"]["transcriptomics"]["cellbin_gef"] = [str(cellbin_gef.name)]
+    with open(str(save_path), 'w') as fh:
+        fh.write(json.dumps(stereo_data, indent=4))

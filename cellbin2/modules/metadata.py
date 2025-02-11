@@ -199,7 +199,7 @@ class ProcParam(BaseModel):
 
         return images
 
-    def get_molecular_classify(self):
+    def get_molecular_classify(self) -> Dict[int, ProcMolecularFile]:
         files = {int(idx): f for idx, f in self.molecular_classify.items()}
         return files
 

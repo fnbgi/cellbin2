@@ -217,11 +217,18 @@ class CellBinPipeline(object):
             # more images, IF, H&E
             if self.more_images is not None:
                 for stain_type, file_path in self.more_images.items():
-                    inner_stain_type = getattr(TechType, stain_type, TechType.IF)
-                    im_process_cp = deepcopy(pp.image_process[inner_stain_type.name])
-                    im_process_cp.file_path = file_path
-                    new_pp.image_process[str(im_count)] = im_process_cp
-                    new_pp.image_process[str(im_count)].registration.reuse = nuclear_cell_idx
+                    if TechType.IF.name in stain_type:
+                        # IF images
+                        inner_stain_type = getattr(TechType, stain_type, TechType.IF)
+                        im_process_cp = deepcopy(pp.image_process[inner_stain_type.name])
+                        im_process_cp.file_path = file_path
+                        # im_process_cp.tech_type = stain_type
+                        new_pp.image_process[str(im_count)] = im_process_cp
+                        new_pp.image_process[str(im_count)].registration.reuse = nuclear_cell_idx
+                        im_count += 1
+                    else:
+                        # H&E
+                        raise Exception("Not supported")
 
             if self._protein_matrix_path is not None:
                 protein_tp = pp.image_process[TechType.Protein.name]
@@ -390,13 +397,21 @@ if __name__ == '__main__':  # main()
     # 负责接收字典类的参数
     class MoreimsKwargs(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
+            mif_im_count = 0
             setattr(namespace, self.dest, dict())
             for value in values:
                 try:
                     # split it into key and value
                     key, value = value.split('=')
                     # assign into dictionary
-                    getattr(namespace, self.dest)[key] = value
+                    if key not in getattr(namespace, self.dest).keys():
+                        getattr(namespace, self.dest)[key] = value
+                    else:
+                        if key == TechType.IF.name:
+                            key = f"unknown{mif_im_count}_{key}"
+                            getattr(namespace, self.dest)[key] = value
+                    if TechType.IF.name in key:
+                        mif_im_count += 1
                 except ValueError:
                     print(f"Input error: {value}, input like 'key=value'.")
 

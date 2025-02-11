@@ -9,6 +9,8 @@ from cellbin2.matrix.matrix import cMatrix
 from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.utils.config import Config
 from cellbin2.utils import clog
+from cellbin2.utils.stereo import generate_stereo_file
+from cellbin2.utils.common import TechType
 
 
 def extract4stitched(
@@ -48,6 +50,11 @@ def extract4matrix(
             tissue_mask_path,
         )
         c_inp = m_naming.tissue_bin_matrix
+        if image_file.tech == TechType.Transcriptomics:
+            generate_stereo_file(
+                save_path=p_naming.stereo,
+                gef=m_naming.tissue_bin_matrix
+            )
     else:
         clog.info(f"{tissue_mask_path} not exists, skip tissue gef generation")
     if c_inp is None:
@@ -65,6 +72,11 @@ def extract4matrix(
             str(m_naming.cell_correct_bin_matrix),
             cell_correct_mask_path
         )
+        if image_file.tech == TechType.Transcriptomics:
+            generate_stereo_file(
+                save_path=p_naming.stereo,
+                cellbin_gef=m_naming.cell_correct_bin_matrix
+            )
     else:
         clog.info(f"{cell_mask_path} not exists, skip cellbin gef generation")
 
