@@ -47,45 +47,6 @@ KIT_VERSIONS = (
 ``` 
 ***Each product line has the configurations of the product and R&D versions. You can visit [config.md](docs/v2/config.md) to view the detailed configurations.***
 
-### Official product
-case 1: 
-Stereo-seq T FF
-DAPI + mIF
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c SS200000045_M5 \
--i /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_fov_stitched.tif \
--s DAPI \
--imf /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_ATP_IF_fov_stitched.tif,/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_CD31_IF_fov_stitched.tif,/media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5_NeuN_IF_fov_stitched.tif \
--m /media/Data/dzh/data/cellbin2/demo_data/SS200000045_M5/SS200000045_M5.raw.gef \
--o /media/Data/dzh/data/cellbin2/test/SS200000045_M5_11 \
--k "Stereo-seq T FF V1.2"
-```
-case 2: 
-Stereo-seq T FF
-ssDNA
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c SS200000135TL_D1 \
--i /media/Data/dzh/data/cellbin2/demo_data/product_demo/SS200000135TL_D1/SS200000135TL_D1.tif \
--s ssDNA \
--m /media/Data/dzh/data/cellbin2/demo_data/product_demo/SS200000135TL_D1/SS200000135TL_D1.raw.gef \
--o /media/Data/dzh/data/cellbin2/test/SS200000135TL_D1 \
--k "Stereo-seq T FF V1.2"
-```
-case 3: 
-Stereo-seq T FF
-H&E
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c C04042E3 \
--i /media/Data/dzh/data/cellbin2/demo_data/product_demo/C04042E3/C04042E3.tif \
--s HE \
--m /media/Data/dzh/data/cellbin2/demo_data/product_demo/C04042E3/C04042E3.raw.gef \
--o /media/Data/dzh/data/cellbin2/test/C04042E3 \
--k "Stereo-seq T FF V1.2"
-```
-
 ### Research mode
 case 1:
 Stereo-CITE 
@@ -93,11 +54,11 @@ DAPI + IF + trans gef
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -c A02677B5 \
--i /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5.tif \
+-i A02677B5.tif \
 -s DAPI \
--imf /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5_IF.tif \
--m /media/Data/dzh/data/cellbin2/demo_data/product_demo/A02677B5/A02677B5.raw.gef \
--o /media/Data/dzh/data/cellbin2/test/A02677B5 \
+-mi IF=A02677B5_IF.tif \
+-m A02677B5.raw.gef \
+-o test/A02677B5 \
 -k "Stereo-CITE T FF V1.1 R"
 ```
 
@@ -107,10 +68,10 @@ DAPI + protein gef
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -c A03899A4 \
--i /media/Data/dzh/data/cellbin2/data/A03899A4/A03899A4_fov_stitched.tif \
+-i A03899A4_fov_stitched.tif \
 -s DAPI \
--pr /media/Data/dzh/data/cellbin2/data/A03899A4/A03899A4.protein.tissue.gef \
--o /media/Data/dzh/data/cellbin2/test/A03899A4 \
+-pr IF=A03899A4.protein.tissue.gef \
+-o /test/A03899A4 \
 -k "Stereo-CITE T FF V1.1 R"
 ```
 
@@ -120,15 +81,52 @@ DAPI + IF + trans gef + protein gef
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -c A03599D1 \ # chip number
--i /media/Data/A03599D1_DAPI_fov_stitched.tif \  # ssDNA, DAPI, HE data path
--imf /media/Data/A03599D1_IF_fov_stitched.tif \  # IF data path
+-i A03599D1_DAPI_fov_stitched.tif \  # ssDNA, DAPI, HE data path
+-mi IF=A02677B5_IF.tif \
 -s DAPI \  # stain type，(ssDNA, DAPI, HE)
--m /media/Data/A03599D1.raw.gef \  # Transcriptomics gef path
--pr /media/Data/A03599D1.protein.raw.gef \  # protein gef path
--o /media/Data/C04042E3_demo \ # output dir
+-m A03599D1.raw.gef \  # Transcriptomics gef path
+-pr A03599D1.protein.raw.gef \  # protein gef path
+-o test/A03599D1 \ # output dir
 -k "Stereo-CITE T FF V1.1 R"
 ```
-
+### Official product
+case 1: 
+Stereo-seq T FF
+DAPI + mIF
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c SS200000045_M5 \
+-i SS200000045_M5_fov_stitched.tif \
+-s DAPI \
+-mi ATP_IF=SS200000045_M5_ATP_IF_fov_stitched.tif CD31_IF=SS200000045_M5_CD31_IF_fov_stitched.tif NeuN_IF=SS200000045_M5_NeuN_IF_fov_stitched.tif \
+-m SS200000045_M5.raw.gef \
+-o test/SS200000045_M5_11 \
+-k "Stereo-seq T FF V1.2"
+```
+case 2: 
+Stereo-seq T FF
+ssDNA
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c SS200000135TL_D1 \
+-i SS200000135TL_D1.tif \
+-s ssDNA \
+-m SS200000135TL_D1.raw.gef \
+-o test/SS200000135TL_D1 \
+-k "Stereo-seq T FF V1.2"
+```
+case 3: 
+Stereo-seq T FF
+H&E
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c C04042E3 \
+-i C04042E3.tif \
+-s HE \
+-m C04042E3.raw.gef \
+-o /test/C04042E3 \
+-k "Stereo-seq T FF V1.2"
+```
 more examples, please visit [example.md](docs/v2/example.md)
 
 ## ErrorCode
