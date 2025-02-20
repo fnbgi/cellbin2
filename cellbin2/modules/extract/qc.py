@@ -1,5 +1,6 @@
 from typing import Tuple, Union, Dict
 import os
+import cv2
 import numpy as np
 from cellbin2.image import CBImage, cbimread, cbimwrite
 from cellbin2.utils.common import TechType
@@ -52,10 +53,19 @@ def detect_chip(
                                                       actual_size=actual_size,
                                                       is_debug=debug)
     if debug and len(debug_image_dic) != 0:
-        # TODO: 图片太多了，整合到一起后再保存。@hdd
-        pass
-        # for i, v in debug_image_dic.items():
-        #     cbimwrite(os.path.join(output_path, i + ".tif"), v)
+        enhance_img = debug_image_dic['enhance']
+        left_up_img = debug_image_dic['left_up']
+        left_down_img = debug_image_dic['left_down']
+        right_down_img = debug_image_dic['right_down']
+        right_up_img = debug_image_dic['right_up']
+
+        tmp_img1 = cv2.vconcat([left_up_img, left_down_img])
+        tmp_img2 = cv2.vconcat([right_up_img, right_down_img])
+
+        result_img = cv2.hconcat([tmp_img1, tmp_img2])
+        result_img = cv2.hconcat([enhance_img, result_img])
+
+        cbimwrite(os.path.join(output_path, 'detect_chip_debug.tif'), result_img)
 
     return info
 
