@@ -209,12 +209,13 @@ class CompareModule2:
             _, image_dct = read(ipr_file[0])
             _, image_dct_ = read(ipr_file2[0])
 
-            for stain in image_dct.keys():
-                if stain in self.stain_list and image_dct_.get(stain):
+            for stain in self.stain_list:
+                if image_dct.get(stain) and image_dct_.get(stain):
                     self.stain = stain
                     print(f'Main stain is {self.stain}')
-                else:
-                    raise "Without same main stain in two ipr "
+
+            if self.stain == '':
+                raise "Without same main stain in two ipr "
 
             self.ipr_dict = wrapper_class(image_dct[self.stain])
             self.ipr_dict_ = wrapper_class(image_dct_[self.stain])

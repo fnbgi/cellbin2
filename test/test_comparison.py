@@ -25,11 +25,11 @@ TEST_OUTPUT_DIR = r"D:\temp\cellbin_test\testdata"
 table_dict = collections.defaultdict()
 
 datafile_path = r"D:\temp\cellbin_test\Cellbin2_TESTDATA.xlsx"
-processed_data = get_data_info(datafile_path, 'Smoke')
+processed_data = get_data_info(datafile_path, 'Smoke', 'local')
 
-def fold(record_md, record: (list, tuple)):
+def fold(record_md, record: (list, tuple, dict), summary: str):
     record_md.write('<details>\n')
-    record_md.write('<summary>Record different detail </summary> \n')
+    record_md.write(f'<summary>{summary}</summary> \n')
 
     if isinstance(record, list):
         for i in record:
@@ -46,14 +46,35 @@ def fold(record_md, record: (list, tuple)):
         record_md.write('</details> \n\n')
 
 
-def pytest_addoption(parser):
-    parser.addoption(
-        "--datafile",
-        action='store',
-        default=None  #放一个固定的数据在这里
-    )
-
 class TestCompare:
+    def setup_class(self):
+        self.formatted_datetime = datetime.now().strftime("%Y%m%d%H%M")
+        self.ipr_compare_dict = []
+        self.de_file_dict = {}
+        self.module_compare_dict = {}
+
+    def teardown_class(self):
+        # create ipr_compare dataframe
+        ipr_df = pd.DataFrame(self.ipr_compare_dict)
+        columns = list(ipr_df)
+        columns.insert(0, columns.pop(columns.index('SN')))
+        ipr_df = ipr_df.loc[:, columns]
+
+        # create missing file dataframe
+        de_file_df = pd.DataFrame(self.de_file_dict).T
+
+        # create module compare dataframe
+        module_compare_df = pd.DataFrame(self.module_compare_dict).T
+
+        with pd.ExcelWriter(os.path.join(TEST_OUTPUT_DIR, f"Testreport_{self.formatted_datetime}.xlsx")) as writer:
+            ipr_df.to_excel(writer, sheet_name="ipr_compare")
+            de_file_df.to_excel(writer, sheet_name="missing_file")
+            module_compare_df.to_excel(writer, sheet_name="module_compare")
+            writer.save()
+
+        print("Test finished.")
+
+
     @pytest.fixture(scope="class")
     def record_md(self):
         formatted_datetime = datetime.now().strftime("%Y%m%d%H%M")
@@ -70,7 +91,7 @@ class TestCompare:
 
     # test script mode
     @pytest.mark.parametrize("sn, info_dict", processed_data)
-    def test_run(self, sn, info_dict, record_md, table):
+    def test_run(self, sn, info_dict, record_md):
         print(sn)
 
         record_md.write(f"# Test case {sn} <br>\n")
@@ -129,22 +150,28 @@ class TestCompare:
 
         else:
             # Compare Ipr
-            type_is_same, value_is_same, type_record, value_record, de_attrs = ipr_compare(ipr_file[0], ipr_file_product[0])
+            type_is_same, value_is_same, type_record, value_record, de_attrs, info_collection = ipr_compare(ipr_file[0], ipr_file_product[0])
+
+            for d in info_collection:
+                d['SN'] = sn
+            self.ipr_compare_dict.extend(info_collection)
+
             if len(de_attrs):
                 record_md.write('* The following attrs are missing: <br>\n')
                 record_md.write(f'{de_attrs} <br> \n')
 
             if len(type_record):
-                fold(record_md, type_record)
+                fold(record_md, type_record, f"Type differences for {sn}")
 
             if len(value_record):
-                fold(record_md, value_record)
+                fold(record_md, value_record, f"Value differences for {sn}")
 
             record_md.write('--- \n')
 
             # Compare File
-            is_complete, de_file = file_compare(cur_out, saw_result)
+            is_complete, de_file, _de_file_dict = file_compare(cur_out, saw_result)
             record_md.write('## Number of file: <br>\n')
+
             if len(de_file):
                 record_md.write('* The following files are missing: <br>\n')
                 record_md.write(f'{de_file} <br> \n')
@@ -152,6 +179,7 @@ class TestCompare:
             else:
                 record_md.write(f'* All documents required for the product are complete. <br>\n')
             record_md.write('--- \n')
+            self.de_file_dict[sn] = _de_file_dict
 
             # Compare Module
             result_is_same, result_dict = module_compare_pipeline(cur_out, saw_result)
@@ -164,6 +192,6 @@ class TestCompare:
 
             markdown_table = dict2mdtable(result_dict)
             record_md.write(f"{markdown_table}")
-            table[sn] = result_dict
+            self.module_compare_dict[sn] = result_dict
 
             assert type_is_same & is_complete & result_is_same, "Test Failed~ The IPR file does not meet the product requirements."
