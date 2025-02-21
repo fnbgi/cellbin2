@@ -9,19 +9,23 @@ As an independent module, stitch modules can be directly referenced by cellbin-v
 
 ### Referenced by cellbin-v2
 ```python
-from cellbin2.contrib.stitch.stitch import stitch_image
+from cellbin2.contrib.stitch.mfws import stitch_image
 
 # 
 def stitch_image(
         image_path: str = '',
-        overlap: float = 0.1,
+        process_rule: dict = None,
+        overlap: str = '0.1',
         name: str = '',
         fuse_flag: bool = True,
         scope_flag: bool = False,
         down_size: int = 1,
         row_slice: str = '-1_-1',
         col_slice: str = '-1_-1',
-        output_path: str = ''
+        output_path: str = '',
+        stereo_data: str = 'cellbin',
+        file_type: str = '',
+        debug: bool = False
 ) -> Union[None, np.ndarray]:
     """
     Image stitch function
@@ -36,24 +40,49 @@ def stitch_image(
 
     Args:
         image_path:
+
         name: image name
+
+        process_rule:
+
         overlap: scope overlap
+
         fuse_flag: whether or not fuse image
+
         scope_flag: scope stitch | algorithm stitch
+
         down_size: down-simpling size
+
         row_slice: means stitch start row and end row,
              if image has 20 rows and 20 cols, row = '0_10' express only stitch row == 0 -> row == 9,
-             like numpy slice, and other area will not stitch
+             same as numpy slice, and other area will not stitch
+
         col_slice: same as 'row'
+
         output_path:
 
+        stereo_data:
+            - V3:
+            - dolphin:
+            - T1:
+            - cellbin:
+
+        file_type: re lambda, like '*.A.*.tif'
+
+        debug:
+
     Returns:
+
+    Examples:
+        >>>
 
     """
 ```
 ### Wheel used 
 ```python
-from MFWS.stitch import stitch_image
+pip install MFWS-0.0.1-py3-none-any.whl
+
+from mfws.stitch import stitch_image
 
 # call method as above
 ```
@@ -68,8 +97,8 @@ parser.add_argument("-i", "--input", action="store", dest="input", type=str, req
                     help="Tar file / Input image dir.")
 
 # scope overlap
-parser.add_argument("-overlap", "--overlap", action="store", dest="overlap", type=float, required=False,
-                    default=0.1, help="Overlap.")
+parser.add_argument("-overlap", "--overlap", action="store", dest="overlap", type=str, required=False,
+                    default='0.1', help="Overlap - 0.1 or 0.1_0.1 .")
 
 # scope stitch or algorithm stitch
 parser.add_argument("-s", "--scope", action = "store_true", dest = "scope",
@@ -92,6 +121,21 @@ parser.add_argument("-n", "--name", action="store", dest="name", type=str, requi
                     default = '', help="Name.")
 parser.add_argument("-o", "--output", action="store", dest="output", type=str, required=False,
                     default = '', help="Result output dir.")
+
+parser.add_argument("-debug", "--debug", action = "store_true", dest = "debug", required = False, help = "debug.")
+
+"""
+interface by stereo data --
+   V3: 
+   dolphin:
+   T1:
+   cellbin:
+any case is fine. 
+"""
+parser.add_argument("-id", "--id", action = "store", dest = "id", type = str, required = False,
+                    default = 'cellbin', help = "Stereo data id.")
+parser.add_argument("-file_type", "--file_type", action = "store", dest = "file_type", type = str,
+                    required = False, default = '', help = "File name -- such as '*.A.*.tif'.")
 ```
 
 
@@ -153,6 +197,7 @@ stitch_image(
 ```
 
 ### Using console
+Stereo data
 ```python
 # if want using console stitch image
 
@@ -168,4 +213,44 @@ stitch
 -row 1_3 
 -col 0_2
 -d 2
+```
+
+V3 data
+```python
+stitch 
+-i '/data/image_path' 
+-o '/data/output_path' 
+-n V3 
+-overlap 0 
+-row 15_17 
+-col 15_17 
+-file_type *.A.*.tif 
+-s 
+-id V3
+```
+
+Dolphin data
+```python
+stitch 
+-i '/data/image_path'  
+-o '/data/output_path'  
+-n dolphin 
+-overlap 0.1_0 
+-row 1_10 
+-col 1_10 
+-file_type *.A.*.tif 
+-id dolphin 
+```
+
+T1 data
+```python
+stitch 
+-i '/data/image_path'  
+-o '/data/output_path'  
+-n T1 
+-overlap 0.07925_0.07925 
+-row 1_10 
+-col 1_10 
+-file_type *.A.*.tif 
+-id T1 
 ```

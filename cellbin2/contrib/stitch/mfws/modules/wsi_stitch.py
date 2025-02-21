@@ -118,7 +118,7 @@ class StitchingWSI(object):
                                             self.buffer[y:y + self._fuse_size, x - dif_v:x + self.fov_width])
                         ###########
                         _h, _w = arr.shape[:2]
-                        b_h, b_w = int(_h // down_sample), int(_w // down_sample)
+                        b_h, b_w = int(np.ceil(_h / down_sample)), int(np.ceil(_w / down_sample))
                         _arr = cv.resize(arr, (b_w, b_h))
                         if self.fov_channel == 1:
                             self.buffer[y_: y_ + b_h, x_: x_ + b_w] = _arr

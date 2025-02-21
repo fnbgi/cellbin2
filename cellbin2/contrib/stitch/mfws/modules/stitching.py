@@ -127,7 +127,7 @@ class Stitching:
             self.fov_x_jitter = h_j
             self.fov_y_jitter = v_j
 
-    def _get_jitter(self, src_fovs, fft_channel=0, process=10):
+    def _get_jitter(self, src_fovs, fft_channel=0, process=5):
         """
         计算FFT特征偏移量
         Args:
