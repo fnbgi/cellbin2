@@ -166,11 +166,15 @@ class LineScanStitch:
                 offset[c] = [int(np.median(jit_x)), int(np.median(jit_y))]
 
             offset_odd = np.round(np.mean(
-                [i for i in list(offset[1::2,:]) if i[0] != self._placeholder], axis = 0)
+                [i for i in list(offset[1::2, :]) if i[0] != self._placeholder], axis = 0)
             )
             offset_even = np.round(np.mean(
-                [i for i in list(offset[::2,:]) if i[0] != self._placeholder], axis = 0)
+                [i for i in list(offset[::2, :]) if i[0] != self._placeholder], axis = 0)
             )
+            try: len(offset_even)
+            except TypeError: offset_even = [offset_odd[0], -offset_odd[1]]
+            try: len(offset_odd)
+            except TypeError: offset_odd = [offset_even[0], -offset_even[1]]
 
             for c in range(1, offset.shape[0]):
                 if offset[c][0] == self._placeholder or \
@@ -179,7 +183,6 @@ class LineScanStitch:
                     else: offset[c] = offset_odd
 
         return offset
-
 
     def get_location(self):
         """
@@ -203,6 +206,7 @@ class LineScanStitch:
                                          [self.fov_width, 0]
 
         return new_location
+
 
 class CenterLrDiffuseStitch:
     '''

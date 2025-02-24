@@ -270,7 +270,7 @@ def get_view_image(
         image: Union[np.ndarray, str],
         points: np.ndarray,
         is_matrix: bool = False,
-        downsample_size: int = 2048,
+        downsample_size: int = 2000,
         crop_size: int = 500,
         color: tuple = (0, 0, 255),
         radius: int = 10,
@@ -381,6 +381,19 @@ if __name__ == '__main__':
                    points = np.loadtxt(r"D:\hedongdong1\Workspace\01.chip_box_detect\show_interface\test_data\C04144G513_ssDNA_stitch.txt"),
                    output_path = r"D:\hedongdong1\Workspace\01.chip_box_detect\show_interface\test_result")
     print(len(image_dic))
+    enhance_img = image_dic['enhance']
+    left_up_img = image_dic['left_up']
+    left_down_img = image_dic['left_down']
+    right_down_img = image_dic['right_down']
+    right_up_img = image_dic['right_up']
+
+    tmp_img1 = cv2.vconcat([left_up_img, left_down_img])
+    tmp_img2 = cv2.vconcat([right_up_img, right_down_img])
+
+    result_img = cv2.hconcat([tmp_img1, tmp_img2])
+    result_img = cv2.hconcat([enhance_img, result_img])
+
+    cbimwrite(os.path.join(r'D:\hedongdong1\Workspace\01.chip_box_detect\show_interface\test_result', 'detect_chip_debug.tif'), result_img)
 
     # register_img = "/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1_ssDNA_regist.tif"
     # tissue_cut = "/media/Data/dzh/data/cellbin2/test/SS200000135TL_D1_demo/SS200000135TL_D1_ssDNA_tissue_cut.tif"
