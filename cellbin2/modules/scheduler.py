@@ -422,14 +422,14 @@ class Scheduler(object):
 
         self.run_merge_masks()  # merge multi masks if needed
 
-        if flag1 == 0:
+        if flag1 in [0, 2]:
             self._dump_rpi(self.p_naming.rpi)
         if research_mode:
-
-            update_ipr_in_tar(
-                tar_path=self.p_naming.tar_gz,
-                ipr_path=self.p_naming.ipr,
-            )
+            if self.p_naming.tar_gz.exists() and self.p_naming.ipr.exists():
+                update_ipr_in_tar(
+                    tar_path=self.p_naming.tar_gz,
+                    ipr_path=self.p_naming.ipr,
+                )
 
             if self.matrix_file is not None:
                 matrix_naming = naming.DumpMatrixFileNaming(
@@ -439,7 +439,7 @@ class Scheduler(object):
                 )
                 matrix_template = matrix_naming.matrix_template
             else:
-                matrix_template = ""
+                matrix_template = Path("")
 
             generate_stereo_file(
                 registered_image=self.p_naming.rpi,

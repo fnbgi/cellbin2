@@ -181,13 +181,14 @@ class CellBinPipeline(object):
             report_m.creat_report(matric_json=src_file_path, save_path=self._output_path)
 
     def usr_inp_to_param(self):
+        if self._kit.endswith("R"):
+            self.research = True
         self.config = Config(self._config_file, self._weights_root)
         if self._param_file is None:
             if self._input_image is None:
                 raise Exception(f"the input image can not be empty if param file is not provided")
             tech, version = self._kit.split("V")
             if self._kit.endswith("R"):
-                self.research = True
                 param_file = os.path.join(CONFIG_PATH, tech.strip(" ") + " R" + ".json")
             else:
                 param_file = os.path.join(CONFIG_PATH, tech.strip(" ") + ".json")
@@ -433,7 +434,7 @@ if __name__ == '__main__':  # main()
                         help="The path of transcriptomics matrix file.")
     parser.add_argument("-pr", action="store", type=str, metavar="PROTEIN_MATRIX_FILE", dest="protein_matrix_file",
                         help="The path of protein matrix file.")
-    parser.add_argument("-k", action="store", type=str, default="Stereo-CITE T FF V1.0", metavar="KIT_VERSION",
+    parser.add_argument("-k", action="store", type=str, default="Stereo-CITE T FF V1.0 R", metavar="KIT_VERSION",
                         dest="kit", choices=KIT_VERSIONS + KIT_VERSIONS_R, help="Kit version")
     parser.add_argument("-p", action="store", type=str, help="The path of input param file.",
                         metavar="PARAM_FILE", dest="param_file")
