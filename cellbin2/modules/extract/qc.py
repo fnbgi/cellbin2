@@ -204,7 +204,9 @@ def run_qc(
             channel_image.Register.Register00.update(pre_out)
             channel_image.Register.Method = AlignMode.Template00Pt.name
     cpf = 1 if channel_image.QCInfo.ChipDetectQCPassFlag == 1 else 0
-    tcf = 1 if channel_image.QCInfo.TrackCrossQCPassFlag == 1 else 0
+    # TODO 芯片框QC恒为0 25/03/04
+    tcf = 0
+    # tcf = 1 if channel_image.QCInfo.TrackCrossQCPassFlag == 1 else 0
     channel_image.QCInfo.QCPassFlag = (cpf or tcf)
 
     clog.info('ImageQC result is {}'.format(channel_image.QCInfo.QCPassFlag))

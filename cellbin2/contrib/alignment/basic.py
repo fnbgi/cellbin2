@@ -229,15 +229,21 @@ class Alignment(object):
         return x, y, x_d, y_d
 
     @staticmethod
-    def scale_rotate2mat(scale: Union[int, float, List, Tuple] = 1,
-                         rotate: Union[int, float] = 0,
-                         offset: Union[List, Tuple] = None):
+    def scale_rotate2mat(
+            scale: Union[int, float, List, Tuple] = 1,
+            rotate: Union[int, float] = 0,
+            offset: Union[List, Tuple] = None,
+            rotate_first_flag: bool = True
+    ) -> np.matrix:
         """
         先缩放、旋转 后平移的矩阵变换
         Args:
             scale:
             rotate:
-            offset: [x, y]
+            offset: [x, y] 默认最后做
+            rotate_first_flag:
+                -- 若scale为两个方向不同值，则会出现旋转的优先级问题，即先做旋转还是先做缩放，
+                两个方法所得到的变换矩阵不一样，具体体现在旋转会改变轴的方向，使得缩放的程度会不一样
 
         Returns:
 
@@ -260,10 +266,15 @@ class Alignment(object):
                                  [0, 1, offset[1]],
                                  [0, 0, 1]])
 
-            mat = mat_offset * mat_scale * mat_rotate
+            if rotate_first_flag:
+                mat = mat_offset * mat_scale * mat_rotate
+            else:
+                mat = mat_offset * mat_rotate * mat_scale
         else:
-
-            mat = mat_scale * mat_rotate
+            if rotate_first_flag:
+                mat = mat_scale * mat_rotate
+            else:
+                mat = mat_rotate * mat_scale
 
         return mat
 

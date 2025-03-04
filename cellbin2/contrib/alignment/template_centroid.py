@@ -86,7 +86,7 @@ class TemplateCentroid(Alignment):
             self,
             fixed_image: ChipFeature,
             moving_image: ChipFeature,
-            mask_flag = False
+            mask_flag = True
     ):
         """
 

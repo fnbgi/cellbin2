@@ -108,14 +108,17 @@ def registration(moving_image: ChipFeature,
         )
     else:
         res_chip_box = None
+
     if res_template is not None:
         cent_info = RegistrationOutput(**res_template)
     else:
         cent_info = None
+
     if res_chip_box is not None:
         chip_info = RegistrationOutput(**res_chip_box)
     else:
         chip_info = None
+
     return cent_info, chip_info
 
 
