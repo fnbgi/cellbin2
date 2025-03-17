@@ -205,9 +205,6 @@ model_postprocess = {
         TechType.Transcriptomics: f_postprocess_rna
     },
     SUPPORTED_MODELS[3]: {
-        TechType.HE: f_postprocess_v2,
-    },
-    SUPPORTED_MODELS[4]: {
         TechType.DAPI: f_postprocess_v2,
     },
 }
