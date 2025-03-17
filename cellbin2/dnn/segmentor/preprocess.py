@@ -50,7 +50,10 @@ model_preprocess = {
     },
     SUPPORTED_MODELS[2]: {
         TechType.Transcriptomics: f_pre_rna
-    }
+    },
+    SUPPORTED_MODELS[3]: {
+        TechType.DAPI: f_pre_ssdna,
+    },
 }
 
 
