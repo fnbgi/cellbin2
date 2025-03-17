@@ -15,11 +15,11 @@ trackPoints:
   DAPI_weights_path: points_detect_yolov5obb_SSDNA_20220513_pytorch.onnx  # DAPI染色图对应的权重文件名
   HE_weights_path: points_detect_yolov5obb_SSDNA_20220513_pytorch.onnx  # HE染色图对应的权重文件名
   IF_weights_path: points_detect_yolov5obb_SSDNA_20220513_pytorch.onnx  # IF染色图对应的权重文件名
-  GPU: 0  # 推理使用的GPU编号
+  GPU: 2  # 推理使用的GPU编号
   num_threads: 0  # 推理使用的线程数
 
 clarity:
-  GPU: 0  # 推理使用的GPU编号
+  GPU: 2  # 推理使用的GPU编号
   num_threads: 0  # 推理使用的线程数
 #  DEFAULT_STAIN_TYPE: 1  # ssDNA染色
 #  SUPPORTED_STAIN_TYPE: [1, 2]  # ssDAN染色, DAPI染色
@@ -40,7 +40,7 @@ chipDetector:
   score_thr: 0.1  # 得分阈值
   stage1_weights_path: chip_detect_obb8n_640_SD_202409_pytorch.onnx
   stage2_weights_path: chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx
-  GPU: 0
+  GPU: 2
   num_threads: 0
 
 templateReferenceV1:
@@ -66,17 +66,17 @@ tissueSegmentation:
   IF_weights_path:
   Transcriptomics_weights_path: tissueseg_bcdu_rna_220909_tf.onnx
   Protein_weights_path: tissueseg_bcdu_rna_220909_tf.onnx
-  GPU: 0
+  GPU: 2
   num_threads: 0
 
 cellSegmentation:
   ssDNA_weights_path: cellseg_bcdu_SHDI_221008_tf.onnx
   DAPI_weights_path: cellseg_bcdu_SHDI_221008_tf.onnx
-  HE_weights_path: cellseg_bcdu_H_240823_tf.onnx
+  HE_weights_path: cellseg_bcdu_H_20250303_tf_R.onnx
   IF_weights_path: cyto2torch_0
   Transcriptomics_weights_path: cellseg_unet_RNA_20230606.onnx
   Protein_weights_path: cellseg_unet_RNA_20230606.onnx
-  GPU: 0
+  GPU: 2
   num_threads: 0
 
 Registration:
