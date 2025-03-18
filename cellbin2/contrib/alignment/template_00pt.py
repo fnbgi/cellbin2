@@ -276,7 +276,7 @@ def template_00pt_check(
         offset = _info["offset"]
         _offset = (np.array(offset) - np.array(fixed_offset)).tolist()
         register_image = mm.trans_image(
-            rot90 = rot_ind,
+            rot90 = (4 - rot_ind) % 4 ,
             offset = _offset,
             dst_size = fixed_image.mat.shape
         )
