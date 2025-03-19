@@ -13,7 +13,6 @@ from cellbin2.utils import clog
 from cellbin2.contrib.alignment.basic import TemplateInfo, ChipBoxInfo
 from cellbin2.image import cbimread, cbimwrite
 from cellbin2.modules import naming
-from cellbin2.utils.cell_shape import f_main
 from pydantic import BaseModel, Field
 
 
@@ -238,6 +237,7 @@ def gem_to_gef(gem_path, gef_path):
 
 
 def save_cell_bin_data(src_path: str, dst_path: str, cell_mask: str):
+    from cellbin2.utils.cell_shape import f_main
     """ 获取：单细胞数据（mask可来自配准图像 or 矩阵自身 ） """
     src_path = str(src_path)
     dst_path = str(dst_path)

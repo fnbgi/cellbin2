@@ -13,7 +13,6 @@ import cellbin2
 from cellbin2.utils import ipr
 from cellbin2.modules.metadata import read_param_file, ProcParam, ProcFile, print_main_modules
 from cellbin2.utils.config import Config
-from cellbin2.modules.metrics import ImageSource
 from cellbin2.utils import dict2json
 from cellbin2.utils.common import KIT_VERSIONS, KIT_VERSIONS_R, sPlaceHolder, bPlaceHolder, ErrorCode
 from cellbin2.utils.pro_monitor import process_decorator
@@ -121,6 +120,7 @@ class CellBinPipeline(object):
                     return v.file_path
 
         if self.pp.run.report:
+            from cellbin2.modules.metrics import ImageSource
             from cellbin2.modules import metrics
             if self._naming.metrics.exists():
                 clog.info('Metrics step has been done')
