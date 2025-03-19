@@ -31,6 +31,7 @@ conda create --name cellbin2 python=3.10
 conda activte cellbin2
 cd cellbin2
 pip install .[rs]
+# pip install -e .[rs] # developer mode
 python demo.py  # run 3 demos, approximately 30-40 mins on GPU
 ```
 
