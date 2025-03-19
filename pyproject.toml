@@ -16,6 +16,8 @@ dependencies = [
     "objtyping",
     "pydantic",
     "opencv-python==4.8.0.76",
+    "imagecodecs==2023.3.16",
+    "aenum",
     "tqdm==4.65.0",
     "tifffile==2023.2.3",
     "scipy",
@@ -43,3 +45,12 @@ version = { attr = "cellbin2.__version__"}
 [tool.setuptools.packages.find]
 where = ["."]
 
+[project.optional-dependencies]
+cp = ['cellpose==3.0.11', 'patchify==0.2.3']
+rs = [
+    'gefpy==1.2.1',
+#    'beautifulsoup4',
+#    'csscompressor',
+#    'mapbox_earcut',
+#    'jsmin'
+]
