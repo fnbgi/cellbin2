@@ -93,7 +93,7 @@ def main(args, para):
     cropped_image, updated_coords = crop_image_by_coords(image, spatial_coords)
 
     # 保存裁剪后的图像
-    cropped_image_path = os.path.join(output_path, "cropped_image.tif")
+    cropped_image_path = os.path.join(output_path, "A04547A1C3.tif")
     Image.fromarray(cropped_image).save(cropped_image_path)
     print(f"裁剪后的图像已保存：{cropped_image_path}")
 
@@ -128,7 +128,7 @@ def main(args, para):
     # 创建输出文件路径
     # 动态生成输出文件路径
     input_filename = os.path.splitext(os.path.basename(input_image))[0]  # 提取输入图像文件名（不带扩展名）
-    output_file = os.path.join(output_path, f"{input_filename}.gem.gz")  # 拼接为输出路径+文件名.gem.gz
+    output_file = os.path.join(output_path, "A04547A1C3.gem.gz")  # 拼接为输出路径+文件名.gem.gz
 
     # 删除已有的文件，确保重新生成
     if os.path.exists(output_file):
