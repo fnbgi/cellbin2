@@ -49,8 +49,8 @@ where = ["."]
 cp = ['cellpose==3.0.11', 'patchify==0.2.3']
 rs = [
     'gefpy==1.2.1',
+    'mapbox_earcut'
 #    'beautifulsoup4',
 #    'csscompressor',
-#    'mapbox_earcut',
 #    'jsmin'
 ]
