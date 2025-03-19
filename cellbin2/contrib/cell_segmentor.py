@@ -25,7 +25,7 @@ from cellbin2.utils.weights_manager import download_by_names
 class CellSegParam(BaseModel, BaseModule):
     ssDNA_weights_path: str = Field("cellseg_bcdu_SHDI_221008_tf.onnx", description="name of the model")
     DAPI_weights_path: str = Field("cellseg_bcdu_SHDI_221008_tf.onnx", description="name of the model")
-    HE_weights_path: str = Field("cellseg_bcdu_H_20250303_tf_R.onnx", description="name of the model")
+    HE_weights_path: str = Field("cellseg_bcdu_H_250303_tf_R.onnx", description="name of the model")
     IF_weights_path: str = Field("cyto2torch_0", description="name of the model")
     Transcriptomics_weights_path: str = Field("cellseg_unet_RNA_20230606.onnx", description="name of the model")
     Protein_weights_path: str = Field("cellseg_unet_RNA_20230606.onnx", description="name of the model")
