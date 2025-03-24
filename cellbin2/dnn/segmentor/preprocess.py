@@ -54,6 +54,9 @@ model_preprocess = {
     SUPPORTED_MODELS[3]: {
         TechType.DAPI: f_pre_ssdna,
     },
+    SUPPORTED_MODELS[4]: {
+         TechType.HE: f_pre_he,
+    }
 }
 
 
