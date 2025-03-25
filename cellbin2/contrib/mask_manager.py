@@ -155,7 +155,7 @@ class BestTissueCellMask:
 
         crop_tissue_mask, crop_cell_mask = tissue_mask, cell_mask  # TODO: hdd check this
         if chip_box:
-            if chip_box.IsAvailable:
+            if 0:  # TODO chip detect is not stable, turn it off for now by dzh 2025/03/25
                 crop_tissue_mask, crop_cell_mask = cls.crop_chip_mask(chip_box, tissue_mask, cell_mask)
             else:
                 clog.warning('chip box is not available')
