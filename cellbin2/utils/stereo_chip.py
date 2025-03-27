@@ -57,6 +57,9 @@ class StereoChip(object):
         self.S1_fov_count = 6.8
         self.exp_r = [0.2, 0.2]  # WH
 
+        self._chip_rows = ''
+        self._chip_cols = ''
+
     @staticmethod
     def _create_points(b, e):
         p_list = list([b])
@@ -99,11 +102,14 @@ class StereoChip(object):
         track_points_data = self.create_track_points()
         track_points_data = pd.DataFrame(track_points_data, columns = ['x', 'y'])
 
+        _info = None
         if self.is_from_S13:
             if min(self.chip_specif) == 0.5:
                 info = self.chip_mask['T10_90_90_s'][self._name[-4:]]
                 sx, sy = self._get_start_margin(self.chip_mask['T10_90_90_s'])
             else:
+                if max(self.chip_specif) > 1:
+                    _info = self.chip_mask['T10_90_90_230508'][self._name[-4:-2]]
                 info = self.chip_mask['T10_90_90_230508'][self._name[-2:]]
                 sx, sy = self._get_start_margin(self.chip_mask['T10_90_90_230508'])
 
@@ -112,14 +118,18 @@ class StereoChip(object):
                 info = self.chip_mask['T10_41_41_s'][self._name[-4:]]
                 sx, sy = self._get_start_margin(self.chip_mask['T10_41_41_s'])
             else:
+                if max(self.chip_specif) > 1:
+                    _info = self.chip_mask['T10_41_41_230508'][self._name[-4:-2]]
                 info = self.chip_mask['T10_41_41_230508'][self._name[-2:]]
                 sx, sy = self._get_start_margin(self.chip_mask['T10_41_41_230508'])
 
-        self.exp_r = [sum(info['lr_expand']), sum(info['ud_expand'])]
+        self._chip_rows, self._chip_cols, lr, ud = self._get_chip_rc(info, _info)
+        self.exp_r = [sum(lr), sum(ud)]
+
         first_xy = list(map(lambda x: x * MASK_FOV_LEN, (sx, sy)))
 
-        row = list(map(int, info['fov_row'].split('-')))
-        col = list(map(int, info['fov_col'].split('-')))
+        row = list(map(int, self._chip_rows.split("-")))
+        col = list(map(int, self._chip_cols.split("-")))
 
         mask_x_min = (col[0] - 1) * MASK_FOV_LEN
         mask_x_max = col[1] * MASK_FOV_LEN
@@ -163,6 +173,28 @@ class StereoChip(object):
 
         self._00pt = (zero_x, zero_y)  # 00点距矩阵图左上角坐标
         self._chip_00pt = chip_point  # 00点距芯片左上角坐标
+
+    def _get_chip_rc(self, info1, info2):
+        if max(self.chip_specif) > 1:
+            row_list = list(map(int, info1["fov_row"].split("-"))) + \
+                       list(map(int, info2["fov_row"].split("-")))
+            col_list = list(map(int, info1["fov_col"].split("-"))) + \
+                       list(map(int, info2["fov_col"].split("-")))
+
+            row = "-".join([str(min(row_list)), str(max(row_list))])
+            col = "-".join([str(min(col_list)), str(max(col_list))])
+
+            lr = [info2["lr_expand"][0], info1["lr_expand"][1]]
+            ud = [info2["ud_expand"][1], info1["ud_expand"][0]]
+
+        else:
+            row = info1["fov_row"]
+            col = info1["fov_col"]
+
+            lr = info1["lr_expand"]
+            ud = info1["ud_expand"]
+
+        return row, col, lr, ud
 
     @property
     def zero_zero_point(self, ): return self._00pt
