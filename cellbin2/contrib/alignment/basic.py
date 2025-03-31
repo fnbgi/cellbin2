@@ -483,6 +483,8 @@ def transform_points(
     """
     align = Alignment()
 
+    src_shape = list(map(lambda x: x - 1, src_shape))
+
     mat = align.get_coordinate_transformation_matrix(shape=src_shape, scale=scale, rotate=rotation)
     if flip == 0:
         points[:, 0] = src_shape[1] - points[:, 0]
@@ -502,17 +504,17 @@ def transform_points(
 
 
 if __name__ == "__main__":
-    # src_points = np.array([[0, 0],
-    #                        [0, 100],
-    #                        [100, 100],
-    #                        [100, 0]])
-    # dst_points = transform_points(src_points,
-    #                               src_shape=(100, 100),
-    #                               scale=2,
-    #                               rotation=30,
-    #                               offset=(10, 10),
-    #                               flip=0)
-    # print(dst_points)
+    src_points = np.array([[0, 0],
+                           [0, 99],
+                           [99, 99],
+                           [99, 0]])
+    dst_points = transform_points(src_points,
+                                  src_shape=(100, 100),
+                                  scale=1,
+                                  rotation=180,
+                                  offset=(0, 0),
+                                  flip=0)
+    print(dst_points)
 
     _points, _ = transform_points(
         np.loadtxt(r"D:\02.data\temp\A03599D1\00pt\temp_rot0.txt"),
