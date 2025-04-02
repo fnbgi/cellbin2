@@ -50,7 +50,7 @@ KIT_VERSIONS = (
 
 ### Research mode
 case 1:
-Stereo-CITE 
+Stereo-CITE <br>
 DAPI + IF + trans gef
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
@@ -64,7 +64,7 @@ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 ```
 
 case 2: 
-Stereo-CITE
+Stereo-CITE <br>
 DAPI + protein gef
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
@@ -77,7 +77,7 @@ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 ```
 
 case 3:
-Stereo-CITE
+Stereo-CITE <br>
 DAPI + IF + trans gef + protein gef
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
@@ -90,6 +90,29 @@ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -o test/A03599D1 \ # output dir
 -k "Stereo-CITE T FF V1.1 R"
 ```
+
+case 4:
+Single RNA <br>
+trans gef
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c B01715B4 \ # chip number
+-p only_matrix.json \ # Personalized Json File
+-o test/B01715B4 \ # output dir
+```
+please modify [only_matrix.json](cellbin2/config/demos/only_matrix.json)<br>
+
+case 5:
+Plant cellbin<br>
+ssDNA + FB + trans gef
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c FP200000449TL_C3 \ # chip number
+-p Plant.json \ # Personalized Json File
+-o test/FP200000449TL_C3 \ # output dir
+```
+please modify [Plant.json](cellbin2/config/demos/Plant.json)<br>
+
 ### Official product
 case 1: 
 Stereo-seq T FF
