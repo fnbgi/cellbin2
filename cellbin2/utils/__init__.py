@@ -73,7 +73,8 @@ class HDF5(object):
 
     def write(self, file_path: str, extra: dict):
         dir_path = os.path.dirname(file_path)
-        os.makedirs(dir_path, exist_ok=True)
+        if dir_path not in ['', '.']:
+            os.makedirs(dir_path, exist_ok=True)
 
         for k, v in extra.items():
             if not hasattr(self, k):
