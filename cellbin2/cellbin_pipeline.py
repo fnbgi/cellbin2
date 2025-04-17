@@ -29,8 +29,23 @@ SUPPORTED_STAINED_Types = []
 
 
 class CellBinPipeline(object):
+    """
+    CellBinPipeline class is designed to handle the entire pipeline of cellular image processing and analysis.
+    It includes steps such as image quality control, image analysis, matrix extraction, metrics calculation, and report generation.
+    """
 
     def __init__(self, config_file: str, chip_mask_file: str, weights_root: str) -> None:
+        """
+        Initialize the CellBinPipeline class.
+
+        Parameters:
+        config_file (str): The path to the configuration file.
+        chip_mask_file (str): The path to the chip mask file.
+        weights_root (str): The path to the weights root directory.
+
+        Returns:
+        None
+        """
         # alg
         self._chip_mask_file = chip_mask_file
         self._config_file = config_file
@@ -59,7 +74,14 @@ class CellBinPipeline(object):
         self.research: bool = False
 
     def image_quality_control(self, ):
-        """ 完成图像 QC 流程 """
+        """
+        Perform image quality control.
+        
+        This method checks if the QC flag in the processing parameters is set.
+        If set, it imports the image_qc module and runs the image_quality_control function
+        with the specified parameters. If the function returns a non-zero status code,
+        the program exits with a status code of 1.
+        """
         if self.pp.run.qc:
             from cellbin2.modules import image_qc
             # if self._naming.ipr.exists():
@@ -79,7 +101,12 @@ class CellBinPipeline(object):
                 sys.exit(1)
 
     def image_analysis(self, ):
-        """ 完成图像、配准、校准、分割、矩阵提取等分析流程 """
+        """
+        Perform various image processing tasks including alignment, registration, calibration, 
+        segmentation, and matrix extraction.
+        
+        This method utilizes the scheduler pipeline to process the images based on the provided parameters.
+        """
         if self.pp.run.alignment:
             from cellbin2.modules import scheduler
             # if self._naming.rpi.exists():
@@ -93,6 +120,11 @@ class CellBinPipeline(object):
                                          research_mode=self.research)
 
     def m_extract(self):
+        """
+        Extract matrices from the processed images.
+        
+        This method runs the matrix extraction process if the corresponding flag is set in the processing parameters.
+        """
         if self.pp.run.matrix_extract:
             from cellbin2.modules.extract.matrix_extract import extract4matrix
             mcf = self.pp.get_molecular_classify()
@@ -113,7 +145,11 @@ class CellBinPipeline(object):
                 )
 
     def metrics(self, ):
-        """ 计算指标 """
+        """
+        Calculate metrics for the processed images and matrices.
+        
+        This method calculates various metrics if the corresponding flag is set in the processing parameters.
+        """
         def _get_stitched(files: Dict[int, ProcFile], g_name: str, sn: str):
             for i, v in files.items():
                 if v.get_group_name(sn) == g_name:
@@ -173,14 +209,24 @@ class CellBinPipeline(object):
             clog.info("Metrics generated")
 
     def export_report(self, ):
+        """
+        Export the analysis report.
+        
+        This method generates and exports the report if the corresponding flag is set in the processing parameters.
+        """
         if self.pp.run.report:
-            """ 生成及导出报告 """
             from cellbin2.modules import report_m
 
             src_file_path = self._naming.metrics
             report_m.creat_report(matric_json=src_file_path, save_path=self._output_path)
 
     def usr_inp_to_param(self):
+        """
+        Convert user input to processing parameters.
+        
+        This method converts the user-provided input into a set of processing parameters that will be used
+        throughout the pipeline.
+        """
         if self._kit.endswith("R"):
             self.research = True
         self.config = Config(self._config_file, self._weights_root)
@@ -268,7 +314,30 @@ class CellBinPipeline(object):
     def run(self, chip_no: str, input_image: str, more_images: str,
             stain_type: str, param_file: str,
             output_path: str, matrix_path: str, protein_matrix_path: str, kit: str, if_report: bool, debug: bool):
-        """ 全分析流程 """
+        """
+        Run the full analysis pipeline.
+        
+        This method runs the entire pipeline for image analysis, including the following steps:
+        - Convert user input to parameters
+        - Perform image quality control
+        - Perform image analysis
+        - Extract matrix
+        - Calculate metrics
+        - Generate report
+        
+        Args:
+            chip_no (str): The serial number of the chip.
+            input_image (str): The path of the input image file.
+            more_images (str): The paths of other input image files.
+            stain_type (str): The stain type of the input image.
+            param_file (str): The path of the input parameter file.
+            output_path (str): The path of the output directory.
+            matrix_path (str): The path of the transcriptomics matrix file.
+            protein_matrix_path (str): The path of the protein matrix file.
+            kit (str): The version of the kit.
+            if_report (bool): Whether to generate a report.
+            debug (bool): Whether to run in debug mode.
+        """
         self._chip_no = chip_no
         self._input_image = input_image
         self.more_images = more_images
@@ -350,6 +419,18 @@ def pipeline(
 
 
 def main(args, para):
+    """
+    Main function to execute the cellbin pipeline.
+
+    This function serves as the entry point for running the cellbin pipeline. It extracts necessary parameters
+    from the parsed command-line arguments and additional parameters, and then passes them to the pipeline function.
+
+    Parameters:
+    args : argparse.Namespace
+        Parsed command-line arguments containing various parameters required by the pipeline.
+    para : dict
+        Additional parameters for the pipeline, typically used to provide extra configuration or context.
+    """
     chip_no = args.chip_no
     input_image = args.input_image
     more_images = args.more_images
