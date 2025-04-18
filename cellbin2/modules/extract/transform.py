@@ -21,6 +21,7 @@ def read_transform(
         research_mode: bool
 ):
     c_name = image_file.get_group_name(sn=param_chip.chip_name)
+    offset = (0, 0)
     if research_mode:
         clog.info(f"Research mode, calibration operation is considered")
         if image_file.channel_align != -1:  # 如果该图是校准图，则先切换到其对齐图上
