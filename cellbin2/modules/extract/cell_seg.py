@@ -18,8 +18,8 @@ def run_cell_seg(
         channel_image: Optional[Union[ipr.ImageChannel, ipr.IFChannel]] = None
 ):
     if image_file.tech == TechType.IF:
-        from cellbin2.contrib import cellpose_segmentor
-        cell_mask = cellpose_segmentor.segment4cell(
+        from cellbin2.contrib import cellpose_segmentor_2
+        cell_mask = cellpose_segmentor_2.segment4cell(
             input_path=str(image_path),
             cfg=config.cell_segmentation,
         )
