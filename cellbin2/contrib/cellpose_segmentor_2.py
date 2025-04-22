@@ -8,6 +8,7 @@ from scipy.ndimage import distance_transform_edt
 
 from cellpose import models, utils
 from cellbin2.contrib.cell_segmentor import CellSegParam
+from cellbin2.contrib.cellpose_segmentor import f_instance2semantics_max
 
 
 class CellSegmentation:
@@ -52,6 +53,7 @@ class CellSegmentation:
                 num0min = wid * high * 800000000000000
                 for k in range(self.dmin, self.dmax, self.step):
                     masks, flows, styles, diams = model.eval(img_data, diameter=k, channels=[0, 0], flow_threshold=0.9)
+                    masks = f_instance2semantics_max(masks)
                     num0 = np.sum(masks == 0)
                     if num0 < num0min:
                         num0min = num0
