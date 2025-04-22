@@ -273,8 +273,19 @@ class CellBinPipeline(object):
                         new_pp.image_process[str(im_count)] = im_process_cp
                         new_pp.image_process[str(im_count)].registration.reuse = nuclear_cell_idx
                         im_count += 1
+
+                    elif getattr(TechType, stain_type, None):
+                        # H&E, ssDNA, DAPI image
+                        inner_stain_type = getattr(TechType, stain_type, TechType.UNKNOWN) #TODO: add unknown to json
+                        im_process_cp = deepcopy(pp.image_process[inner_stain_type.name])
+                        im_process_cp.file_path = file_path
+                        # im_process_cp.tech_type = stain_type
+                        new_pp.image_process[str(im_count)] = im_process_cp
+                        new_pp.image_process[str(im_count)].registration.reuse = nuclear_cell_idx
+                        new_pp.image_process[str(im_count)].registration.trackline = False
+                        im_count += 1
                     else:
-                        # H&E
+                        # other stain
                         raise Exception("Not supported")
 
             if self._protein_matrix_path is not None:

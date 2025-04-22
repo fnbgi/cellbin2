@@ -299,7 +299,7 @@ class Scheduler(object):
                 shutil.copy2(f.file_path, cur_f_name.stitch_image)
                 if self._channel_images is not None and self._ipr is not None:
                     # IPR data is provided
-                    if not f.tech == TechType.IF:
+                    if f.registration.reuse == -1:
                         # TODO: handle two versions of IPR
                         qc_ = self._channel_images[g_name].QCInfo
                         if hasattr(qc_, 'QcPassFlag'):

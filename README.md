@@ -27,7 +27,8 @@
 Linux
 ```shell
 git clone https://github.com/STOmics/cellbin2
-conda create --name cellbin2 python=3.10
+conda create --name cellbin2 python>=3.8
+# if you want to use stereopy, you need to install python version 3.8. stereopy is used in the report part.
 conda activte cellbin2
 cd cellbin2
 pip install .[rs]
@@ -112,6 +113,20 @@ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 -o test/FP200000449TL_C3 \ # output dir
 ```
 please modify [Plant.json](cellbin2/config/demos/Plant.json)<br>
+
+case 6:
+CytAssist <br>
+ssDNA + HE + trans gef
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c Q00001A1 \ # chip number
+-i Q00001A1_ssDNA_fov_stitched.tif \  # ssDNA,DAPI data path
+-mi HE=Q00001A1_HE_fov_stitched.tif \ # HE data path. This image has been registered with ssDNA(DAPI) image
+-s ssDNA \  # stain type (ssDNA, DAPI)
+-m Q00001A1.raw.gef \  # Transcriptomics gef path
+-o test/Q00001A1 \ # output dir
+-k "Stereo-CITE T FF V1.1 R"
+```
 
 ### Official product
 case 1: 

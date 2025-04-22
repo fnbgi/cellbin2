@@ -238,12 +238,14 @@ class ImageQC(object):
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
                 files.append((f.file_path, f"{f.tech.name}/{f.tag}.tif"))
             elif f.channel_align != -1:
+                # do calibration
                 channel_image = ipr.IFChannel()
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
                 self._align_channels(f)
                 files.append((f.file_path, f"{f.tech.name}/{f.get_group_name(sn=self.param_chip.chip_name)}/{f.tag}.tif"))
             else:
                 channel_image = ipr.ImageChannel()
+                self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
             image = cbimread(f.file_path)
             if f.tech == TechType.IF:  # Product-specific handling: SN_IF.tif -> ipr stain_type = SN_IF
                 s_type = f.get_group_name(sn=self.param_chip.chip_name)

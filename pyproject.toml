@@ -34,7 +34,7 @@ dependencies = [
     "pyvips-binary",
     "pyvips"
 ]
-requires-python = "==3.10.*"
+requires-python = ">=3.8.*"
 
 [tool.setuptools]
 include-package-data = true
@@ -50,7 +50,7 @@ cp = ['cellpose==3.0.11', 'patchify==0.2.3']
 rs = [
     'gefpy==1.2.1',
     'mapbox_earcut',
-    'stereopy==1.6.0',
+#    'stereopy==1.6.0',
 #    'beautifulsoup4',
 #    'csscompressor',
 #    'jsmin'
