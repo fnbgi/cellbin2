@@ -22,14 +22,14 @@ def read_transform(
 ):
     """
     Reads and applies transformations to an image based on various parameters.
-    
-    Parameters:
+
+    Args:
         image_file (ProcFile): The image file object.
         param_chip (StereoChip): The stereo chip parameters.
         channel_images (Dict[str, Union[IFChannel, ImageChannel]]): Dictionary of channel images.
         files (Dict[int, ProcFile]): Dictionary of files.
         research_mode (bool): Flag indicating if research mode is enabled.
-    
+
     Returns:
         Tuple: A tuple containing scale factors (s), rotation angle (r), and offset.
     """
@@ -85,15 +85,15 @@ def run_transform(
 ):
     """
     Apply transformations to an image based on parameters such as scale, rotation, and offset.
-    
-    Parameters:
+
+    Args:
         file: The processing file containing the image to be transformed.
-        channel_images: Dictionary mapping channel names to image channel objects.
+        channel_images (dict): Dictionary mapping channel names to image channel objects.
         param_chip: Parameters for the stereo chip.
-        files: Dictionary mapping file IDs to processing files.
+        files (dict): Dictionary mapping file IDs to processing files.
         cur_f_name: Naming convention object for file output.
-        if_track: Boolean flag indicating if tracking is enabled.
-        research_mode: Boolean flag indicating if research mode is enabled.
+        if_track (bool): Boolean flag indicating if tracking is enabled.
+        research_mode (bool): Boolean flag indicating if research mode is enabled.
     """
     clog.info(f"Running transform module")
     # Read transformation parameters

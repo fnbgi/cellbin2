@@ -311,10 +311,13 @@ def read_param_file(file_path: str, cfg: Config, out_path: Optional[str] = None)
     """
     Reads a parameter file and returns a ProcParam object.
 
-    :param file_path: Path to the parameter file.
-    :param cfg: Configuration object.
-    :param out_path: Optional path to save the processed parameters as a JSON file.
-    :return: A ProcParam object containing the parameters read from the file.
+    Args:
+        file_path (str): Path to the parameter file.
+        cfg (object): Configuration object.
+        out_path (str, optional): Optional path to save the processed parameters as a JSON file.
+
+    Returns:
+        ProcParam: A ProcParam object containing the parameters read from the file.
     """
     with open(file_path, 'r') as fd:
         dct = json.load(fd)

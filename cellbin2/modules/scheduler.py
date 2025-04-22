@@ -71,11 +71,11 @@ class Scheduler(object):
         """
         Dumps the internal representation (ipr) to a specified output path.
 
-        Parameters:
-        output_path (str): The path where the ipr will be written.
+        Args:
+            output_path (str): The path where the ipr will be written.
 
         Returns:
-        None
+            None
         """
         ipr.write(file_path=output_path, ipr=self._ipr, extra_images=self._channel_images)
         clog.info('Dump ipr to {}'.format(output_path))
@@ -216,17 +216,17 @@ class Scheduler(object):
         """
         Run tissue and cell segmentation on the given image file.
 
-        Parameters:
-        - f: The file object containing segmentation settings.
-        - im_path: The path to the image file.
-        - ts_raw_save_path: The path to save the raw tissue segmentation mask.
-        - cs_raw_save_path: The path to save the raw cell segmentation mask.
-        - ts_save_path: The path to save the final tissue segmentation mask.
-        - cs_save_path: The path to save the final cell segmentation mask.
-        - cur_c_image: The current channel image or IF channel image, if available.
+        Args:
+            f (ProcFile): The file object containing segmentation settings.
+            im_path (Path): The path to the image file.
+            ts_raw_save_path (Path): The path to save the raw tissue segmentation mask.
+            cs_raw_save_path (Path): The path to save the raw cell segmentation mask.
+            ts_save_path (str): The path to save the final tissue segmentation mask.
+            cs_save_path (str): The path to save the final cell segmentation mask.
+            cur_c_image (object, optional): The current channel image or IF channel image, if available.
 
         Returns:
-        - None
+            None
         """
         final_tissue_mask = None
         final_cell_mask = None
@@ -487,17 +487,20 @@ class Scheduler(object):
         """
         Run the main pipeline for processing the images.
 
-        Parameters:
-        chip_no (str): The serial number of the chip.
-        input_image (str): The path to the input image file.
-        stain_type (str): The type of stain used in the image.
-        param_file (str): The path to the parameter file.
-        output_path (str): The directory where the output files will be saved.
-        ipr_path (str): The path to the image process record file.
-        matrix_path (str): The path to the matrix file.
-        kit (str): The type of kit used (e.g., Transcriptomics, Protein).
-        debug (bool): Flag to enable debug mode.
-        research_mode (bool): Flag to enable research mode.
+        Args:
+            chip_no (str): The serial number of the chip.
+            input_image (str): The path to the input image file.
+            stain_type (str): The type of stain used in the image.
+            param_file (str): The path to the parameter file.
+            output_path (str): The directory where the output files will be saved.
+            ipr_path (str): The path to the image process record file.
+            matrix_path (str): The path to the matrix file.
+            kit (str): The type of kit used (e.g., Transcriptomics, Protein).
+            debug (bool): Flag to enable debug mode.
+            research_mode (bool): Flag to enable research mode.
+
+        Returns:
+            None
         """
 
         self._output_path = output_path
@@ -575,10 +578,12 @@ class Scheduler(object):
     def del_files(self, f_to_keep):
         """
         Deletes files from the output directory, excluding those specified to be kept.
-        
-        Parameters:
-        f_to_keep : list
-            List of file properties that should not be deleted.
+
+        Args:
+            f_to_keep (list): List of file properties that should not be deleted.
+
+        Returns:
+            None
         """
         # List to store all file paths
         all_ = []
@@ -652,19 +657,22 @@ def scheduler_pipeline(weights_root: str, chip_no: str, input_image: str, stain_
                        kit: str, debug: bool = False, research_mode=False):
     """
     This function serves as the main pipeline for scheduling the image processing tasks.
-    
-    :param weights_root: Local directory path for storing CNN weight files
-    :param chip_no: Sample chip number
-    :param input_image: Local path of the stained image
-    :param stain_type: Staining type corresponding to the stained image
-    :param param_file: Local path of the parameter file
-    :param output_path: Local directory path for storing output files
-    :param matrix_path: Local directory path for storing the expression matrix
-    :param ipr_path: Local directory path for storing the image processing record file
-    :param kit: Kit type (e.g., Transcriptomics, Protein)
-    :param debug: Debug mode flag (default is False)
-    :param research_mode: Research mode flag (default is False)
-    :return: int (status code)
+
+    Args:
+        weights_root (str): Local directory path for storing CNN weight files.
+        chip_no (str): Sample chip number.
+        input_image (str): Local path of the stained image.
+        stain_type (str): Staining type corresponding to the stained image.
+        param_file (str): Local path of the parameter file.
+        output_path (str): Local directory path for storing output files.
+        matrix_path (str): Local directory path for storing the expression matrix.
+        ipr_path (str): Local directory path for storing the image processing record file.
+        kit (str): Kit type (e.g., Transcriptomics, Protein).
+        debug (bool, optional): Debug mode flag. Defaults to False.
+        research_mode (bool, optional): Research mode flag. Defaults to False.
+
+    Returns:
+        int: Status code.
     """
     curr_path = os.path.dirname(os.path.realpath(__file__))
     config_file = os.path.join(curr_path, r'../config/cellbin.yaml')
@@ -686,11 +694,12 @@ def main(args, para):
     """
     The main function that initializes and runs the scheduler pipeline.
 
-    Parameters:
-    args : argparse.Namespace
-        Parsed command-line arguments containing the configuration and input data.
-    para : dict
-        Additional parameters required for the pipeline.
+    Args:
+        args (argparse.Namespace): Parsed command - line arguments containing the configuration and input data.
+        para (dict): Additional parameters required for the pipeline.
+
+    Returns:
+        None
     """
     # Call the scheduler_pipeline function with the parsed arguments
     scheduler_pipeline(weights_root=args.weights_root, chip_no=args.chip_no,
