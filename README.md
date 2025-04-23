@@ -9,14 +9,16 @@
 [CellBin introduction](docs/md/CellBin_1.0/CellBin解决方案技术说明.md) (Chinese) 
 
 ***Tweets*** <br>
+[Stereo-seq CellBin introduction](https://mp.weixin.qq.com/s/2-lE5OjPpjitLK_4Z0QI3Q) (Chinese)  <br>
 [Stereo-seq CellBin introduction](https://mp.weixin.qq.com/s/PT3kPvsmrB3oQleEIMPkjQ)  (Chinese)  <br>
-[Stereo-seq CellBin database introduction](https://mp.weixin.qq.com/s/OYJhAH6Bq1X1CQIYwugxkw) (Chinese)  <br>
-[Stereo-seq CellBin cell segmentation intro](https://mp.weixin.qq.com/s/2-lE5OjPpjitLK_4Z0QI3Q) (Chinese)  <br>
+[Stereo-seq CellBin cell segmentation database introduction](https://mp.weixin.qq.com/s/OYJhAH6Bq1X1CQIYwugxkw) (Chinese)  <br>
+[CellBin: The Core Image Processing Pipeline in SAW for Generating Single-cell Gene Expression Data for Stereo-seq](https://en.stomics.tech/news/stomics-blog/1017.html) (English)  <br>
+[A Practical Guide to SAW Output Files for Stereo-seq](https://en.stomics.tech/news/stomics-blog/1108.html) (English)  <br>
 
 ***Paper related*** <br>
 [CellBin: a highly accurate single-cell gene expression processing pipeline for high-resolution spatial transcriptomics](https://www.biorxiv.org/content/10.1101/2023.02.28.530414v5) [(GitHub Link)](https://github.com/STOmics) <br>
-[CellBinDB: A Large-Scale Multimodal Annotated Dataset for Cell Segmentation with Benchmarking of Universal Models](https://www.biorxiv.org/content/10.1101/2024.11.20.619750v2) [(GitHub Link)](https://github.com/STOmics/cs-benchmark) <br>
 [Generating single-cell gene expression profiles for high-resolution spatial transcriptomics based on cell boundary images](https://gigabytejournal.com/articles/110) [(GitHub Link)](https://github.com/STOmics/STCellbin) <br>
+[CellBinDB: A Large-Scale Multimodal Annotated Dataset for Cell Segmentation with Benchmarking of Universal Models](https://www.biorxiv.org/content/10.1101/2024.11.20.619750v2) [(GitHub Link)](https://github.com/STOmics/cs-benchmark) <br>
 
 ***Video tutorial*** <br>
 [Cell segmentation tool selection and application](https://www.bilibili.com/video/BV1Ct421H7ST/?spm_id_from=333.337.search-card.all.click) (Chinese) <br>
@@ -27,12 +29,13 @@
 Linux
 ```shell
 git clone https://github.com/STOmics/cellbin2
-conda create --name cellbin2 python=3.10
+# git clone -b dev https://github.com/STOmics/cellbin2
+conda create --name cellbin2 python=3.8
 conda activte cellbin2
 cd cellbin2
 pip install .[rs]
 # pip install -e .[rs] # developer mode
-python demo.py  # run 3 demos, approximately 30-40 mins on GPU
+python demo.py  # run 1 demo, approximately 30-40 mins on GPU
 ```
 
 
