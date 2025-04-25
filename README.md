@@ -31,7 +31,7 @@ Linux
 git clone https://github.com/STOmics/cellbin2
 # git clone -b dev https://github.com/STOmics/cellbin2
 conda create --name cellbin2 python=3.8
-conda activte cellbin2
+conda activate cellbin2
 cd cellbin2
 pip install .[rs]
 # pip install -e .[rs] # developer mode
