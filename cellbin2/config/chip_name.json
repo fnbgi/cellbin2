@@ -13,7 +13,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "B": {
     "state": "Product",
@@ -29,7 +29,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "C": {
     "state": "Product",
@@ -45,7 +45,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "D": {
     "state": "Product",
@@ -61,7 +61,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "Y": {
     "state": "Product",
@@ -77,7 +77,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10L",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "E": {
     "state": "Product",
@@ -93,7 +93,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "F": {
     "state": "Product",
@@ -109,7 +109,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "G": {
     "state": "Product",
@@ -125,7 +125,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "H": {
     "state": "Product",
@@ -141,7 +141,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "Q": {
     "state": "Product",
@@ -157,7 +157,7 @@
     "corr_long_prefix": "FP2",
     "sequence": "T10L",
     "s1_length": 8,
-    "un-s1_length": 10
+    "un_s1_length": 10
   },
   "CL1": {
     "state": "R&D",
@@ -173,7 +173,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "N1": {
     "state": "Delete",
@@ -186,7 +186,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "V3": {
     "state": "Delete",
@@ -199,7 +199,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "K2": {
     "state": "Delete",
@@ -212,7 +212,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "S2": {
     "state": "Delete",
@@ -225,7 +225,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "S1": {
     "state": "Delete",
@@ -238,7 +238,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "F3": {
     "state": "Delete",
@@ -251,7 +251,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "F1": {
     "state": "Delete",
@@ -264,7 +264,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "V1": {
     "state": "Delete",
@@ -277,7 +277,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "DP84": {
     "state": "Transition",
@@ -293,7 +293,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "DP8": {
     "state": "Delete",
@@ -306,7 +306,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "FP2": {
     "state": "Transition",
@@ -322,7 +322,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": [14, 16],
-    "un-s1_length": [16, 18]
+    "un_s1_length": [16, 18]
   },
   "FP1": {
     "state": "Delete",
@@ -335,7 +335,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "SS2": {
     "state": "Product",
@@ -351,7 +351,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": [14, 16],
-    "un-s1_length": [16, 18]
+    "un_s1_length": [16, 18]
   },
   "SS1": {
     "state": "Product",
@@ -367,7 +367,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": [14, 16],
-    "un-s1_length": [16, 18]
+    "un_s1_length": [16, 18]
   },
   "E1": {
     "state": "Delete",
@@ -380,7 +380,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "DP40": {
     "state": "Delete",
@@ -393,7 +393,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "G1": {
     "state": "Delete",
@@ -406,7 +406,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "FP21": {
     "state": "R&D",
@@ -422,7 +422,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "P1": {
     "state": "Delete",
@@ -435,7 +435,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "SS84": {
     "state": "Delete",
@@ -448,7 +448,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "U": {
     "state": "Delete",
@@ -461,7 +461,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "V": {
     "state": "Delete",
@@ -474,7 +474,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "W": {
     "state": "Delete",
@@ -487,7 +487,7 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   },
   "X": {
     "state": "Delete",
@@ -500,6 +500,6 @@
     "corr_long_prefix": "",
     "sequence": "",
     "s1_length": -1,
-    "un-s1_length": -1
+    "un_s1_length": -1
   }
 }
