@@ -10,7 +10,7 @@
 
 ***Tweets*** <br>
 [Stereo-seq CellBin introduction](https://mp.weixin.qq.com/s/2-lE5OjPpjitLK_4Z0QI3Q) (Chinese)  <br>
-[Stereo-seq CellBin introduction](https://mp.weixin.qq.com/s/PT3kPvsmrB3oQleEIMPkjQ)  (Chinese)  <br>
+[Stereo-seq CellBin application intro](https://mp.weixin.qq.com/s/PT3kPvsmrB3oQleEIMPkjQ)  (Chinese)  <br>
 [Stereo-seq CellBin cell segmentation database introduction](https://mp.weixin.qq.com/s/OYJhAH6Bq1X1CQIYwugxkw) (Chinese)  <br>
 [CellBin: The Core Image Processing Pipeline in SAW for Generating Single-cell Gene Expression Data for Stereo-seq](https://en.stomics.tech/news/stomics-blog/1017.html) (English)  <br>
 [A Practical Guide to SAW Output Files for Stereo-seq](https://en.stomics.tech/news/stomics-blog/1108.html) (English)  <br>
