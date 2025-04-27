@@ -25,9 +25,9 @@ TechToWeightName = {i.value: i.name.lower() + weight_name_ext for i in SUPPORTED
 class ChipParam(BaseModel, BaseModule):
     detect_channel: int = Field(-1, description="若输入图为3通道，需指明检测通道。否则，程序会自动转为单通道图")
     stage1_weights_path: str = Field(
-        "chip_detect_obb8n_1024_SDH_stage1_202410_pytorch.onnx", description="ssDNA染色图对应的权重文件名")
+        "chip_detect_11obbn_640_stage1_20250402_pytorch.onnx", description="一阶段对应的权重文件名")
     stage2_weights_path: str = Field(
-        "chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx", description="ssDNA染色图对应的权重文件名")
+        "chip_detect_yolo11x_1024_stage2_20250411_2e3_equ_pytorch.onnx", description="二阶段对应的权重文件名")
     GPU: int = Field(0, description="推理使用的GPU编号")
     num_threads: int = Field(0, description="推理使用的线程数")
 
