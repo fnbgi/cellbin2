@@ -316,7 +316,8 @@ class CellBinPipeline(object):
                 protein_m_tp.exp_matrix = protein_exp_idx
                 protein_m_tp.cell_mask = [nuclear_cell_idx]
                 new_pp.molecular_classify['1'] = protein_m_tp
-            new_pp.run.report = True if self._if_report else False
+            if new_pp.run.report is False and self._if_report is True:
+                new_pp.run.report = True
             param_f_p = self._naming.input_json
             dict2json(new_pp.model_dump(), json_path=param_f_p)
             self._param_file = param_f_p
