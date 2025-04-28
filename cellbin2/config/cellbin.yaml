@@ -38,8 +38,8 @@ trackLines:
 chipDetector:
   detect_channel: -1
   score_thr: 0.1  # 得分阈值
-  stage1_weights_path: chip_detect_obb8n_640_SD_202409_pytorch.onnx
-  stage2_weights_path: chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx
+  stage1_weights_path: chip_detect_11obbn_640_stage1_20250402_pytorch.onnx
+  stage2_weights_path: chip_detect_yolo11x_1024_stage2_20250411_2e3_equ_pytorch.onnx
   GPU: 0
   num_threads: 0
 
