@@ -234,15 +234,18 @@ def compare_points(
         points2: np.ndarray,
         k: int = 10
 ):
-
+    check_result = 'YES'
     _temp, _track = TemplateReferenceV1.pair_to_template(
         points1[:, :2], points1[:, :2], threshold = k
     )
     warning = f"New DATA QC detects {len(points1)} points, " \
               f" compared to {len(points2)} points, " \
               f"{len(_temp)} pairs of points within 10pixels "
-    print(warning)
-    return warning
+    if len(points1) != len(points2) or len(points2) != len(_temp):
+        print(warning)
+        check_result = 'NO'
+
+    return warning, check_result
 
 if __name__ == '__main__':
     ipr, image_dct = read(r"D:\temp\cellbin_test\GOLD\SS200000135TL_D1\SS200000135TL_D1_SC_20241030_151054_4.1.0.ipr")

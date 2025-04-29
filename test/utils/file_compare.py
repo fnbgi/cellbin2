@@ -222,13 +222,14 @@ def compare_Crosspoint(image_dct: dict, image_dct_: dict):
             if image_dict_stain.ImageInfo.StitchedImage == image_dict_stain_.ImageInfo.StitchedImage:
                 point1 = create_crosspoint(image_dict_stain)
                 point2 = create_crosspoint(image_dict_stain_)
-                warning = compare_points(point1, point2)
+                warning, check_result = compare_points(point1, point2)
+                diff_atts_info["Value_Consistency_Check"] = check_result
 
             else:
                 warning = 'The input Images is different,one is fov folders ,Other is Stitched Image!'
+                diff_atts_info["Value_Consistency_Check"] = 'NO'
 
             diff = f"[{stain}.QCInfo.CrossPoints] - " + warning
-            diff_atts_info["Value_Consistency_Check"] = 'NO'
             diff_atts_info["Other"] = warning
 
             return diff, diff_atts_info

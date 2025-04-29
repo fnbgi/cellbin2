@@ -19,7 +19,7 @@ from cellbin2.utils.ipr import read
 def subtract(a, b):
     if isinstance(a, (bool, np.bool_, np.bool)) or isinstance(b, (bool, np.bool_, np.bool)):
         a, b = map(lambda x: 1 if x else 0, (a,b))
-    if isinstance(a, (int, float, np.int64)) and isinstance(b, (int, float, np.int64)):
+    if isinstance(a, (int, float, np.int64, np.int32)) and isinstance(b, (int, float, np.int64, np.int32)):
         sub = a - b
 
     else:
@@ -136,13 +136,13 @@ class CompareTemplate(CompareBase):
 class CompareRegist(CompareBase):
     def __init__(self, ipr_dict, ipr_dict_):
 
-        Compare_QCresult = subtract(ipr_dict.QCInfo.QCPassFlag, ipr_dict_.QCInfo.QCPassFlag)  # 这里的QC先用小c
+        Compare_QCresult = subtract(ipr_dict.QCInfo.QCPassFlag, ipr_dict_.QCInfo.QCPassFlag)
         Compare_offsetX = subtract(ipr_dict.Register.OffsetX, ipr_dict_.Register.OffsetX)
         Compare_offsetY = subtract(ipr_dict.Register.OffsetY, ipr_dict_.Register.OffsetY)
+        Compare_CounterRot90 = subtract(ipr_dict.Register.CounterRot90, ipr_dict_.Register.CounterRot90)
 
-        if Compare_QCresult ==0 and (subtract(ipr_dict.Register.CounterRot90, ipr_dict.Register.CounterRot90) == 0):
-            if abs(Compare_offsetX) < 51 and Compare_offsetY < 51:
-                self.comment = 'SAME'
+        if Compare_QCresult == 0 and (Compare_CounterRot90 == 0) and abs(Compare_offsetX) < 51 and abs(Compare_offsetY) < 51:
+            self.comment = 'SAME'
         else:
             self.comment = 'DIFF'
 
@@ -259,7 +259,7 @@ def module_compare_pipeline(result1, result2):
     else:
         result_dict['QC'] = 'ERROR'
 
-    result_dict['QC_score_change']  = cpm.CompareQC.TrackLineScore
+    result_dict['QC_score_change'] = cpm.CompareQC.TrackLineScore
 
     if cpm.CompareRegist.comment == 'DIFF':
         result_is_same = False
