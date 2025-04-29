@@ -44,15 +44,15 @@ def run_tissue_seg(
     tissue_mask = tissue_mask_output.tissue_mask
     cbimwrite(str(save_path), tissue_mask)
 
-    if channel_image is not None:
-        # Update the channel image with tissue segmentation shape
-        channel_image.TissueSeg.TissueSegShape = list(tissue_mask.shape)
-
-        # Encode the tissue mask using Run-Length Encoding
-        bmr = RLEncode()
-        t_mask_encode = bmr.encode(tissue_mask)
-
-        # Update the channel image with the encoded tissue mask
-        channel_image.TissueSeg.TissueMask = t_mask_encode
+    # if channel_image is not None:
+    #     # Update the channel image with tissue segmentation shape
+    #     channel_image.TissueSeg.TissueSegShape = list(tissue_mask.shape)
+    #
+    #     # Encode the tissue mask using Run-Length Encoding
+    #     bmr = RLEncode()
+    #     t_mask_encode = bmr.encode(tissue_mask)
+    #
+    #     # Update the channel image with the encoded tissue mask
+    #     channel_image.TissueSeg.TissueMask = t_mask_encode
 
     return tissue_mask

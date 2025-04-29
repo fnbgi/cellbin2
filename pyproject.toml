@@ -31,10 +31,10 @@ dependencies = [
     "matplotlib==3.7.1",
     "requests",
     "pandas==1.5.3",
-    "pyvips-binary",
+    "pyvips-binary",  # if pip install pyvips error, use conda install instead. (conda install --channel conda-forge pyvips)
     "pyvips"
 ]
-requires-python = ">=3.8.*"
+requires-python = ">=3.8"
 
 [tool.setuptools]
 include-package-data = true
@@ -48,9 +48,9 @@ where = ["."]
 [project.optional-dependencies]
 cp = ['cellpose==3.0.11', 'patchify==0.2.3']
 rs = [
-    'gefpy==1.2.1',
+    'gefpy==1.2.1',  # generate cellbin matrix
     'mapbox_earcut',
-#    'stereopy==1.6.0',
+#    'stereopy==1.6.0',  # research report
 #    'beautifulsoup4',
 #    'csscompressor',
 #    'jsmin'

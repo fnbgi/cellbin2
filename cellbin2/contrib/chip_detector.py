@@ -25,9 +25,9 @@ TechToWeightName = {i.value: i.name.lower() + weight_name_ext for i in SUPPORTED
 class ChipParam(BaseModel, BaseModule):
     detect_channel: int = Field(-1, description="若输入图为3通道，需指明检测通道。否则，程序会自动转为单通道图")
     stage1_weights_path: str = Field(
-        "chip_detect_obb8n_1024_SDH_stage1_202410_pytorch.onnx", description="ssDNA染色图对应的权重文件名")
+        "chip_detect_11obbn_640_stage1_20250402_pytorch.onnx", description="一阶段对应的权重文件名")
     stage2_weights_path: str = Field(
-        "chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx", description="ssDNA染色图对应的权重文件名")
+        "chip_detect_yolo11x_1024_stage2_20250411_2e3_equ_pytorch.onnx", description="二阶段对应的权重文件名")
     GPU: int = Field(0, description="推理使用的GPU编号")
     num_threads: int = Field(0, description="推理使用的线程数")
 
@@ -77,8 +77,10 @@ class ChipDetector(object):
             clog.info(f"Track detect only support {[i.name for i in SUPPORTED_STAIN_TYPE]}, fail to initialize")
             return
         # Initialize configuration
-        if cfg is not None: self.cfg: ChipParam = cfg
-        else: self.cfg = ChipParam()
+        if cfg is not None:
+            self.cfg: ChipParam = cfg
+        else:
+            self.cfg = ChipParam()
 
         self.stain_type = stain_type
         self.chip_actual_size = (None, None)
@@ -226,7 +228,7 @@ class ChipDetector(object):
         # Calculate the chip size by finding the distances between the first and second,
         # and first and fourth fine-tuned corner points
         self.chip_size = (cdist([self.finetune_corner_points[0]], [self.finetune_corner_points[1]])[0][0],
-                cdist([self.finetune_corner_points[0]], [self.finetune_corner_points[3]])[0][0])
+                          cdist([self.finetune_corner_points[0]], [self.finetune_corner_points[3]])[0][0])
 
         # Log the calculated chip size
         clog.info('On image, chip size == {}'.format(self.chip_size))
@@ -251,46 +253,68 @@ class ChipDetector(object):
     def stage_rough(self):
         """Perform rough detection of the chip's corner points.
 
+        If the original image is a long rectangle (width/length < 0.9),
+        it should be transformed into a square by non-proportional scaling first,
+
         This method initializes an OBB8Detector with the provided ONNX model and source image,
         then runs the detector to obtain the rough corner points.
 
         Returns:
             None. The rough corner points are stored in the `rough_corner_points` attribute.
         """
-        obb8_detector = OBB8Detector(self.onnx_model_global, self.source_image)
-        self.rough_corner_points = obb8_detector.run()
+
+        if len(self.source_image.shape) == 3:
+            h, w, _ = self.source_image.shape
+        else:
+            h, w = self.source_image.shape
+
+        max_l = max(h, w)
+        min_l = min(h, w)
+        if min_l / max_l < 0.9:
+            new_size = max_l
+            square_image = cv2.resize(self.source_image, (new_size, new_size), interpolation=cv2.INTER_LINEAR)
+            obb8_detector = OBB8Detector(self.onnx_model_global, square_image)
+            square_corner_points = obb8_detector.run()
+            scale_w = w / new_size
+            scale_h = h / new_size
+            square_corner_points[:, 0] *= scale_w  # 调整x坐标
+            square_corner_points[:, 1] *= scale_h  # 调整y坐标
+            self.rough_corner_points = square_corner_points
+        else:
+            obb8_detector = OBB8Detector(self.onnx_model_global, self.source_image)
+            self.rough_corner_points = obb8_detector.run()
 
     def stage_finetune(self):
         """
         Fine-tune the corner points of the detected object.
-        
+
         This method adjusts the rough corner points detected in the previous stage by:
         1. Checking the border to ensure points are within image boundaries.
         2. Calculating the rotation angle of the object.
         3. Rotating the image and transforming the corner points.
         4. Padding the image borders and adjusting the corner points accordingly.
         5. Using a YOLO detector to further refine the corner points.
-        
+
         Attributes:
             rough_corner_points: The initial rough corner points detected.
             source_image: The source image being analyzed.
             PADDING_SIZE: The size of the padding to be added to the image borders.
             onnx_model_local: The ONNX model used for detection.
-        
+
         Returns:
             None. The method updates the `finetune_corner_points` attribute with the refined points.
         """
 
         # Check the border to ensure rough corner points are within image boundaries
         self.rough_corner_points = self.check_border(self.rough_corner_points)
-        
+
         # Calculate the rotation angle of the object based on rough corner points
         rotate = self.calculate_rotation_angle(self.rough_corner_points)
 
         # Read the source image and rotate it based on the calculated angle
         rotated_image = cbi.cbimread(self.source_image)
         rotated_image = rotated_image.trans_image(rotate=rotate)
-        
+
         # Transform the corner points based on the rotation
         new_corner_points, M = transform_points(
             points=self.rough_corner_points,
@@ -305,11 +329,11 @@ class ChipDetector(object):
 
         # Initialize a list to store the refined points
         new_points = list()
-        
+
         # Loop through each corner point to refine it using YOLO detection
         for i, _p in enumerate(new_corner_points):
             x, y = map(lambda k: self.PADDING_SIZE if k < self.PADDING_SIZE else int(k), _p)
-            
+
             # Ensure the points do not go out of the padded image boundaries
             if x > rotated_image.shape[1] - self.PADDING_SIZE: x = rotated_image.shape[1] - self.PADDING_SIZE
             if y > rotated_image.shape[0] - self.PADDING_SIZE: y = rotated_image.shape[0] - self.PADDING_SIZE
@@ -321,7 +345,7 @@ class ChipDetector(object):
             # Initialize and run the YOLO detector on the image patch
             yolo8_detector = Yolo8Detector(self.onnx_model_local, _img)
             yolo8_detector.set_preprocess_func(self._finetune_preprocess)
-            
+
             points = yolo8_detector.run()
             points = self.check_border(points)
             new_points.append(points[i] - self.PADDING_SIZE)
@@ -345,8 +369,10 @@ class ChipDetector(object):
         Returns:
         numpy.ndarray: The preprocessed image in RGB format.
         """
-        if img.ndim == 3: ei = cv2.equalizeHist(img[:, :, 0])
-        else: ei = cv2.equalizeHist(img)
+        if img.ndim == 3:
+            ei = cv2.equalizeHist(img[:, :, 0])
+        else:
+            ei = cv2.equalizeHist(img)
 
         ei = cv2.cvtColor(ei, cv2.COLOR_GRAY2RGB)
 
@@ -371,7 +397,7 @@ class ChipDetector(object):
             _mat = mat
 
         new_points = np.matrix(_mat).I @ np.concatenate(
-            [points, np.ones((points.shape[0], 1))], axis = 1
+            [points, np.ones((points.shape[0], 1))], axis=1
         ).transpose(1, 0)
 
         return np.array(new_points)[:2, :].transpose()
@@ -381,10 +407,10 @@ class ChipDetector(object):
         """
         Calculate the angle between the line segment joining the two points with the smallest y-coordinates
         and the horizontal axis.
-        
+
         Parameters:
         points (list of tuples): List of points in the format (x, y).
-        
+
         Returns:
         float: The angle in degrees between the line segment and the horizontal axis.
         """
@@ -414,16 +440,36 @@ class ChipDetector(object):
     @staticmethod
     def padding_border(img, size):
         """
-        Pads the border of the input image with zeros.
-        
+        Pads with the pixel mean values of the first three columns and the bottom four rows.
+
         Parameters:
         img (numpy.ndarray): The input image to be padded.
         size (int): The size of the border to be added to each side of the image.
-        
+
         Returns:
         numpy.ndarray: The padded image.
         """
-        return cv2.copyMakeBorder(img, size, size, size, size, cv2.BORDER_CONSTANT, value = (0,))
+
+        if len(img.shape) == 3:
+            top_pixels = img[:3, :, :]
+            left_pixels = img[:, :3, :]
+            bottom_pixels = img[-3:, :, :]
+            right_pixels = img[:, -3:, :]
+            combined_pixels = np.vstack([
+                top_pixels.reshape(-1, 3),
+                left_pixels.reshape(-1, 3),
+                bottom_pixels.reshape(-1, 3),
+                right_pixels.reshape(-1, 3)
+            ])
+            mean_value = tuple(int(x) for x in np.mean(combined_pixels, axis=0))
+        elif len(img.shape) == 2:
+            top_pixels = img[:3, :].flatten()
+            left_pixels = img[:, :3].flatten()
+            bottom_pixels = img[-3:, :].flatten()
+            right_pixels = img[:, -3:].flatten()
+            mean_value = int(np.mean(np.concatenate([top_pixels, left_pixels, bottom_pixels, right_pixels])))
+
+        return cv2.copyMakeBorder(img, size, size, size, size, cv2.BORDER_CONSTANT, value=mean_value)
 
     @staticmethod
     def check_border(file: np.ndarray):
@@ -443,7 +489,7 @@ class ChipDetector(object):
         if not isinstance(file, np.ndarray): return None
         assert file.shape == (4, 2), "Array shape error."
 
-        file = file[np.argsort(np.mean(file, axis = 1)), :]
+        file = file[np.argsort(np.mean(file, axis=1)), :]
         if file[1, 0] > file[2, 0]:
             file = file[(0, 2, 1, 3), :]
 
@@ -492,12 +538,13 @@ def detect_chip(file_path: Union[str, np.ndarray],
 def main():
     cfg = ChipParam(
         **{"stage1_weights_path":
-            r"D:\hedongdong1\Workspace\01.chip_box_detect\algorithm_develop\old_model\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
-            "stage2_weights_path":
-            r"D:\hedongdong1\Workspace\01.chip_box_detect\algorithm_develop\old_model\chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx"})
+               r"D:\hedongdong1\Workspace\01.chip_box_detect\algorithm_develop\old_model\chip_detect_obb8n_640_SD_202409_pytorch.onnx",
+           "stage2_weights_path":
+               r"D:\hedongdong1\Workspace\01.chip_box_detect\algorithm_develop\old_model\chip_detect_yolo8x_1024_SDH_stage2_202410_pytorch.onnx"})
 
     file_path = r"D:\hedongdong1\Workspace\01.chip_box_detect\show_interface\test_data\C04144G513_ssDNA_stitch.tif"
-    info, debug_dic = detect_chip(file_path, cfg=cfg, stain_type=TechType.ssDNA, actual_size=(19992, 19992), is_debug=True)
+    info, debug_dic = detect_chip(file_path, cfg=cfg, stain_type=TechType.ssDNA, actual_size=(19992, 19992),
+                                  is_debug=True)
     print(info.IsAvailable)
 
 
