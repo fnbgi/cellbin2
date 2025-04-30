@@ -424,6 +424,8 @@ class Metrics(object):
             with h5py.File(self.filesource.ipr_file, "r") as f:
                 template_points = f[layer]["Register"]["RegisterTemplate"][...]
                 track_points = f[layer]["Register"]["RegisterTrackTemplate"][...]
+                if template_points.size == 0:
+                    continue
                 img, cp_image_list, tissue_image_list = template_painting(
                     image_data=self.filesource.image_dict[layer].registration_image,
                     tissue_seg_data=self.filesource.image_dict[layer].tissue_mask,
