@@ -116,6 +116,20 @@ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
 ```
 please modify [Plant.json](cellbin2/config/demos/Plant.json)<br>
 
+case 6:
+CytAssist <br>
+ssDNA + HE + trans gef
+ ```shell
+ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+ -c Q00001A1 \ # chip number
+ -i Q00001A1_ssDNA_fov_stitched.tif \  # ssDNA,DAPI data path
+ -mi HE=Q00001A1_HE_fov_stitched.tif \ # HE data path. This image has been registered with ssDNA(DAPI) image
+ -s ssDNA \  # stain type (ssDNA, DAPI)
+ -m Q00001A1.raw.gef \  # Transcriptomics gef path
+ -o test/Q00001A1 \ # output dir
+ -k "Stereo-CITE T FF V1.1 R"
+ ```
+
 ### Official product
 case 1: 
 Stereo-seq T FF
