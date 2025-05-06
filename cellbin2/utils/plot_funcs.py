@@ -43,7 +43,7 @@ def pad_to_target_size(image, target_h, target_w, padding_color=(0, 0, 0)):
     pad_left = (target_w - w) // 2
     pad_right = target_w - w - pad_left
 
-    padded_image = cv2.copyMakeBorder(
+    padded_image = cv.copyMakeBorder(
         image,
         pad_top,
         pad_bottom,
@@ -248,7 +248,7 @@ def template_painting(
     qc_list = _qc.tolist()
     _unpair = [i for i in qc_points[:, :2].tolist() if i not in qc_list]
 
-    rate = image_size / max(image.width, image.height)
+    rate = image_size*2 / max(image.width, image.height)
     _image = image.resize_image(rate)
 
     if len(_image.image.shape) == 2:
@@ -273,8 +273,8 @@ def template_painting(
                      True, chip_rect_color, draw_thickness)
 
         # draw index on left_top
-        text_pos = (int(x0 * rate) + 5, int(y0 * rate) + 20)
-        cv.putText(_image, str(small_idx), text_pos, cv.FONT_HERSHEY_SIMPLEX, 0.6, idx_color, 2)
+        text_pos = (int(x0 * rate) + 10, int(y0 * rate) + 40)
+        cv.putText(_image, str(small_idx), text_pos, cv.FONT_HERSHEY_SIMPLEX, 1.2, idx_color, 2)
 
     for tc in tissue_coord_list:
         small_idx += 1
@@ -285,10 +285,10 @@ def template_painting(
                      True, tissue_rect_color, draw_thickness)
 
         # draw index in left_top
-        text_pos = (int(x0 * rate) + 5, int(y0 * rate) + 20)
-        cv.putText(_image, str(small_idx), text_pos, cv.FONT_HERSHEY_SIMPLEX, 0.6, idx_color, 2)
+        text_pos = (int(x0 * rate) + 10, int(y0 * rate) + 40)
+        cv.putText(_image, str(small_idx), text_pos, cv.FONT_HERSHEY_SIMPLEX, 1.2, idx_color, 2)
 
-    _image = pad_to_target_size(_image, image_size, image_size, (0, 0, 0))
+    _image = pad_to_target_size(_image, image_size*2, image_size*2, (0, 0, 0))
 
     return _image, cp_image_list, tissue_image_list
 
@@ -314,7 +314,7 @@ def chip_box_painting(
         draw_thickness:
 
     Returns:
-        Chip frame detection results
+        Chip frame detection results and four part image
     """
     if ipr_path is not None:
         with h5py.File(ipr_path) as conf:
@@ -331,25 +331,53 @@ def chip_box_painting(
         raise ValueError("Chip info not found.")
 
     image = cbimread(image_data)
-    rate = image_size / image.image.shape[0]
-    # _image = image.resize_image(rate)
-    # _image = cv.cvtColor(f_ij_16_to_8(_image.image), cv.COLOR_GRAY2BGR)
 
-    image = image.image
-    image = f_ij_16_to_8(image)
+    ###
+    rate = image_size / max(image.width, image.height)
+    _image = image.resize_image(rate).image
+
+    if len(_image.shape) == 2:
+        _image = cv2.equalizeHist(_image)
+        _image = cv.cvtColor(f_ij_16_to_8(_image), cv.COLOR_GRAY2BGR)
+    else:
+        _image = f_ij_16_to_8(_image)
+
+    _points = points * rate
+    _points = _points.reshape(-1, 1, 2)
+    cv.polylines(_image, [_points.astype(np.int32)],
+                 True, chip_color, draw_thickness)
+    ### part image
+    image = f_ij_16_to_8(image.image)
     if len(image.shape) == 2:
         image = cv2.equalizeHist(image)
-        image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
         image = cv.cvtColor(image, cv.COLOR_GRAY2BGR)
-    else:
-        image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
-
-    points = points * rate
-    points = points.reshape(-1, 1, 2)
     cv.polylines(image, [points.astype(np.int32)],
                  True, chip_color, draw_thickness)
 
-    return image
+    half_image_size = image_size//2
+    padded_image = cv.copyMakeBorder(
+        image,
+        half_image_size,
+        half_image_size,
+        half_image_size,
+        half_image_size,
+        cv2.BORDER_CONSTANT,
+        value=(0, 0, 0)
+    )
+
+    chipbox_part_image_lists = []
+    for point in points:
+        x, y = point
+        x, y = int(x), int(y)
+        # 由于原图已经填充了 half_image_size，所以直接按原坐标裁切即可
+        chip = padded_image[
+               y: y + 2 * half_image_size,  # 高度范围
+               x: x + 2 * half_image_size  # 宽度范围
+               ]
+        chipbox_part_image_lists.append(chip)
+
+
+    return _image, chipbox_part_image_lists
 
 
 def get_view_image(

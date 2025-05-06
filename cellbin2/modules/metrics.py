@@ -458,19 +458,24 @@ class Metrics(object):
                 # trackpoint_name = os.path.join(self.output_figure_path_image, f"{layer}_trackpoint.png")
                 # self.output_data["image_ipr"][layer]["trackpoint"] = os.path.relpath(trackpoint_name,
                 #                                                                      self._output_path)
-                chipbox_painting = os.path.join(self.output_figure_path_image, f"{layer}_chipbox.png")
+                chipbox_painting_path = os.path.join(self.output_figure_path_image, f"{layer}_chipbox.png")
                 tmp_chipbox_info = ChipBoxInfo()
                 tmp_chipbox_info.LeftTop = f[layer]["QCInfo"]["ChipBBox"]['LeftTop'][...]
                 tmp_chipbox_info.LeftBottom = f[layer]["QCInfo"]["ChipBBox"]['LeftBottom'][...]
                 tmp_chipbox_info.RightBottom = f[layer]["QCInfo"]["ChipBBox"]['RightBottom'][...]
                 tmp_chipbox_info.RightTop = f[layer]["QCInfo"]["ChipBBox"]['RightTop'][...]
 
-                img = chip_box_painting(image_data=self.filesource.image_dict[layer].stitch_image,
+                _image, chipbox_part_image_lists = chip_box_painting(image_data=self.filesource.image_dict[layer].stitch_image,
                                         chip_info=tmp_chipbox_info,
                                         layer=layer,
                                         draw_thickness=3)
-                cv2.imwrite(chipbox_painting, img)
-                self.output_data["image_ipr"][layer]["chipbox"] = os.path.relpath(chipbox_painting, self._output_path)
+                cv2.imwrite(chipbox_painting_path, _image)
+                self.output_data["image_ipr"][layer]["chipbox"] = os.path.relpath(chipbox_painting_path, self._output_path)
+                for i in range(len(chipbox_part_image_lists)):
+                    tmp_chipbox_part_image = chipbox_part_image_lists[i]
+                    tmp_chipbox_part_image_path = os.path.join(self.output_figure_path_image,f"{layer}_chipbox_part_image_{i + 1}.png")
+                    cv2.imwrite(tmp_chipbox_part_image_path, tmp_chipbox_part_image)
+                    self.output_data["image_ipr"][layer][f"chipbox_part_image_{i + 1}"] = os.path.relpath(tmp_chipbox_part_image_path, self._output_path)
 
     @property
     def output_path(self):

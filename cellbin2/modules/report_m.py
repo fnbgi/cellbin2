@@ -270,18 +270,24 @@ class Report(object):
             ### set image trackpoint and chipbox
             self._json["image"][f"image{num + 1}_trackpoint"]["src"] = self.matrics_data["image_ipr"][layer][
                 "trackpoint"]
+            self._json["image"][f"image{num + 1}_chipbox"]["src"] = self.matrics_data["image_ipr"][layer][
+                "chipbox"]
 
             ### set small trackpoint image
             img_num = len(self._json["image"][f"image{num + 1}_trackpoint"]["small_chip_image"])
             for i in range(img_num):
-                self._json["image"][f"image{num + 1}_trackpoint"]["small_chip_image"][f"chip_image{i+1}_src"] = self.matrics_data["image_ipr"][layer][f"trackpoint_cp_image_{i+1}"]
+                #trackpoint small
+                self._json["image"][f"image{num + 1}_trackpoint"]["small_chip_image"][f"chip_image{i+1}_src"] = \
+                    self.matrics_data["image_ipr"][layer][f"trackpoint_cp_image_{i+1}"]
                 self._json["image"][f"image{num + 1}_trackpoint"]["small_tissue_image"][f"tissue_image{i+1}_src"] = \
-                self.matrics_data["image_ipr"][layer][f"trackpoint_tissue_image_{i+1}"]
+                    self.matrics_data["image_ipr"][layer][f"trackpoint_tissue_image_{i+1}"]
+                #chipbox part
+                self._json["image"][f"image{num + 1}_chipbox"]["chipbox_part_image"][f"chipbox_part_image{i+1}_src"] = \
+                    self.matrics_data["image_ipr"][layer][f"chipbox_part_image_{i + 1}"]
+            # self._json["image"][f"image{num + 1}_trackpoint"]["src"] = self.matrics_data["image_ipr"][layer][
+            #     "trackpoint"]
 
-            self._json["image"][f"image{num + 1}_trackpoint"]["src"] = self.matrics_data["image_ipr"][layer][
-                "trackpoint"]
-            self._json["image"][f"image{num + 1}_chipbox"]["src"] = self.matrics_data["image_ipr"][layer][
-                "chipbox"]
+
 
             ### set image register infor
             self._json["image"][f"image{num + 1}_registration"]["data"] = []
