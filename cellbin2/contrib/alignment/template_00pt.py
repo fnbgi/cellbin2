@@ -13,7 +13,8 @@ from cellbin2.utils import clog
 
 class Template00PtAlignment(Alignment):
     """
-    满足CellBin需求，利用芯片切割特性，实现左上角第一个周期起始点对齐。实现配准，误差在10pix
+    Satisfy CellBin's requirements and utilize chip cutting characteristics to achieve alignment
+    of the starting point of the first cycle in the upper left corner. Implement registration with an error of 10pix
     """
 
     def __init__(self,
@@ -71,7 +72,7 @@ class Template00PtAlignment(Alignment):
             file: Union[str, np.ndarray, CBImage]
     ) -> CBImage:
         """
-        从拼接图开始配
+        Starting from the stitching diagram
         Args:
             file:
 
@@ -207,7 +208,7 @@ class Template00PtAlignment(Alignment):
     def get_lt_zero_point(template_points, x_index=0, y_index=0):
         """
         Args:
-            template_points: np.array, 模板点 -- shape == (*, 4)
+            template_points: np.array, template points -- shape == (*, 4)
             x_index:
             y_index:
         Returns:
@@ -233,7 +234,7 @@ def template_00pt_check(
         moving_image:
         fixed_image:
         offset_info:
-        fixed_offset: 矩阵图的起始 xy 信息
+        fixed_offset: Starting xy information of matrix image
         flip_flag:
         rot90_flag:
         max_length:
@@ -315,9 +316,9 @@ def template_00pt_align(
         rot90_flag: bool = True
 ):
     """
-    :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
-    :param ref: 模板周期，仅在模板相关配准方法下用到
-    :param dst_shape: 配准图理论尺寸
+    :param moving_image: The image to be registered is usually a stained image (such as ssDNA, HE)
+    :param ref: Template cycle, only used in template related registration methods
+    :param dst_shape: Theoretical size of registration map
     :param from_stitched
     :param flip_flag:
     :param rot90_flag:

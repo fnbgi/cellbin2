@@ -20,15 +20,15 @@ from cellbin2.image import cbimread
 
 
 class CalibrationParam(BaseModel):
-    offset_thr: int = Field(20, description="阈值，用于判断是否通过的标志位")
+    offset_thr: int = Field(20, description="Threshold, a flag used to determine whether it has passed or not")
 
 
 class Calibrate:
     """
 
-        * 使用FFT进行图像间的匹配
-        * 两图模态需要相同或接近，否则计算准确性不高
-        * 可进行平移计算及旋转缩放计算
+        *Using FFT for image matching
+        *The two modalities need to be the same or close, otherwise the calculation accuracy is not high
+        *Can perform translation calculation and rotation scaling calculation
 
     """
 
@@ -40,15 +40,15 @@ class Calibrate:
             down_size: int = 4000
     ):
         """
-        初始化参数，变换 dst 到 src ！！！
+        Initialize parameters, transform dst to src ！！！
 
         Args:
-            src_image: image path | array  表示目标配准图像
-            dst_image: image path | array  表示待配准图像
-            method: 校准使用方法  0 | 1
-                * 0 表示只做平移校准 求得参数仅为 offset
-                * 1 表示做仿射变换校准 求得参数为 scale, rotate, offset
-            down_size: 计算FFT时，图像最长边缩放至该参数
+            src_image: image path | array  Representing the target registration image
+            dst_image: image path | array  Representing the image to be registered
+            method: Calibration usage method  0 | 1
+                * 0 Indicating that only translational calibration is used to obtain parameters that are only offset
+                * 1 Perform affine transformation calibration to obtain parameters such as scale, rotate, and offset
+            down_size: When calculating FFT, the longest edge of the image is scaled to this parameter
 
         """
         self.method = (0 if method == 0 else 1)
@@ -68,7 +68,6 @@ class Calibrate:
         Returns:
 
         """
-        # TODO 可接其他io方式
         if im is None: return
 
         if isinstance(im, str):
@@ -172,8 +171,8 @@ class Calibrate:
 
     def calibration(self):
         """
-        * 对图像进行缩放、尺寸统一处理
-        * 并进行校准操作
+        *Scale and size the image uniformly
+        *And perform calibration operations
 
         Returns:
 
@@ -196,7 +195,7 @@ class Calibrate:
         else:
             ret = imreg_dft.similarity(src_img, dst_img)
 
-        # 解析结果
+        # Analysis results
         offset = np.round(ret.get('tvec')[::-1] * down_scale)
         score = ret.get('success')
         scale = ret.get('scale', 1)

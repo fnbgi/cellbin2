@@ -12,8 +12,11 @@ from cellbin2.utils import clog
 class RegistrationInput(BaseModel):
     moving_image: ChipFeature
     fixed_image: Optional[ChipFeature] = None
-    ref: Tuple[List, List] = Field(..., description="模板周期，仅在模板相关配准方法下用到")
-    dst_shape: Optional[Tuple[int, int]] = Field(None, description="the shape of fixed image ")
+    ref: Tuple[List, List] = Field(
+        ...,
+        description="Template cycle, only used in template related registration methods"
+    )
+    dst_shape: Optional[Tuple[int, int]] = Field(None, description="The shape of fixed image ")
     from_stitched: bool
     rot90_flag: bool
     flip_flag: bool
@@ -23,7 +26,7 @@ class RegistrationOutput(BaseModel):
     counter_rot90: int = Field(0, description='')
     flip: bool = Field(True, description='')
     register_score: int = Field(-999, description='')
-    # offset 多样原因为前置为暂定四个方向
+    # Due to offset various reasons, the four directions are tentatively set as preliminary
     offset: Union[Dict, Tuple[float, float]] = Field((0., 0.), description='')
     register_mat: Any = Field(None, description='')
     method: AlignMode = Field(AlignMode.TemplateCentroid, description='')
@@ -75,11 +78,11 @@ def registration(moving_image: ChipFeature,
                  rot90_flag: bool = True,
                  ) -> (RegistrationOutput, RegistrationOutput):
     """
-    :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
-    :param fixed_image: 固定图，通常是矩阵，支持TIF/GEM/GEF及数组
-    :param ref: 模板周期，仅在模板相关配准方法下用到
-    :param from_stitched: 从拼接图配准
-    :param qc_info: QC flag 信息
+    :param moving_image: The image to be registered is usually a stained image (such as ssDNA, HE)
+    :param fixed_image: Fixed image, usually a matrix, supports TIF/GEM/GEF and arrays
+    :param ref: Template cycle, only used in template related registration methods
+    :param from_stitched: Registration from stitched images
+    :param qc_info: QC flag info
     :param flip_flag:
     :param rot90_flag:
     :return: RegistrationInfo
