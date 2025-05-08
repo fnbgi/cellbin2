@@ -19,24 +19,19 @@ from cellbin2.utils import clog
 
 
 def asStride(arr, sub_shape, stride):
-    '''Get a strided sub-matrices view of an ndarray.
+    """
+    Get a strided sub-matrices view of an ndarray.
 
     This function is similar to `skimage.util.shape.view_as_windows()`.
 
-    Parameters
-    ----------
-    arr : ndarray
-        The input ndarray.
-    sub_shape : tuple
-        The shape of the sub-matrices.
-    stride : tuple
-        The step size along each axis.
+    Args:
+        arr (ndarray): The input ndarray.
+        sub_shape (tuple): The shape of the sub-matrices.
+        stride (tuple): The step size along each axis.
 
-    Returns
-    -------
-    ndarray
-        A view of strided sub-matrices.
-    '''
+    Returns:
+        ndarray: A view of strided sub-matrices.
+    """
     s0, s1 = arr.strides[:2]
     m1, n1 = arr.shape[:2]
     m2, n2 = sub_shape
@@ -49,24 +44,16 @@ def asStride(arr, sub_shape, stride):
 def poolingOverlap(mat, ksize, stride=None, method='max', pad=False):
     """
     Perform overlapping pooling on 2D or 3D data.
-    
-    Parameters:
-    mat : ndarray
-        The input array to pool.
-    ksize : tuple of 2
-        Kernel size in (ky, kx).
-    stride : tuple of 2 or None, optional
-        Stride of the pooling window. If None, it defaults to the kernel size (non-overlapping pooling).
-    method : str, optional
-        Pooling method, 'max' for max-pooling, 'mean' for mean-pooling.
-    pad : bool, optional
-        Whether to pad the input matrix or not. If not padded, the output size will be (n-f)//s+1,
-        where n is the matrix size, f is the kernel size, and s is the stride. If padded, the output size
-        will be ceil(n/s).
-    
+
+    Args:
+        mat (ndarray): The input array to pool.
+        ksize (tuple of 2): Kernel size in (ky, kx).
+        stride (tuple of 2, optional): Stride of the pooling window. If None, it defaults to the kernel size (non - overlapping pooling).
+        method (str, optional): Pooling method, 'max' for max - pooling, 'mean' for mean - pooling.
+        pad (bool, optional): Whether to pad the input matrix or not. If not padded, the output size will be (n - f)//s+1, where n is the matrix size, f is the kernel size, and s is the stride. If padded, the output size will be ceil(n/s).
+
     Returns:
-    result : ndarray
-        The pooled matrix.
+        ndarray: The pooled matrix.
     """
 
     m, n = mat.shape[:2]
@@ -107,11 +94,11 @@ def f_instance2semantics_max(ins):
     """
     Processes an instance segmentation mask to remove small objects and converts it to a semantic segmentation mask.
 
-    Parameters:
-    ins (numpy.ndarray): The instance segmentation mask.
+    Args:
+        ins (numpy.ndarray): The instance segmentation mask.
 
     Returns:
-    numpy.ndarray: The semantic segmentation mask.
+        numpy.ndarray: The semantic segmentation mask.
     """
     ins_m = poolingOverlap(ins, ksize=(2, 2), stride=(1, 1), pad=True, method='mean')
     mask = np.uint8(np.subtract(np.float64(ins), ins_m))

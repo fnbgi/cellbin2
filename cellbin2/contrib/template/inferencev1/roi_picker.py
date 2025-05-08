@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import tifffile as tif
-from cellbin2.utils.file_manager import rc_key
+# from cellbin2.utils import rc_key
 
 
 class TrackROIPicker(object):

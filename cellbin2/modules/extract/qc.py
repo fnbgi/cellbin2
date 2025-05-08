@@ -22,16 +22,13 @@ from cellbin2.utils.plot_funcs import get_view_image
 def scale_estimate(image_file, param_chip):
     """
     Estimate the average scaling factor between the image and the chip dimensions.
-    
-    Parameters:
-    image_file : ProcFile
-        The image file object.
-    param_chip : StereoChip
-        The chip parameter object.
-    
+
+    Args:
+        image_file (ProcFile): The image file object.
+        param_chip (StereoChip): The chip parameter object.
+
     Returns:
-    float
-        The average scaling factor.
+        float: The average scaling factor.
     """
     image = cbimread(image_file.file_path)
     mx = max(image.width, image.height) / max(param_chip.width, param_chip.height)  # Maximum dimension scale
@@ -46,14 +43,14 @@ def estimate_fov_size(
 ) -> tuple:
     """
     Estimate the Field of View (FOV) size based on the provided image and chip parameters.
-    
-    Parameters:
-    image_file (ProcFile): The image file object.
-    param_chip (StereoChip): The chip parameters object.
-    fov_wh (tuple): The original FOV width and height.
-    
+
+    Args:
+        image_file (ProcFile): The image file object.
+        param_chip (StereoChip): The chip parameters object.
+        fov_wh (tuple): The original FOV width and height.
+
     Returns:
-    tuple: A tuple containing the estimated FOV width and height, and the scale factor.
+        tuple: A tuple containing the estimated FOV width and height, and the scale factor.
     """
     scale = scale_estimate(image_file, param_chip)  # Scale estimation
     clog.info('Using the image and chip prior size, calculate scale == {}'.format(scale))
@@ -72,15 +69,15 @@ def detect_chip(
     """
     Detects a chip in the given image file.
 
-    Parameters:
-    image_file (ProcFile): The image file to be processed.
-    param_chip (StereoChip): Parameters defining the stereo chip.
-    config (Config): Configuration settings for the detection process.
-    debug (bool): Flag to enable or disable debugging.
-    output_path (str): Path where debug images will be saved if debugging is enabled.
+    Args:
+        image_file (ProcFile): The image file to be processed.
+        param_chip (StereoChip): Parameters defining the stereo chip.
+        config (Config): Configuration settings for the detection process.
+        debug (bool): Flag to enable or disable debugging.
+        output_path (str): Path where debug images will be saved if debugging is enabled.
 
     Returns:
-    ChipBoxInfo: Information about the detected chip.
+        ChipBoxInfo: Information about the detected chip.
     """
     actual_size = param_chip.norm_chip_size
     # If debug is False, the returned dictionary debug_image_dic is empty
@@ -114,12 +111,12 @@ def run_clarity(
     """
     Run clarity detection on the provided image file using the specified configuration.
 
-    Parameters:
-    image_file (ProcFile): The image file to be analyzed.
-    config (Config): The configuration settings for the clarity detection.
+    Args:
+        image_file (ProcFile): The image file to be analyzed.
+        config (Config): The configuration settings for the clarity detection.
 
     Returns:
-    ClarityOutput: The output of the clarity detection process.
+        ClarityOutput: The output of the clarity detection process.
     """
     # Run clarity detection using the provided image file and configuration
     c: clarity.ClarityOutput = clarity.run_detect(
@@ -142,16 +139,16 @@ def inference_template(
     """
     Perform template inference on the given image file.
 
-    Parameters:
-    - cut_siz: Tuple[int, int] - The size of the cut image.
-    - est_scale: float - The estimated scale of the image.
-    - image_file: ProcFile - The image file to be processed.
-    - param_chip: StereoChip - Parameters for the stereo chip.
-    - config: Config - Configuration settings for the inference.
-    - overlap: float - The overlap value for the inference (default is 0.0).
+    Args:
+        cut_siz (Tuple[int, int]): The size of the cut image.
+        est_scale (float): The estimated scale of the image.
+        image_file (ProcFile): The image file to be processed.
+        param_chip (StereoChip): Parameters for the stereo chip.
+        config (Config): Configuration settings for the inference.
+        overlap (float, optional): The overlap value for the inference. Defaults to 0.0.
 
     Returns:
-    - Tuple[TrackPointsInfo, inference.TemplateInfo] - The resulting track points and template information.
+        Tuple[TrackPointsInfo, inference.TemplateInfo]: The resulting track points and template information.
     """
 
     # Call the template_inference function with the provided parameters
@@ -180,14 +177,14 @@ def pre_registration(
 ):
     """
     Prepare and perform the registration of an image based on provided parameters and configurations.
-    
-    Parameters:
+
+    Args:
         image_file (ProcFile): The image file to be registered.
         param_chip (StereoChip): Parameters for the stereo chip.
         channel_image (Union[ipr.ImageChannel, ipr.IFChannel]): The channel image containing box and template information.
         config (Config): Configuration settings for registration.
         output_path (str): Path where the output should be saved.
-    
+
     Returns:
         re_out: The result of the alignment process.
     """
@@ -229,16 +226,16 @@ def run_qc(
     """
     Perform quality control (QC) on the provided image file.
 
-    Parameters:
-    image_file (ProcFile): The image file to be analyzed.
-    param_chip (StereoChip): Parameters for the stereo chip.
-    config (Config): Configuration settings for QC.
-    output_path (str): Path where output files will be saved.
-    debug (bool): Flag to enable debug mode.
-    fov_wh (tuple): Field of view width and height.
+    Args:
+        image_file (ProcFile): The image file to be analyzed.
+        param_chip (StereoChip): Parameters for the stereo chip.
+        config (Config): Configuration settings for QC.
+        output_path (str): Path where output files will be saved.
+        debug (bool): Flag to enable debug mode.
+        fov_wh (tuple): Field of view width and height.
 
     Returns:
-    Union[ipr.ImageChannel, ipr.IFChannel]: An ImageChannel or IFChannel object with updated QC information.
+        Union[ipr.ImageChannel, ipr.IFChannel]: An ImageChannel or IFChannel object with updated QC information.
     """
     if image_file.tech is TechType.IF:
         channel_image = ipr.IFChannel()
