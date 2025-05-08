@@ -51,7 +51,7 @@ def read_transform(
         clog.info(f"Product mode, no calibration operation is performed ")
     s = (1., 1.)  # Default scale factors
     r = 0.  # Default rotation angle
-    if image_file.tech != TechType.IF:
+    if image_file.registration.reuse == -1:
         # Get registration parameters
         if channel_images[c_name].QCInfo.TrackCrossQCPassFlag:
             s = (1 / channel_images[c_name].Register.ScaleX,

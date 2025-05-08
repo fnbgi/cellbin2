@@ -8,6 +8,7 @@ from cellbin2.modules.metadata import ProcFile
 
 from cellbin2.utils import ipr
 from cellbin2.utils.stereo_chip import StereoChip
+from cellbin2.utils.rle import RLEncode
 
 
 def run_tissue_seg(
