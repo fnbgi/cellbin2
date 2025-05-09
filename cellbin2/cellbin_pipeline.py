@@ -27,6 +27,8 @@ DEFAULT_PARAM_FILE = os.path.join(CONFIG_PATH, 'default_param.json')
 SUPPORTED_TRACK_STAINED_TYPES = (TechType.ssDNA.name, TechType.DAPI.name, TechType.HE.name)
 SUPPORTED_STAINED_Types = []
 
+os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
+os.environ["HDF5_DISABLE_VERSION_CHECK"] = "1"
 
 class CellBinPipeline(object):
     """
@@ -202,8 +204,14 @@ class CellBinPipeline(object):
                     )
                     matrix_dict[cur_m_type] = cur_m_src_files
             matrix_lists = list(matrix_dict.values())
+            if len(matrix_lists):
+                matrix_list = [matrix_lists[0]]
+            else:
+                matrix_list = []
+
+
             fs = metrics.FileSource(
-                ipr_file=ipr_file, rpi_file=rpi_file, matrix_list=[matrix_lists[0]], sn=self._chip_no,
+                ipr_file=ipr_file, rpi_file=rpi_file, matrix_list=matrix_list, sn=self._chip_no,
                 image_dict=src_img_dict)  # TODO 蛋白矩阵没放进去
             metrics.calculate(param=fs, output_path=self._output_path)
             clog.info("Metrics generated")

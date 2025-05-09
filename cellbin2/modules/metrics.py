@@ -136,6 +136,8 @@ class Metrics(object):
     def set_image_list(self):
         if self.filesource.rpi_file == "":
             return
+        elif not os.path.exists(self.filesource.rpi_file):
+            return
         else:
             h5 = h5py.File(self.filesource.rpi_file, 'r')
             self._set_image_param(h5)
@@ -278,15 +280,15 @@ class Metrics(object):
         pass
 
     def image_array_to_base64(self, img_array):
-        png_path = './temp.png'
+        png_path = os.path.join(self.output_path,'temp.png')
         if len(img_array.shape) == 3 and img_array.shape[-1] == 3:
             img_array = img_array[:, :, (2, 1, 0)]
         cv2.imwrite(png_path, img_array)
-        with open('./temp.png', "rb") as f:
+        with open(png_path, "rb") as f:
             img_b = f.read()
             b = io.BytesIO(img_b)
-        cmd = 'rm ' + png_path
-        os.system(cmd)
+
+        os.remove(png_path)
         return 'data:image/png;base64,{}'.format(base64.b64encode(b.getvalue()).decode())
 
     def set_cellbin_scatterplot(self):
