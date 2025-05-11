@@ -367,15 +367,32 @@ def chip_box_painting(
 
     chipbox_part_image_lists = []
     for point in points:
-        x, y = point
-        x, y = int(x), int(y)
-        # 由于原图已经填充了 half_image_size，所以直接按原坐标裁切即可
-        chip = padded_image[
-               y: y + 2 * half_image_size,  # 高度范围
-               x: x + 2 * half_image_size  # 宽度范围
-               ]
-        chipbox_part_image_lists.append(chip)
+        x, y = int(point[0]), int(point[1])
 
+        # 计算裁剪区域（中心点为(x,y)，范围是 image_size x image_size）
+        x_start = x  # 因已填充 half_image_size，原图坐标无需偏移
+        y_start = y
+        x_end = x_start + image_size
+        y_end = y_start + image_size
+
+        # 自动约束边界（不会越界）
+        chip = padded_image[
+               max(0, y_start): min(padded_image.shape[0], y_end),
+               max(0, x_start): min(padded_image.shape[1], x_end)
+               ]
+        if chip.shape[0] < image_size or chip.shape[1] < image_size:
+            pad_bottom = image_size - chip.shape[0]
+            pad_right = image_size - chip.shape[1]
+            chip = cv2.copyMakeBorder(
+                chip,
+                top=0,
+                bottom=pad_bottom,
+                left=0,
+                right=pad_right,
+                borderType=cv2.BORDER_CONSTANT,
+                value=(0, 0, 0))
+
+        chipbox_part_image_lists.append(chip)
 
     return _image, chipbox_part_image_lists
 
