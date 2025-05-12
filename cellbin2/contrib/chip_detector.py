@@ -23,13 +23,17 @@ TechToWeightName = {i.value: i.name.lower() + weight_name_ext for i in SUPPORTED
 
 
 class ChipParam(BaseModel, BaseModule):
-    detect_channel: int = Field(-1, description="若输入图为3通道，需指明检测通道。否则，程序会自动转为单通道图")
+    detect_channel: int = Field(
+        -1, description="If the input image is 3-channel, indicate the detection channel. "
+                        "Otherwise, the program will automatically switch to a single channel diagram")
     stage1_weights_path: str = Field(
-        "chip_detect_11obbn_640_stage1_20250402_pytorch.onnx", description="一阶段对应的权重文件名")
+        "chip_detect_11obbn_640_stage1_20250402_pytorch.onnx",
+        description="The weight file name corresponding to the first stage")
     stage2_weights_path: str = Field(
-        "chip_detect_yolo11x_1024_stage2_20250411_2e3_equ_pytorch.onnx", description="二阶段对应的权重文件名")
-    GPU: int = Field(0, description="推理使用的GPU编号")
-    num_threads: int = Field(0, description="推理使用的线程数")
+        "chip_detect_yolo11x_1024_stage2_20250411_2e3_equ_pytorch.onnx",
+        description="The weight file name corresponding to the second stage")
+    GPU: int = Field(0, description="The weight file name corresponding to the second stage")
+    num_threads: int = Field(0, description="The number of threads used for inference")
 
     def get_stage1_weights_path(self, ):
         return self.stage1_weights_path
@@ -39,7 +43,7 @@ class ChipParam(BaseModel, BaseModule):
 
 
 class ChipDetector(object):
-    """ 图像数据： 芯片区域检测器 """
+    """ Image data: chip area detector """
 
     PADDING_SIZE = 1000
 
