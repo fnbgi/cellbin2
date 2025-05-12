@@ -245,6 +245,8 @@ class Report(object):
         if len(main_stain) > 1:
             # choice stain type
             layer_ = max(main_stain, key=lambda x: len(self.matrics_data["image_ipr"].get(x, {}).keys()))
+        else:
+            layer_ = list(main_stain)[0]
         for num, layer in enumerate(layers):
             if layer != layer_:
                 continue
