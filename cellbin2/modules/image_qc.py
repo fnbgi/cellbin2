@@ -20,20 +20,16 @@ from cellbin2.utils.tar import save_tar
 
 
 class ImageQC(object):
-    """
-        入参合法性、模板推导（点/线识别）、芯片检测、清晰度、校准
-    """
-
     def __init__(self, config_file: str, chip_mask_file: str, weights_root: str):
         """
         Initialize the ImageQC class.
-        
-        This class is responsible for image quality control operations.
-        
-        Parameters:
-        - config_file (str): Path to the configuration file.
-        - chip_mask_file (str): Path to the chip mask file.
-        - weights_root (str): Path to the weights folder.
+
+        This class is in charge of image quality control operations.
+
+        Args:
+            config_file (str): The path to the configuration file.
+            chip_mask_file (str): The path to the chip mask file.
+            weights_root (str): The path to the weights folder.
         """
         self.weights_root = weights_root
         self.param_chip = StereoChip(chip_mask_file)
@@ -47,12 +43,12 @@ class ImageQC(object):
     def _align_channels(self, image_file: ProcFile):
         """
         Aligns the channels of an image using calibration data.
-        
-        Parameters:
-        image_file (ProcFile): The image file to be aligned.
-        
+
+        Args:
+            image_file (ProcFile): The image file to be aligned.
+
         Returns:
-        int: 1 if calibration data is missing, otherwise 0.
+            int: Returns 1 if calibration data is missing; otherwise, returns 0.
         """
         from cellbin2.contrib import calibration
 
@@ -176,17 +172,17 @@ class ImageQC(object):
         """
         Executes the Image Quality Control (ImageQC) process.
 
-        Parameters:
-        - chip_no (str): The chip number used to load chip information.
-        - input_image (str): The path to the input image.
-        - stain_type (str): The staining type used for image processing.
-        - param_file (str): The path to the parameter file containing configuration details for image processing.
-        - output_path (str): The path where output files will be saved.
-        - debug (bool): Whether to enable debug mode, which outputs additional debug information.
-        - research_mode (bool): Whether to enable research mode, which compresses the result files.
+        Args:
+            chip_no (str): The chip number used to load chip information.
+            input_image (str): The path to the input image.
+            stain_type (str): The staining type used for image processing.
+            param_file (str): The path to the parameter file containing configuration details for image processing.
+            output_path (str): The path where output files will be saved.
+            debug (bool): Whether to enable debug mode, which outputs additional debug information.
+            research_mode (bool): Whether to enable research mode, which compresses the result files.
 
         Returns:
-        - int: Returns a status code, where 0 indicates success and 1 indicates failure.
+            int: A status code. 0 indicates success, and 1 indicates failure.
         """
 
         """ Phase1: Input Preparation """
@@ -238,12 +234,14 @@ class ImageQC(object):
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
                 files.append((f.file_path, f"{f.tech.name}/{f.tag}.tif"))
             elif f.channel_align != -1:
+                # do calibration
                 channel_image = ipr.IFChannel()
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
                 self._align_channels(f)
                 files.append((f.file_path, f"{f.tech.name}/{f.get_group_name(sn=self.param_chip.chip_name)}/{f.tag}.tif"))
             else:
                 channel_image = ipr.ImageChannel()
+                self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
             image = cbimread(f.file_path)
             if f.tech == TechType.IF:  # Product-specific handling: SN_IF.tif -> ipr stain_type = SN_IF
                 s_type = f.get_group_name(sn=self.param_chip.chip_name)
@@ -275,18 +273,21 @@ def image_quality_control(weights_root: str, chip_no: str, input_image: str,
                           stain_type: str, param_file: str, output_path: str, debug: bool = False, research_mode=False):
     """
     Perform image quality control tasks.
-    
+
     This function initializes an ImageQC object and runs the quality control process.
-    
-    :param weights_root: Local directory path where the CNN weight files are stored.
-    :param chip_no: Serial number of the sample chip.
-    :param input_image: Local path to the stained image.
-    :param stain_type: Stain type corresponding to the input image.
-    :param param_file: Local path to the input parameter file.
-    :param output_path: Local directory path where the output files will be stored.
-    :param debug: Boolean flag to enable debug mode. Defaults to False.
-    :param research_mode: Boolean flag to enable research mode. Defaults to False.
-    :return: int (Status code)
+
+    Args:
+        weights_root (str): Local directory path where the CNN weight files are stored.
+        chip_no (str): Serial number of the sample chip.
+        input_image (str): Local path to the stained image.
+        stain_type (str): Stain type corresponding to the input image.
+        param_file (str): Local path to the input parameter file.
+        output_path (str): Local directory path where the output files will be stored.
+        debug (bool, optional): Boolean flag to enable debug mode. Defaults to False.
+        research_mode (bool, optional): Boolean flag to enable research mode. Defaults to False.
+
+    Returns:
+        int: Status code
     """
     curr_path = os.path.dirname(os.path.realpath(__file__))
     config_file = os.path.join(curr_path, r'../config/cellbin.yaml')
@@ -300,16 +301,17 @@ def image_quality_control(weights_root: str, chip_no: str, input_image: str,
 def main(args, para):
     """
     Main function to execute image quality control.
-    
-    This function parses the command-line arguments and parameters,
-    and then calls the image_quality_control function to perform the
-    quality control process on the input image.
-    
-    Parameters:
-    args : argparse.Namespace
-        Parsed command-line arguments containing input parameters.
-    para : dict
-        Additional parameters for the quality control process.
+
+    This function parses the command - line arguments and parameters,
+    and then invokes the `image_quality_control` function to carry out
+    the quality control process on the input image.
+
+    Args:
+        args (argparse.Namespace): Parsed command - line arguments that contain input parameters.
+        para (dict): Additional parameters for the quality control process.
+
+    Returns:
+        None
     """
     image_quality_control(weights_root=args.weights_root,
                           chip_no=args.chip_no,

@@ -107,13 +107,21 @@ class BestTissueCellMask:
 
     @classmethod
     def get_best_tissue_cell_mask(cls, input_data: MaskManagerInfo) -> BestTissueCellMaskInfo:
-
         """
+        Perform operations on masks based on input data.
 
-        :param input_data: MaskManagerInfo结构体类型，入参包含tissue mask, cell mask, method(目前可选0，1,0代表默认操作，
-                            使用组织分割过滤细胞分割，1代表研发版本，使用所有信息输出过滤后的细胞分割和组织分割）,
-                            stain type(TechType枚举类型）, chip box(ChipBoxInfo类型，可选）
-        :return: BestTissueCellMaskInfo结构提类型，出参包含优化后的cell mask和优化后的tissue mask
+        Args:
+            input_data (MaskManagerInfo):
+                The input data containing the following:
+                - tissue mask: The tissue mask data.
+                - cell mask: The cell mask data.
+                - method (int): Currently can be 0 or 1. 0 represents the default operation, using tissue segmentation to filter cell segmentation; 1 represents the R & D version, using all information to output filtered cell and tissue segmentation.
+                - stain type (TechType): The staining type from the TechType enumeration.
+                - chip box (ChipBoxInfo, optional): Information about the chip box.
+
+        Returns:
+            BestTissueCellMaskInfo:
+                The output containing the optimized cell mask and the optimized tissue mask.
         """
         cls.init_flag = False
 

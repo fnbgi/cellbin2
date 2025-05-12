@@ -198,7 +198,8 @@ class Report(object):
                 temp_dict["marker"]["size"] = 1.56
                 temp_dict["marker"]["opacity"] = 1.0
                 temp_dict["marker"]["symbol"] = "circle"
-                temp_dict["marker"]["color"] = COLORS[i]
+                if i < 49:
+                    temp_dict["marker"]["color"] = COLORS[i] # if the category is less than 50, use the COLORS list
                 self._json["cellbin"][matrix_type]["clustering"]["data"]["spatial"].append(temp_dict)
                 temp_dict = {"mode": "markers", "name": f"Cluster {c}", "type": "scattergl", "hovertemplate": " ",
                              "marker": {}}
@@ -206,7 +207,8 @@ class Report(object):
                 temp_dict["marker"]["size"] = 1.56
                 temp_dict["marker"]["opacity"] = 1.0
                 temp_dict["marker"]["symbol"] = "circle"
-                temp_dict["marker"]["color"] = COLORS[i]
+                if i < 49:
+                    temp_dict["marker"]["color"] = COLORS[i] # if the category is less than 50, use the COLORS list
                 self._json["cellbin"][matrix_type]["clustering"]["data"]["umap"].append(temp_dict)
 
         if len(self.matrics_data["matrix"]["RNA"]["cluster"]) > 0:
@@ -234,14 +236,19 @@ class Report(object):
         self._json["image"]["summary"]["data"].append(_set_data_dict("ImageSizey (mm)",
                                                                      int(self.matrics_data["image"]["param"][
                                                                              "sizey"]) * RESOLUTION))
-        layers = list(self.matrics_data["image_ipr"].keys());
-        layers.remove("ManualState");
+        layers = list(self.matrics_data["image_ipr"].keys())
+        layers.remove("ManualState")
         layers.remove("StereoResepSwitch")
         self._json["image"]["image_num"] = len(layers)
 
+        main_stain = set(layers) & set(['HE', 'DAPI', 'ssDNA'])
+        if len(main_stain) > 1:
+            # choice stain type
+            layer_ = max(main_stain, key=lambda x: len(self.matrics_data["image_ipr"].get(x, {}).keys()))
         for num, layer in enumerate(layers):
-            if layer not in ['HE', 'DAPI', 'ssDNA']:
+            if layer != layer_:
                 continue
+
             self._json["image"]["summary"]["data"].append(_set_data_dict(f"Image_{num} name", layer))
             self._json["image"]["summary"]["data"].append(_set_data_dict(f"Image_{num} channel",
                                                                          self.matrics_data["image_ipr"][layer][

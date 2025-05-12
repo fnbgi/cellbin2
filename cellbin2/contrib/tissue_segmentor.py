@@ -147,11 +147,11 @@ class TissueSegmentation:
         """
         Perform tissue segmentation on the input image.
 
-        Parameters:
-        img (Union[str, npt.NDArray]): The input image, which can be provided as a file path or a NumPy array.
+        Args:
+            img (Union[str, npt.NDArray]): The input image, which can be provided as a file path or a NumPy array.
 
         Returns:
-        TissueSegOutputInfo: The segmentation mask.
+            TissueSegOutputInfo: The segmentation mask.
         """
 
         clog.info("start tissue seg")
@@ -167,16 +167,16 @@ class TissueSegmentation:
 def compute_chip_size(input_img: np.ndarray) -> list:
     """
     Calculate the chip size of the input image.
-    
+
     The function divides the height and width of the input image by 20000 to compute
     the chip size. If the input image has a shape of 1, 2, or 3 along the first axis,
     it is transposed before computing the dimensions.
-    
-    Parameters:
-    input_img (np.ndarray): The input image as a numpy array.
-    
+
+    Args:
+        input_img (np.ndarray): The input image as a numpy array.
+
     Returns:
-    list: A list containing the computed chip height and width.
+        list: A list containing the computed chip height and width.
     """
     input_img = input_img.squeeze()
     if input_img.shape[0] in [1, 2, 3]:
@@ -190,23 +190,27 @@ def compute_chip_size(input_img: np.ndarray) -> list:
 def segment4tissue(input_data: TissueSegInputInfo) -> TissueSegOutputInfo:
     """
     Perform tissue segmentation on the input image.
-    
+
     Args:
-        input_data (TissueSegInputInfo): An instance containing the following fields:
-            weight_path_cfg (TissueSegParam): Configuration for the tissue segmentation model weights.
-            input_path (str): Absolute path to the input image.
-            stain_type (TechType): The staining type of the input image.
-            gpu (int): GPU index to use for computation. Default is -1, which means using CPU.
-            chip_size (Tuple[int, int]): The height and width of the chip. If not provided, it will be computed based on the image size.
-            threshold_list (Tuple[int, int], optional): The lower and upper thresholds for segmentation. Only applicable for IF images. 
-                If provided, these thresholds will be used for segmentation. If not provided, the OTSU algorithm will be used.
-    
+        input_data (TissueSegInputInfo):
+            An instance containing the following fields:
+                - weight_path_cfg (TissueSegParam): Configuration for the tissue segmentation model weights.
+                - input_path (str): Absolute path to the input image.
+                - stain_type (TechType): The staining type of the input image.
+                - gpu (int): GPU index to use for computation. Default is -1, which means using CPU.
+                - chip_size (Tuple[int, int]): The height and width of the chip. If not provided, it will be computed based on the image size.
+                - threshold_list (Tuple[int, int], optional):
+                    The lower and upper thresholds for segmentation. Only applicable for IF images.
+                    If provided, these thresholds will be used for segmentation. If not provided, the OTSU algorithm will be used.
+
     Returns:
-        TissueSegOutputInfo: An instance containing the following fields:
-            tissue_mask (np.ndarray): The output tissue segmentation mask.
-            threshold_list (Tuple[int, int]): The thresholds used for segmentation. Only applicable for IF images.
-                If input_data.threshold_list is None, the returned thresholds are those calculated by the OTSU algorithm and the theoretical maximum grayscale value 
-                (uint8: 255, uint16: 65535). If input_data.threshold_list is not None, the returned thresholds are the same as the input thresholds.
+        TissueSegOutputInfo:
+            An instance containing the following fields:
+                - tissue_mask (np.ndarray): The output tissue segmentation mask.
+                - threshold_list (Tuple[int, int]):
+                    The thresholds used for segmentation. Only applicable for IF images.
+                    If input_data.threshold_list is None, the returned thresholds are those calculated by the OTSU algorithm and the theoretical maximum grayscale value
+                    (uint8: 255, uint16: 65535). If input_data.threshold_list is not None, the returned thresholds are the same as the input thresholds.
     """
 
     from cellbin2.image import cbimread
@@ -254,20 +258,20 @@ def segment4tissue(input_data: TissueSegInputInfo) -> TissueSegOutputInfo:
 def main():
     """
     Main function to perform tissue segmentation on an input image.
-    
+
     This function parses command-line arguments for the input image path, output file path,
     model path, stain type, chip size, mode (onnx or tf), and GPU index. It initializes the
     tissue segmentation model with the given parameters, processes the input image, and saves
     the resulting segmented image.
-    
-    Parameters:
-    - input (str): Path to the input image file.
-    - output (str): Path to save the output segmented image file.
-    - model (str): Path to the model file.
-    - stain (str): Type of stain used in the input image.
-    - chip_size (list): Height and width of the chip.
-    - mode (str): Mode of the model ('onnx' or 'tf').
-    - gpu (int): Index of the GPU to use.
+
+    Args:
+        input (str): Path to the input image file.
+        output (str): Path to save the output segmented image file.
+        model (str): Path to the model file.
+        stain (str): Type of stain used in the input image.
+        chip_size (list): Height and width of the chip.
+        mode (str): Mode of the model ('onnx' or 'tf').
+        gpu (int): Index of the GPU to use.
     """
     import argparse
     parser = argparse.ArgumentParser(description="you should add those parameter")
