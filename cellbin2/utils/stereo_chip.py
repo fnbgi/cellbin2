@@ -5,8 +5,9 @@ import numpy as np
 import pandas as pd
 from typing import Tuple
 from enum import Enum
+
 from cellbin2.utils import clog
-from stereo_chip_name import get_chip_prefix_info
+from cellbin2.utils.stereo_chip_name import get_chip_prefix_info
 
 try:
     from prettytable import PrettyTable
