@@ -22,13 +22,14 @@ def extract4stitched(
 ):
     """
     Extracts matrix data for a stitched image.
-    
-    Parameters:
-    image_file (ProcFile): The image file to process.
-    param_chip (StereoChip): Parameters for the stereo chip.
-    m_naming (naming.DumpMatrixFileNaming): Naming convention for matrix files.
-    config (Config): Configuration settings.
-    detect_feature (bool): Whether to detect features. Default is True.
+
+    Args:
+        image_file (ProcFile): The image file to process.
+        param_chip (StereoChip): Parameters for the stereo chip.
+        m_naming (naming.DumpMatrixFileNaming): Naming convention for matrix files.
+        config (Config): Configuration settings.
+        detect_feature (bool): Whether to detect features. Default is True.
+
     """
     cm = cMatrix()
     cm.read(file_path=Path(image_file.file_path))
@@ -49,11 +50,11 @@ def extract4matrix(
 ):
     """
     Extracts matrix data for stitched images based on cell and tissue masks.
-    
-    Parameters:
-    p_naming (naming.DumpPipelineFileNaming): Naming convention for pipeline files.
-    image_file (ProcFile): Processed image file.
-    m_naming (naming.DumpMatrixFileNaming): Naming convention for matrix files.
+
+    Args:
+        p_naming (naming.DumpPipelineFileNaming): Naming convention for pipeline files.
+        image_file (ProcFile): Processed image file.
+        m_naming (naming.DumpMatrixFileNaming): Naming convention for matrix files.
     """
     # Check if tissue mask is considered for cell matrix extraction, needs confirmation
     from cellbin2.matrix.matrix import save_cell_bin_data, save_tissue_bin_data

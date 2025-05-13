@@ -30,11 +30,11 @@ def transform_to_register(
 ):
     """
     Transforms and registers images based on provided parameters.
-    
-    Parameters:
-    cur_f_name (naming.DumpImageFileNaming): The current file naming object.
-    info (Optional[RegistrationOutput]): The registration output information. Defaults to None.
-    cur_c_image (Optional[Union[IFChannel, ImageChannel]]): The current channel image. Defaults to None.
+
+    Args:
+        cur_f_name (naming.DumpImageFileNaming): The current file naming object.
+        info (Optional[RegistrationOutput], optional): The registration output information. Defaults to None.
+        cur_c_image (Optional[Union[IFChannel, ImageChannel]], optional): The current channel image. Defaults to None.
     """
     dct = {
         cur_f_name.transformed_image: cur_f_name.registration_image,

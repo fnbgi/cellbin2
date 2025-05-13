@@ -20,7 +20,7 @@ def run_cell_seg(
     """
     Run cell segmentation based on the type of technology used in the image file.
 
-    Parameters:
+    Args:
         image_file (ProcFile): The image file containing the cell data.
         image_path (Path): The path to the input image file.
         save_path (Path): The path to save the segmented cell mask.

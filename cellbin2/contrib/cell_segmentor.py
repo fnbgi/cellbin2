@@ -142,14 +142,14 @@ class CellSegmentation:
     def run_fast(cls, mask: npt.NDArray, distance: int, process: int) -> npt.NDArray[np.uint8]:
         """
         Applies a fast correction to the mask if the distance is greater than 0.
-        
-        Parameters:
-        mask (npt.NDArray): The mask to be corrected.
-        distance (int): The distance parameter for the fast correction.
-        process (int): The number of processes to be used for the correction.
-        
+
+        Args:
+            mask (npt.NDArray): The mask to be corrected.
+            distance (int): The distance parameter for the fast correction.
+            process (int): The number of processes to be used for the correction.
+
         Returns:
-        npt.NDArray[np.uint8]: The corrected mask if distance > 0, else the original mask.
+            npt.NDArray[np.uint8]: The corrected mask if distance > 0, else the original mask.
         """
         if distance > 0:
             fast_mask = run_fast_correct(

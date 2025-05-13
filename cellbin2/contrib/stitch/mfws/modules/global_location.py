@@ -11,7 +11,7 @@ import scipy.spatial as spt
 
 class GlobalLocation(object):
     """
-    只接收偏移量矩阵并求解最终拼接坐标
+    Only receive the offset matrix and solve for the final stitching coordinates
     """
     def __init__(self):
         self.overlap_x = self.overlap_y = 0.1
@@ -59,7 +59,7 @@ class GlobalLocation(object):
 
     def create_location(self, mode='cd'):
         """
-        :param mode:生成最终坐标 'cd'
+        :param mode: Generate final coordinates 'cd'
         """
         if mode == 'cd':
             coord_model = CenterLrDiffuseStitch(self.rows, self.cols)
@@ -89,11 +89,13 @@ class GlobalLocation(object):
 
 
 ##################################
-"""坐标生成方法"""
+"""Coordinate generation method"""
 ##################################
+
+
 class LineScanStitch:
     """
-    线扫拼接，在某一方位无overlap或者恒定一个overlap
+    Line scanning splicing, with no overlap or a constant overlap in a certain direction
     """
 
     def __init__(self, rows, cols, ls = 0):
@@ -137,7 +139,7 @@ class LineScanStitch:
         self.overlap_y = overlap_y
 
     def set_scope_loc_by_overlap(self, h, w):
-        """计算显微镜的原始拼接坐标"""
+        """Calculate the original stitching coordinates of the microscope"""
         scope_global_loc = np.zeros(shape=(self.rows, self.cols, 2), dtype=np.int32)
         self.fov_height = h
         self.fov_width = w
@@ -210,7 +212,7 @@ class LineScanStitch:
 
 class CenterLrDiffuseStitch:
     '''
-        从组织连通域中心位置，推导出对应的拼接顺序
+        Derive the corresponding splicing sequence from the central position of the organizational connected domain
         * * *    * # *    # # #
         * # * -> # # # -> # # #
         * * *    * # *    # # #
@@ -218,9 +220,9 @@ class CenterLrDiffuseStitch:
 
     def __init__(self, rows, cols):
         '''
-        rows, cols:总行列
+        rows, cols:
         cumulate_thread: int: cumulative departure by centerLrDiffuseStitch
-        src: 目标位置(row, col)
+        src: (row, col)
         '''
         self.scope_global_loc = None
         self.rows = rows
@@ -234,13 +236,13 @@ class CenterLrDiffuseStitch:
 
         # self.src = src
 
-        self.jitter_mask = np.zeros((self.rows, self.cols), dtype=int) + 999  # 连通域信息
-        self.stitch_mask = np.zeros((self.rows, self.cols), dtype=int)  # 待拼接索引
-        self.stitch_masked = np.zeros((self.rows, self.cols), dtype=int)  # 已拼接的索引
+        self.jitter_mask = np.zeros((self.rows, self.cols), dtype=int) + 999  # Connected domain information
+        self.stitch_mask = np.zeros((self.rows, self.cols), dtype=int)  # Index to be spliced
+        self.stitch_masked = np.zeros((self.rows, self.cols), dtype=int)  # Spliced index
         self.global_loc = np.zeros((self.rows, self.cols, 2), dtype=int) + 999
-        self.stitch_list = list()  # 最终拼接顺序
-        self.connect_domains = dict()  # 连通域信息
-        self.domains = -1  # 连通域编号
+        self.stitch_list = list()  # Final splicing sequence
+        self.connect_domains = dict()  # Connected domain information
+        self.domains = -1  # Connected domain number
         self.offset_diff = np.zeros(shape=(self.rows, self.cols)) - 1  # estimate accumulative error
 
         # output

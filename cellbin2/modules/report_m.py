@@ -198,7 +198,8 @@ class Report(object):
                 temp_dict["marker"]["size"] = 1.56
                 temp_dict["marker"]["opacity"] = 1.0
                 temp_dict["marker"]["symbol"] = "circle"
-                temp_dict["marker"]["color"] = COLORS[i]
+                if i < 49:
+                    temp_dict["marker"]["color"] = COLORS[i] # if the category is less than 50, use the COLORS list
                 self._json["cellbin"][matrix_type]["clustering"]["data"]["spatial"].append(temp_dict)
                 temp_dict = {"mode": "markers", "name": f"Cluster {c}", "type": "scattergl", "hovertemplate": " ",
                              "marker": {}}
@@ -206,7 +207,8 @@ class Report(object):
                 temp_dict["marker"]["size"] = 1.56
                 temp_dict["marker"]["opacity"] = 1.0
                 temp_dict["marker"]["symbol"] = "circle"
-                temp_dict["marker"]["color"] = COLORS[i]
+                if i < 49:
+                    temp_dict["marker"]["color"] = COLORS[i] # if the category is less than 50, use the COLORS list
                 self._json["cellbin"][matrix_type]["clustering"]["data"]["umap"].append(temp_dict)
 
         if len(self.matrics_data["matrix"]["RNA"]["cluster"]) > 0:
@@ -234,14 +236,21 @@ class Report(object):
         self._json["image"]["summary"]["data"].append(_set_data_dict("ImageSizey (mm)",
                                                                      int(self.matrics_data["image"]["param"][
                                                                              "sizey"]) * RESOLUTION))
-        layers = list(self.matrics_data["image_ipr"].keys());
-        layers.remove("ManualState");
+        layers = list(self.matrics_data["image_ipr"].keys())
+        layers.remove("ManualState")
         layers.remove("StereoResepSwitch")
         self._json["image"]["image_num"] = len(layers)
 
+        main_stain = set(layers) & set(['HE', 'DAPI', 'ssDNA'])
+        if len(main_stain) > 1:
+            # choice stain type
+            layer_ = max(main_stain, key=lambda x: len(self.matrics_data["image_ipr"].get(x, {}).keys()))
+        else:
+            layer_ = list(main_stain)[0]
         for num, layer in enumerate(layers):
-            if layer not in ['HE', 'DAPI', 'ssDNA']:
+            if layer != layer_:
                 continue
+
             self._json["image"]["summary"]["data"].append(_set_data_dict(f"Image_{num} name", layer))
             self._json["image"]["summary"]["data"].append(_set_data_dict(f"Image_{num} channel",
                                                                          self.matrics_data["image_ipr"][layer][
@@ -270,18 +279,24 @@ class Report(object):
             ### set image trackpoint and chipbox
             self._json["image"][f"image{num + 1}_trackpoint"]["src"] = self.matrics_data["image_ipr"][layer][
                 "trackpoint"]
+            self._json["image"][f"image{num + 1}_chipbox"]["src"] = self.matrics_data["image_ipr"][layer][
+                "chipbox"]
 
             ### set small trackpoint image
             img_num = len(self._json["image"][f"image{num + 1}_trackpoint"]["small_chip_image"])
             for i in range(img_num):
-                self._json["image"][f"image{num + 1}_trackpoint"]["small_chip_image"][f"chip_image{i+1}_src"] = self.matrics_data["image_ipr"][layer][f"trackpoint_cp_image_{i+1}"]
+                #trackpoint small
+                self._json["image"][f"image{num + 1}_trackpoint"]["small_chip_image"][f"chip_image{i+1}_src"] = \
+                    self.matrics_data["image_ipr"][layer][f"trackpoint_cp_image_{i+1}"]
                 self._json["image"][f"image{num + 1}_trackpoint"]["small_tissue_image"][f"tissue_image{i+1}_src"] = \
-                self.matrics_data["image_ipr"][layer][f"trackpoint_tissue_image_{i+1}"]
+                    self.matrics_data["image_ipr"][layer][f"trackpoint_tissue_image_{i+1}"]
+                #chipbox part
+                self._json["image"][f"image{num + 1}_chipbox"]["chipbox_part_image"][f"chipbox_part_image{i+1}_src"] = \
+                    self.matrics_data["image_ipr"][layer][f"chipbox_part_image_{i + 1}"]
+            # self._json["image"][f"image{num + 1}_trackpoint"]["src"] = self.matrics_data["image_ipr"][layer][
+            #     "trackpoint"]
 
-            self._json["image"][f"image{num + 1}_trackpoint"]["src"] = self.matrics_data["image_ipr"][layer][
-                "trackpoint"]
-            self._json["image"][f"image{num + 1}_chipbox"]["src"] = self.matrics_data["image_ipr"][layer][
-                "chipbox"]
+
 
             ### set image register infor
             self._json["image"][f"image{num + 1}_registration"]["data"] = []

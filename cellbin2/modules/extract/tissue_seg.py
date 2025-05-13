@@ -8,6 +8,7 @@ from cellbin2.modules.metadata import ProcFile
 
 from cellbin2.utils import ipr
 from cellbin2.utils.stereo_chip import StereoChip
+from cellbin2.utils.rle import RLEncode
 
 
 def run_tissue_seg(
@@ -21,16 +22,16 @@ def run_tissue_seg(
     """
     Run tissue segmentation on the given image.
 
-    Parameters:
-    image_file (ProcFile): The image file object.
-    image_path (Path): The path to the input image.
-    save_path (Path): The path to save the resulting tissue mask.
-    config (Config): Configuration object containing tissue segmentation settings.
-    chip_info (StereoChip): Information about the stereo chip used.
-    channel_image (Optional[Union[ipr.ImageChannel, ipr.IFChannel]]): Optional channel image object to update with tissue segmentation data.
+    Args:
+        image_file (ProcFile): The image file object.
+        image_path (Path): The path to the input image.
+        save_path (Path): The path to save the resulting tissue mask.
+        config (Config): Configuration object containing tissue segmentation settings.
+        chip_info (StereoChip): Information about the stereo chip used.
+        channel_image (Optional[Union[ipr.ImageChannel, ipr.IFChannel]]): Optional channel image object to update with tissue segmentation data.
 
     Returns:
-    tissue_mask (np.ndarray): The resulting tissue mask.
+        np.ndarray: The resulting tissue mask.
     """
     from cellbin2.contrib.tissue_segmentor import segment4tissue
     tissue_input = TissueSegInputInfo(

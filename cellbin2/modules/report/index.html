@@ -329,29 +329,42 @@
              </tissue-seg>
 
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_trackpoint.small_chip_image.chip_image1_src).length > 0"
-                 :module-title="dataJson.image.image1_trackpoint.title" :src="dataJson.image.image1_trackpoint.small_chip_image.chip_image1_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image1_trackpoint.title}&nbsp;1`" :src="dataJson.image.image1_trackpoint.small_chip_image.chip_image1_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_trackpoint.small_chip_image.chip_image2_src).length > 0"
-                 :module-title="dataJson.image.image1_trackpoint.title" :src="dataJson.image.image1_trackpoint.small_chip_image.chip_image2_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image1_trackpoint.title}&nbsp;2`" :src="dataJson.image.image1_trackpoint.small_chip_image.chip_image2_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_trackpoint.small_chip_image.chip_image3_src).length > 0"
-                 :module-title="dataJson.image.image1_trackpoint.title" :src="dataJson.image.image1_trackpoint.small_chip_image.chip_image3_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image1_trackpoint.title}&nbsp;3`" :src="dataJson.image.image1_trackpoint.small_chip_image.chip_image3_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_trackpoint.small_chip_image.chip_image4_src).length > 0"
-                 :module-title="dataJson.image.image1_trackpoint.title" :src="dataJson.image.image1_trackpoint.small_chip_image.chip_image4_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image1_trackpoint.title}&nbsp;4`" :src="dataJson.image.image1_trackpoint.small_chip_image.chip_image4_src" container-id="tissueseg-plot">
              </track-point>
 
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_trackpoint.small_tissue_image.tissue_image1_src).length > 0"
-                 :module-title="dataJson.image.image1_trackpoint.title" :src="dataJson.image.image1_trackpoint.small_tissue_image.tissue_image1_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image1_trackpoint.title}&nbsp;5`" :src="dataJson.image.image1_trackpoint.small_tissue_image.tissue_image1_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_trackpoint.small_tissue_image.tissue_image2_src).length > 0"
-                 :module-title="dataJson.image.image1_trackpoint.title" :src="dataJson.image.image1_trackpoint.small_tissue_image.tissue_image2_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image1_trackpoint.title}&nbsp;6`" :src="dataJson.image.image1_trackpoint.small_tissue_image.tissue_image2_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_trackpoint.small_tissue_image.tissue_image3_src).length > 0"
-                 :module-title="dataJson.image.image1_trackpoint.title" :src="dataJson.image.image1_trackpoint.small_tissue_image.tissue_image3_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image1_trackpoint.title}&nbsp;7`" :src="dataJson.image.image1_trackpoint.small_tissue_image.tissue_image3_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_trackpoint.small_tissue_image.tissue_image4_src).length > 0"
-                 :module-title="dataJson.image.image1_trackpoint.title" :src="dataJson.image.image1_trackpoint.small_tissue_image.tissue_image4_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image1_trackpoint.title}&nbsp;8`" :src="dataJson.image.image1_trackpoint.small_tissue_image.tissue_image4_src" container-id="tissueseg-plot">
+             </track-point>
+
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_chipbox.chipbox_part_image.chipbox_part_image1_src).length > 0"
+                 :module-title="`${dataJson.image.image1_chipbox.title}&nbsp;1`" :src="dataJson.image.image1_chipbox.chipbox_part_image.chipbox_part_image1_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_chipbox.chipbox_part_image.chipbox_part_image2_src).length > 0"
+                 :module-title="`${dataJson.image.image1_chipbox.title}&nbsp;2`" :src="dataJson.image.image1_chipbox.chipbox_part_image.chipbox_part_image2_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_chipbox.chipbox_part_image.chipbox_part_image3_src).length > 0"
+                 :module-title="`${dataJson.image.image1_chipbox.title}&nbsp;3`" :src="dataJson.image.image1_chipbox.chipbox_part_image.chipbox_part_image3_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image1_chipbox.chipbox_part_image.chipbox_part_image4_src).length > 0"
+                 :module-title="`${dataJson.image.image1_chipbox.title}&nbsp;4`" :src="dataJson.image.image1_chipbox.chipbox_part_image.chipbox_part_image4_src" container-id="tissueseg-plot">
              </track-point>
 
 			  <tissue-seg v-if="dataJson.image.image_num > 0"
@@ -403,29 +416,42 @@
              </tissue-seg>
 
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_trackpoint.small_chip_image.chip_image1_src).length > 0"
-                 :module-title="dataJson.image.image2_trackpoint.title" :src="dataJson.image.image2_trackpoint.small_chip_image.chip_image1_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image2_trackpoint.title}&nbsp;1`" :src="dataJson.image.image2_trackpoint.small_chip_image.chip_image1_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_trackpoint.small_chip_image.chip_image2_src).length > 0"
-                 :module-title="dataJson.image.image2_trackpoint.title" :src="dataJson.image.image2_trackpoint.small_chip_image.chip_image2_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image2_trackpoint.title}&nbsp;2`" :src="dataJson.image.image2_trackpoint.small_chip_image.chip_image2_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_trackpoint.small_chip_image.chip_image3_src).length > 0"
-                 :module-title="dataJson.image.image2_trackpoint.title" :src="dataJson.image.image2_trackpoint.small_chip_image.chip_image3_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image2_trackpoint.title}&nbsp;3`" :src="dataJson.image.image2_trackpoint.small_chip_image.chip_image3_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_trackpoint.small_chip_image.chip_image4_src).length > 0"
-                 :module-title="dataJson.image.image2_trackpoint.title" :src="dataJson.image.image2_trackpoint.small_chip_image.chip_image4_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image2_trackpoint.title}&nbsp;4`" :src="dataJson.image.image2_trackpoint.small_chip_image.chip_image4_src" container-id="tissueseg-plot">
              </track-point>
 
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_trackpoint.small_tissue_image.tissue_image1_src).length > 0"
-                 :module-title="dataJson.image.image2_trackpoint.title" :src="dataJson.image.image2_trackpoint.small_tissue_image.tissue_image1_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image2_trackpoint.title}&nbsp;5`" :src="dataJson.image.image2_trackpoint.small_tissue_image.tissue_image1_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_trackpoint.small_tissue_image.tissue_image2_src).length > 0"
-                 :module-title="dataJson.image.image2_trackpoint.title" :src="dataJson.image.image2_trackpoint.small_tissue_image.tissue_image2_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image2_trackpoint.title}&nbsp;6`" :src="dataJson.image.image2_trackpoint.small_tissue_image.tissue_image2_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_trackpoint.small_tissue_image.tissue_image3_src).length > 0"
-                 :module-title="dataJson.image.image2_trackpoint.title" :src="dataJson.image.image2_trackpoint.small_tissue_image.tissue_image3_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image2_trackpoint.title}&nbsp;7`" :src="dataJson.image.image2_trackpoint.small_tissue_image.tissue_image3_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_trackpoint.small_tissue_image.tissue_image4_src).length > 0"
-                 :module-title="dataJson.image.image2_trackpoint.title" :src="dataJson.image.image2_trackpoint.small_tissue_image.tissue_image4_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image2_trackpoint.title}&nbsp;8`" :src="dataJson.image.image2_trackpoint.small_tissue_image.tissue_image4_src" container-id="tissueseg-plot">
+             </track-point>
+
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_chipbox.chipbox_part_image.chipbox_part_image1_src).length > 0"
+                 :module-title="`${dataJson.image.image2_chipbox.title}&nbsp;1`" :src="dataJson.image.image2_chipbox.chipbox_part_image.chipbox_part_image1_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_chipbox.chipbox_part_image.chipbox_part_image2_src).length > 0"
+                 :module-title="`${dataJson.image.image2_chipbox.title}&nbsp;2`" :src="dataJson.image.image2_chipbox.chipbox_part_image.chipbox_part_image2_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_chipbox.chipbox_part_image.chipbox_part_image3_src).length > 0"
+                 :module-title="`${dataJson.image.image2_chipbox.title}&nbsp;3`" :src="dataJson.image.image2_chipbox.chipbox_part_image.chipbox_part_image3_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image2_chipbox.chipbox_part_image.chipbox_part_image4_src).length > 0"
+                 :module-title="`${dataJson.image.image2_chipbox.title}&nbsp;4`" :src="dataJson.image.image2_chipbox.chipbox_part_image.chipbox_part_image4_src" container-id="tissueseg-plot">
              </track-point>
 
 			  <tissue-seg v-if="dataJson.image.image_num > 1"
@@ -476,29 +502,42 @@
              </tissue-seg>
 
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_trackpoint.small_chip_image.chip_image1_src).length > 0"
-                 :module-title="dataJson.image.image3_trackpoint.title" :src="dataJson.image.image3_trackpoint.small_chip_image.chip_image1_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image3_trackpoint.title}&nbsp;1`" :src="dataJson.image.image3_trackpoint.small_chip_image.chip_image1_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_trackpoint.small_chip_image.chip_image2_src).length > 0"
-                 :module-title="dataJson.image.image3_trackpoint.title" :src="dataJson.image.image3_trackpoint.small_chip_image.chip_image2_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image3_trackpoint.title}&nbsp;2`" :src="dataJson.image.image3_trackpoint.small_chip_image.chip_image2_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_trackpoint.small_chip_image.chip_image3_src).length > 0"
-                 :module-title="dataJson.image.image3_trackpoint.title" :src="dataJson.image.image3_trackpoint.small_chip_image.chip_image3_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image3_trackpoint.title}&nbsp;3`" :src="dataJson.image.image3_trackpoint.small_chip_image.chip_image3_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_trackpoint.small_chip_image.chip_image4_src).length > 0"
-                 :module-title="dataJson.image.image3_trackpoint.title" :src="dataJson.image.image3_trackpoint.small_chip_image.chip_image4_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image3_trackpoint.title}&nbsp;4`" :src="dataJson.image.image3_trackpoint.small_chip_image.chip_image4_src" container-id="tissueseg-plot">
              </track-point>
 
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_trackpoint.small_tissue_image.tissue_image1_src).length > 0"
-                 :module-title="dataJson.image.image3_trackpoint.title" :src="dataJson.image.image3_trackpoint.small_tissue_image.tissue_image1_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image3_trackpoint.title}&nbsp;5`" :src="dataJson.image.image3_trackpoint.small_tissue_image.tissue_image1_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_trackpoint.small_tissue_image.tissue_image2_src).length > 0"
-                 :module-title="dataJson.image.image3_trackpoint.title" :src="dataJson.image.image3_trackpoint.small_tissue_image.tissue_image2_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image3_trackpoint.title}&nbsp;6`" :src="dataJson.image.image3_trackpoint.small_tissue_image.tissue_image2_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_trackpoint.small_tissue_image.tissue_image3_src).length > 0"
-                 :module-title="dataJson.image.image3_trackpoint.title" :src="dataJson.image.image3_trackpoint.small_tissue_image.tissue_image3_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image3_trackpoint.title}&nbsp;7`" :src="dataJson.image.image3_trackpoint.small_tissue_image.tissue_image3_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_trackpoint.small_tissue_image.tissue_image4_src).length > 0"
-                 :module-title="dataJson.image.image3_trackpoint.title" :src="dataJson.image.image3_trackpoint.small_tissue_image.tissue_image4_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image3_trackpoint.title}&nbsp;8`" :src="dataJson.image.image3_trackpoint.small_tissue_image.tissue_image4_src" container-id="tissueseg-plot">
+             </track-point>
+
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_chipbox.chipbox_part_image.chipbox_part_image1_src).length > 0"
+                 :module-title="`${dataJson.image.image3_chipbox.title}&nbsp;1`" :src="dataJson.image.image3_chipbox.chipbox_part_image.chipbox_part_image1_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_chipbox.chipbox_part_image.chipbox_part_image2_src).length > 0"
+                 :module-title="`${dataJson.image.image3_chipbox.title}&nbsp;2`" :src="dataJson.image.image3_chipbox.chipbox_part_image.chipbox_part_image2_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_chipbox.chipbox_part_image.chipbox_part_image3_src).length > 0"
+                 :module-title="`${dataJson.image.image3_chipbox.title}&nbsp;3`" :src="dataJson.image.image3_chipbox.chipbox_part_image.chipbox_part_image3_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image3_chipbox.chipbox_part_image.chipbox_part_image4_src).length > 0"
+                 :module-title="`${dataJson.image.image3_chipbox.title}&nbsp;4`" :src="dataJson.image.image3_chipbox.chipbox_part_image.chipbox_part_image4_src" container-id="tissueseg-plot">
              </track-point>
 
 			  <tissue-seg v-if="dataJson.image.image_num > 2"
@@ -549,29 +588,42 @@
              </tissue-seg>
 
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_trackpoint.small_chip_image.chip_image1_src).length > 0"
-                 :module-title="dataJson.image.image4_trackpoint.title" :src="dataJson.image.image4_trackpoint.small_chip_image.chip_image1_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image4_trackpoint.title}&nbsp;1`" :src="dataJson.image.image4_trackpoint.small_chip_image.chip_image1_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_trackpoint.small_chip_image.chip_image2_src).length > 0"
-                 :module-title="dataJson.image.image4_trackpoint.title" :src="dataJson.image.image4_trackpoint.small_chip_image.chip_image2_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image4_trackpoint.title}&nbsp;2`" :src="dataJson.image.image4_trackpoint.small_chip_image.chip_image2_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_trackpoint.small_chip_image.chip_image3_src).length > 0"
-                 :module-title="dataJson.image.image4_trackpoint.title" :src="dataJson.image.image4_trackpoint.small_chip_image.chip_image3_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image4_trackpoint.title}&nbsp;3`" :src="dataJson.image.image4_trackpoint.small_chip_image.chip_image3_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_trackpoint.small_chip_image.chip_image4_src).length > 0"
-                 :module-title="dataJson.image.image4_trackpoint.title" :src="dataJson.image.image4_trackpoint.small_chip_image.chip_image4_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image4_trackpoint.title}&nbsp;4`" :src="dataJson.image.image4_trackpoint.small_chip_image.chip_image4_src" container-id="tissueseg-plot">
              </track-point>
 
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_trackpoint.small_tissue_image.tissue_image1_src).length > 0"
-                 :module-title="dataJson.image.image4_trackpoint.title" :src="dataJson.image.image4_trackpoint.small_tissue_image.tissue_image1_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image4_trackpoint.title}&nbsp;5`" :src="dataJson.image.image4_trackpoint.small_tissue_image.tissue_image1_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_trackpoint.small_tissue_image.tissue_image2_src).length > 0"
-                 :module-title="dataJson.image.image4_trackpoint.title" :src="dataJson.image.image4_trackpoint.small_tissue_image.tissue_image2_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image4_trackpoint.title}&nbsp;6`" :src="dataJson.image.image4_trackpoint.small_tissue_image.tissue_image2_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_trackpoint.small_tissue_image.tissue_image3_src).length > 0"
-                 :module-title="dataJson.image.image4_trackpoint.title" :src="dataJson.image.image4_trackpoint.small_tissue_image.tissue_image3_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image4_trackpoint.title}&nbsp;7`" :src="dataJson.image.image4_trackpoint.small_tissue_image.tissue_image3_src" container-id="tissueseg-plot">
              </track-point>
               <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_trackpoint.small_tissue_image.tissue_image4_src).length > 0"
-                 :module-title="dataJson.image.image4_trackpoint.title" :src="dataJson.image.image4_trackpoint.small_tissue_image.tissue_image4_src" container-id="tissueseg-plot">
+                 :module-title="`${dataJson.image.image4_trackpoint.title}&nbsp;8`" :src="dataJson.image.image4_trackpoint.small_tissue_image.tissue_image4_src" container-id="tissueseg-plot">
+             </track-point>
+
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_chipbox.chipbox_part_image.chipbox_part_image1_src).length > 0"
+                 :module-title="`${dataJson.image.image4_chipbox.title}&nbsp;1`" :src="dataJson.image.image4_chipbox.chipbox_part_image.chipbox_part_image1_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_chipbox.chipbox_part_image.chipbox_part_image2_src).length > 0"
+                 :module-title="`${dataJson.image.image4_chipbox.title}&nbsp;2`" :src="dataJson.image.image4_chipbox.chipbox_part_image.chipbox_part_image2_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_chipbox.chipbox_part_image.chipbox_part_image3_src).length > 0"
+                 :module-title="`${dataJson.image.image4_chipbox.title}&nbsp;3`" :src="dataJson.image.image4_chipbox.chipbox_part_image.chipbox_part_image3_src" container-id="tissueseg-plot">
+             </track-point>
+              <track-point v-if="dataJson.image.image_num > 0 && Object.keys(dataJson.image.image4_chipbox.chipbox_part_image.chipbox_part_image4_src).length > 0"
+                 :module-title="`${dataJson.image.image4_chipbox.title}&nbsp;4`" :src="dataJson.image.image4_chipbox.chipbox_part_image.chipbox_part_image4_src" container-id="tissueseg-plot">
              </track-point>
 
 			  <tissue-seg v-if="dataJson.image.image_num > 3"

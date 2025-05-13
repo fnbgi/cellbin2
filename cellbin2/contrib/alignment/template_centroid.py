@@ -7,7 +7,8 @@ from typing import List, Tuple
 
 class TemplateCentroid(Alignment):
     """
-    满足CellBin需求，利用模板周期性及组织形态，通过遍历实现变换参数的获取。实现配准，误差约10pix
+    Satisfy CellBin's requirements, utilize template periodicity and organizational form,
+    and obtain transformation parameters through traversal. Realize registration with an error of approximately 10pix
     """
     def __init__(
             self,
@@ -122,10 +123,10 @@ def centroid(moving_image: ChipFeature,
              rot90_flag: bool = True
              ):
     """
-    :param moving_image: 待配准图，通常是染色图（如ssDNA、HE）
-    :param fixed_image: 固定图，通常是矩阵，支持TIF/GEM/GEF及数组
-    :param ref: 模板周期，仅在模板相关配准方法下用到
-    :param from_stitched: 从拼接图开始
+    :param moving_image: The image to be registered is usually a stained image (such as ssDNA, HE)
+    :param fixed_image: Fixed graph, usually a matrix, supports TIF/GEM/GEF and arrays
+    :param ref: Template cycle, only used in template related registration methods
+    :param from_stitched: Starting from the stitching diagram
     :param flip_flag:
     :param rot90_flag:
     :return: RegistrationInfo
