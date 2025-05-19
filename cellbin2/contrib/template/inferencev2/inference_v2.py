@@ -217,7 +217,7 @@ class TemplateReferenceV2(TemplateReferenceV1):
                     if re_conf > best_method_re_conf:
                         best_method_result = [self.template.copy(),
                                               self.scale_x, self.scale_y, self.rotation,
-                                              self.fov_index, self.fov_best_point.copy()]
+                                              self.fov_index, self.fov_best_point.copy(), self.flag_skip_reference]
                         best_method_re_conf = re_conf
 
                     if valid_area > method_threshold or re_conf > method_threshold:
@@ -240,7 +240,7 @@ class TemplateReferenceV2(TemplateReferenceV1):
 
         try:
             self.template, self.scale_x, self.scale_y, self.rotation, \
-            self.fov_index, self.fov_best_point = best_fov_result
+            self.fov_index, self.fov_best_point, self.flag_skip_reference = best_fov_result
         except NameError:
             self.flag_skip_reference = True
             clog.info("Template is None, quit template reference.")
