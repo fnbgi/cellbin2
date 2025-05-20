@@ -98,7 +98,7 @@ class cMatrix(object):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for chunk in df:
-                # 将数据转成图片
+                # convert data to image
                 tmp_h = chunk["y"].max() + 1
                 tmp_w = chunk["x"].max() + 1
                 tmp_min_y = chunk["y"].min()
@@ -188,7 +188,7 @@ class cMatrix(object):
             return width, height
 
     def detect_feature(self, ref: list, chip_size: float):
-        """ track lines 检测，矩阵数据：芯片区域识别，用于配准 """
+        """ track lines detection, matrix data: chip area recognition for registration """
         from cellbin2.matrix.box_detect import detect_chip_box
         from cellbin2.matrix.index_points_detect import detect_cross_points
 

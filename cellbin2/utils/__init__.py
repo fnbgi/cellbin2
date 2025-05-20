@@ -106,7 +106,7 @@ class Dict2Obj(object):
 
 
 class DictEncoder(json.JSONEncoder):
-    """ 适配json各种数据类型 """
+    """ adapt to various json data types """
 
     def default(self, o: Any) -> Any:
         if isinstance(o, np.ndarray):

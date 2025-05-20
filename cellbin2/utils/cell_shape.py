@@ -19,20 +19,20 @@ import h5py
 import mapbox_earcut as earcut
 import numpy as np
 
-# 50w 个细胞
+# 50w cells
 # file = 'D:/gef/FP200000616TL_A3C4.cellbin.gef'
 # output_folder = 'D:/ng_local_data/cell_border/2D_data/FP200000616TL_A3C4'
-# 5w 个细胞
+# 5w cells
 # file = 'D:/gef/SS200000135TL_D1.cellbin.gef'
 # output_folder = 'D:/ng_local_data/cell_border/2D_data/SS200000135TL_D1'
-# 100w 个细胞
+# 100w cells
 # file = 'D:/gef/SS200000144TR_C1E4.cellbin.gef'
 # output_folder = 'D:/ng_local_data/cell_border/2D_data/SS200000144TR_C1E4'
-# 100w 个细胞
+# 100w cells
 # file = 'D:/gef/SS200000144TR_C1E4.cellbin-new.gef'
 # output_folder = 'D:/ng_local_data/cell_border/2D_data/SS200000144TR_C1E4'
 # TODO 需要另外输入info中设置properties，properties中内容需要可配置
-# 细胞轮廓点数量，固定值
+# fix number, number of points of 细胞轮廓点数量，固定值
 final_border_length = 16
 
 # TODO 需要改成读取gef文件中的属性名称对应的数据下标
@@ -45,16 +45,16 @@ attr_area_index = 7
 attr_cell_type_id_index = 8
 attr_cluster_id_index = 9
 
-# h5文件指针
+# h5file pointer
 H5_FILE_POINT: h5py.File
 
 
 def create_group(group_name):
     """
-    h5文件创建group
+    h5file creation group
 
-    :param group_name: group 名称
-    :return: group 对象
+    :param group_name: group name
+    :return: group object 
     """
     global H5_FILE_POINT
     if H5_FILE_POINT.get(group_name):
@@ -76,11 +76,11 @@ def set_attrs(group: h5py.Group, key, values):
 
 def create_dataset(group: h5py.Group, name, data, dtype=None):
     """
-    h5 group 创建数据集
-    :param group: group名称
-    :param name: 数据集名称
-    :param data: 数据
-    :param dtype: 数据类型 **暂未用到
+    h5 group create dataset
+    :param group: group name
+    :param name: dataset name
+    :param data: data
+    :param dtype: data type **not in use yet
     :return:
     """
     group.create_dataset(name, data=data)
