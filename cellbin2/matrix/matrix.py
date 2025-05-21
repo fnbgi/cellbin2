@@ -33,7 +33,7 @@ class GeneticStandards(BaseModel):
 
 
 class cMatrix(object):
-    """ 单个矩阵管理 """
+    """ single matrix management """
 
     def __init__(self) -> None:
         self._gene_mat = np.array([])
@@ -210,7 +210,7 @@ class cMatrix(object):
 
     @property
     def heatmap(self, ):
-        """ 灰度热图： 用于配准 """
+        """ gray scale heatmap: for registration """
         return self._gene_mat
 
 
@@ -238,7 +238,7 @@ def gem_to_gef(gem_path, gef_path):
 
 def save_cell_bin_data(src_path: str, dst_path: str, cell_mask: str):
     from cellbin2.utils.cell_shape import f_main
-    """ 获取：单细胞数据（mask可来自配准图像 or 矩阵自身 ） """
+    """ fetch: single cell data (mask can get from registered image or matrix) """
     src_path = str(src_path)
     dst_path = str(dst_path)
     cell_mask = str(cell_mask)
@@ -270,7 +270,7 @@ def generate_vis_gef(src_path: str, dst_path):
 
 
 def save_tissue_bin_data(src_path: str, dst_path: str, tissue_mask: str, bin_siz: int = 1):
-    """ 获取：组织区域内BinN数据 """
+    """ fetch: BinN data within the tissue area 获取：组织区域内BinN数据 ? """
     src_path = str(src_path)
     dst_path = str(dst_path)
     tissue_mask = str(tissue_mask)
@@ -295,7 +295,7 @@ def get_tissue_bin_data(file_path: str, tissue_mask: np.ndarray, bin_siz: int = 
 
 
 def get_bin_n_data(file_path: str, bin_siz: int = 1):
-    """ 获取：芯片全部区域内BinN数据 """
+    """ fetch: BinN data within the tissue area 获取：芯片全部区域内BinN数据 """
     from stereo.io import read_gef, read_gem
 
     if file_path.endswith(".gem") or file_path.endswith(".gem.gz"):

@@ -500,7 +500,7 @@ class FFTMatcher(Matcher):
         lims = np.array([[-size_y, size_y], [-size_x, size_x]])
         max_peak = self._interpret_translation(
             image1, image2, yins, xins, *lims[0], *lims[1]
-        )  # 与输入进来的位置参数刚好相反
+        )  # opposite to inputted position parameter 
         ncc, offset_y, offset_x, sub_dst, sub_src = max_peak
         return ncc, offset_y, offset_x, sub_dst, sub_src
 
