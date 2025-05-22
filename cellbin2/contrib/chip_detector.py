@@ -277,7 +277,7 @@ class ChipDetector(object):
         if min_l / max_l < 0.9:
             new_size = max_l
             square_image = cv2.resize(self.source_image, (new_size, new_size), interpolation=cv2.INTER_LINEAR)
-            obb8_detector = OBB8Detector(self.onnx_model_global, square_image)
+            obb8_detector = OBB8Detector(self.onnx_model_global, square_image, gpu=self.cfg.GPU, num_threads=self.cfg.num_threads)
             square_corner_points = obb8_detector.run()
             scale_w = w / new_size
             scale_h = h / new_size
@@ -285,7 +285,7 @@ class ChipDetector(object):
             square_corner_points[:, 1] *= scale_h  # 调整y坐标
             self.rough_corner_points = square_corner_points
         else:
-            obb8_detector = OBB8Detector(self.onnx_model_global, self.source_image)
+            obb8_detector = OBB8Detector(self.onnx_model_global, self.source_image, gpu=self.cfg.GPU, num_threads=self.cfg.num_threads)
             self.rough_corner_points = obb8_detector.run()
 
     def stage_finetune(self):
@@ -347,7 +347,7 @@ class ChipDetector(object):
                    x - self.PADDING_SIZE: x + self.PADDING_SIZE]
 
             # Initialize and run the YOLO detector on the image patch
-            yolo8_detector = Yolo8Detector(self.onnx_model_local, _img)
+            yolo8_detector = Yolo8Detector(self.onnx_model_local, _img, gpu=self.cfg.GPU, num_threads=self.cfg.num_threads)
             yolo8_detector.set_preprocess_func(self._finetune_preprocess)
 
             points = yolo8_detector.run()

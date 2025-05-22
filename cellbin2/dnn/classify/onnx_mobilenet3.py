@@ -37,6 +37,9 @@ class OnnxMobileNet3(OnnxNet):
             num_threads=0,
     ):
         super().__init__(weight_path, gpu, num_threads)
+        # print('1111111111')
+        # print(gpu)
+        # print(num_threads)
         self.conf_thresh = conf_thresh
         self.batch_size = batch_size
 

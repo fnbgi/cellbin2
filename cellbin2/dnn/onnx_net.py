@@ -8,7 +8,7 @@ class OnnxNet(BaseNet):
     def __init__(self, model_path, gpu="-1", num_threads=0):
         super(OnnxNet, self).__init__()
         self._providers = ['CPUExecutionProvider']
-        self._providers_id = [{'device_id': -1}]
+        self._providers_id = [{'device_id': "-1"}]
         self._model = None
         self._gpu = int(gpu)
         self._model_path = model_path
@@ -21,7 +21,7 @@ class OnnxNet(BaseNet):
     def _f_init(self):
         if self._gpu > -1:
             self._providers = ['CUDAExecutionProvider']
-            self._providers_id = [{'device_id': self._gpu}]
+            self._providers_id = [{'device_id': str(self._gpu)}]
         self._f_load_model()
 
     def _f_load_model(self):
@@ -44,7 +44,7 @@ class OnnxNet(BaseNet):
                 self._model = onnxruntime.InferenceSession(self._model_path, providers=['CPUExecutionProvider'],
                                                            provider_options=[{'device_id': -1}],
                                                            sess_options=sessionOptions)
-                clog.info(f"onnx work on cpu,threads {self._num_threads}")
+                clog.info(f"Warning!!! GPU call failed, onnx work on cpu,threads {self._num_threads}")
             self._input_name = self._model.get_inputs()[0].name
             self._input_shape = tuple(self._model.get_inputs()[0].shape[1:])
             self._output_shape = tuple(self._model.get_outputs()[0].shape)
