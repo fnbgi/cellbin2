@@ -13,8 +13,6 @@ from cellbin2.utils import clog
 def init_session(model_path, gpu=-1, providers=['CPUExecutionProvider'],
                  providers_id=[{'device_id': '-1'}], num_threads = 0):
     if os.path.exists(model_path):
-        print(gpu, providers, providers_id, num_threads)
-        clog.info(f'loading model from {model_path}')
         sessionOptions = onnxruntime.SessionOptions()
         try:
             if (gpu < 0) and (num_threads > 0):

@@ -34,10 +34,21 @@ class OnnxNet(BaseNet):
                 self._model = onnxruntime.InferenceSession(self._model_path, providers=self._providers,
                                                            provider_options=self._providers_id,
                                                            sess_options=sessionOptions)
-                if self._gpu < 0:
-                    clog.info(f"onnx work on cpu,threads {self._num_threads}")
+
+                active_provider = self._model.get_providers()[0]
+                expected_provider = self._providers[0]
+                if  active_provider == expected_provider:
+                    if self._gpu < 0:
+                        clog.info(f"onnx work on cpu,threads {self._num_threads}")
+                    else:
+                        clog.info(f"onnx work on gpu {self._gpu}")
                 else:
-                    clog.info(f"onnx work on gpu {self._gpu}")
+                    # ['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider']
+                    clog.warning(f'Warning!!! expected: {expected_provider}, active: {active_provider}')
+                    if active_provider == 'CPUExecutionProvider':
+                        clog.info(f'Warning!!! GPU call failed, onnx work on cpu,threads {self._num_threads}')
+                    if active_provider == 'CUDAExecutionProvider':
+                        clog.info(f'onnx work on gpu')
             except:
                 if self._num_threads > 0:
                     sessionOptions.intra_op_num_threads = self._num_threads

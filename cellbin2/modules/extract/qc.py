@@ -81,7 +81,6 @@ def detect_chip(
     """
     actual_size = param_chip.norm_chip_size
     # If debug is False, the returned dictionary debug_image_dic is empty
-    print(config.chip_detector)
     info, debug_image_dic = chip_detector.detect_chip(file_path=image_file.file_path,
                                                       cfg=config.chip_detector,
                                                       stain_type=image_file.tech,

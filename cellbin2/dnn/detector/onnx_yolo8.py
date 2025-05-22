@@ -193,10 +193,20 @@ class Yolo8Detector(object):
                                            providers=self.providers,
                                            provider_options=self.predictor_id,
                                            sess_options = sessionOptions)
-            if self.gpu < 0:
-                clog.info(f'onnx work on cpu,threads {self.num_threads}')
+            active_provider = session.get_providers()[0]
+            expected_provider = self.providers[0]
+            if active_provider == expected_provider:
+                if self.gpu < 0:
+                    clog.info(f'onnx work on cpu,threads {self.num_threads}')
+                else:
+                    clog.info(f'onnx work on gpu {self.gpu}')
             else:
-                clog.info(f'onnx work on gpu {self.gpu}')
+                # ['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider']
+                clog.warning(f'Warning!!! expected: {expected_provider}, active: {active_provider}')
+                if active_provider == 'CPUExecutionProvider':
+                    clog.info(f'Warning!!! GPU call failed, onnx work on cpu,threads {self.num_threads}')
+                if active_provider == 'CUDAExecutionProvider':
+                    clog.info(f'onnx work on gpu')
         except:
             if self.num_threads > 0:
                 sessionOptions.intra_op_num_threads = self.num_threads

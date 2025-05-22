@@ -169,9 +169,6 @@ class TrackPointQC(object):
         # init
         self.cfg: TrackPointsParam = cfg
         self.stain_type = stain_type
-        print('cfg')
-        print(cfg.GPU)
-        print(cfg.num_threads)
         self.ci = OBB5Detector(gpu=cfg.GPU, num_threads=cfg.num_threads)
         self.ci.load_model(
             weight_path=self.cfg.get_weights_path(self.stain_type)
