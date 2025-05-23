@@ -18,12 +18,12 @@ COLORS = ["#E64B35", "#4DBBD5", "#00A087", "#3C5488", "#F39B7F", "#8491B4", "#91
 
 
 class Report(object):
-    """ 报告: 不限制形式（HTML ） """
+    """ report: unlimited format (HTML) """
 
     def __init__(self, matrics_json, save_path=RESULT_JSON_PARH, json_template=JSON_TEMPLATE):
         """
-        :param json_template:  生成报告的需要的json文件模板
-        :param matrics_json:  计算出的指标json文件
+        :param json_template:  json template for report generation 生成报告的需要的json文件模板
+        :param matrics_json:  calculated matrics json file 
         """
         self.json_path = json_template
         with open(json_template, 'r') as file:
@@ -373,8 +373,9 @@ class Report(object):
 
     def _falsified_data(self, layer):
         """
-           ipr 里读不到图片信息，暂时用伪造的方式做一个名称
-           ipr 里读不到文件大小的信息，暂时伪造一个文件大小的数字
+           when image information cannot be read from ipr, temporarily generate fake names
+           when file size data cannot be read from ipr, temporarily generate a fake file size value
+
         """
         self.matrics_data["image_ipr"][layer]["image_info"]["imagename"] = "SS200000135TL_D1.tif"
         self.matrics_data["image_ipr"][layer]["image_info"]["imagesize"] = "4.12"

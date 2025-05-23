@@ -173,7 +173,7 @@ class ProcMolecularFile(BaseModel):
     """
     exp_matrix: int
     cell_mask: List[int]
-    extra_method: str = ''  # 额外的分子归类方法，当前没有
+    extra_method: str = ''  # additional molecular classification methods, currently not available
 
 
 class Run(BaseModel):

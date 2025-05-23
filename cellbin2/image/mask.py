@@ -57,7 +57,7 @@ def iou(a, b, epsilon=1e-5):
     Returns:
 
     """
-    # quantize a and b into 0/1 values
+    # quantify a and b into 0/1 values
     a = (a > 0).astype(int)
     b = (b > 0).astype(int)
 

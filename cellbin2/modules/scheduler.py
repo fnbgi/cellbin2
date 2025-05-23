@@ -187,7 +187,7 @@ class Scheduler(object):
                     continue
                 if not os.path.exists(f.file_path):
                     clog.warning('Missing file, {}'.format(f.file_path))
-                    sys.exit(ErrorCode.missFile.value)  # 缺失文件，非正常退出
+                    sys.exit(ErrorCode.missFile.value)  # missing file, abnormal exit
                 image = cbimread(f.file_path)
                 wh.append([image.width, image.height])
 
@@ -383,6 +383,8 @@ class Scheduler(object):
 
         :return: None
         """
+        # involve coorperation of multiple images
+        # since this is registration, single-image processing is considered complete by default
         # 这里涉及多张图的配合，因为是配准。所以默认但张图的处理都结束了
         for idx, f in self._files.items():
             if f.is_image:

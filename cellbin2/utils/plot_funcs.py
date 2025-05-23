@@ -219,25 +219,25 @@ def template_painting(
         qc_points, template_points
     )
 
-    # 芯片角最近qc_track点
+    # qc_track point closest to chip corner
     chip_corner_points = np.array([[0, 0], [0, image.height],
                               [image.width, image.height], [image.width, 0]])
     chip_points_dis = cdist(_qc[:, :2], chip_corner_points)
     corner_chip_qc_points = _qc[np.argmin(chip_points_dis, axis=0)]
 
-    # 组织角最近qc_track点
+    # qc_track point closest to tissue corner
     tissue_corner_points = get_tissue_corner_points(tissue_image.image)
     tissue_points_dis = cdist(_qc[:, :2], tissue_corner_points)
     corner_tissue_qc_points = _qc[np.argmin(tissue_points_dis, axis=0)]
 
     ########################
-    # 芯片边缘 qc template track点
+    # qc template track point for chip edge
     cp_image_list, cp_coord_list = crop_image(
         corner_chip_qc_points, template_points, qc_points,
         image, image_size, image_type,
         draw_radius, template_color, qc_color, draw_thickness
     )
-    # 组织边缘qc template track点
+    # qc template track point for tissue edge
     tissue_image_list, tissue_coord_list = crop_image(
         corner_tissue_qc_points, template_points, qc_points,
         image, image_size, image_type,
@@ -368,14 +368,13 @@ def chip_box_painting(
     chipbox_part_image_lists = []
     for point in points:
         x, y = int(point[0]), int(point[1])
-
-        # 计算裁剪区域（中心点为(x,y)，范围是 image_size x image_size）
-        x_start = x  # 因已填充 half_image_size，原图坐标无需偏移
+        # calculate cutting area (center point (x,y), range is image_size x image_size)
+        x_start = x  # since original image already padded with 'half_image_size'，no offset required for the coordinate
         y_start = y
         x_end = x_start + image_size
         y_end = y_start + image_size
 
-        # 自动约束边界（不会越界）
+        # automatic restrict boundary (prevent crossing line) 
         chip = padded_image[
                max(0, y_start): min(padded_image.shape[0], y_end),
                max(0, x_start): min(padded_image.shape[1], x_end)

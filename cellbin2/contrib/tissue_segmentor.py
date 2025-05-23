@@ -26,8 +26,8 @@ class TissueSegParam(BaseModel, BaseModule):
                                               description="name of the transcriptomics model")
     Protein_weights_path: str = Field(r"tissueseg_bcdu_rna_220909_tf.onnx",
                                       description="name of the Protein model")
-    IF_weights_path: Optional[str] = Field('-', description='IF 使用传统算法，没有相应的模型')
-    GPU: int = Field(-1, description='gpu编号，默认为-1，使用cpu')
+    IF_weights_path: Optional[str] = Field('-', description='IF using tradition algorithm, no model applied')
+    GPU: int = Field(-1, description='GPU id, default -1 (CPU)')
     num_threads: int = Field(1, description="name of the model")
 
     # def get_weights_path(self, stain_type):
@@ -48,11 +48,11 @@ class TissueSegParam(BaseModel, BaseModule):
 
 
 class TissueSegInputInfo(BaseModel):
-    weight_path_cfg: TissueSegParam = Field('', description='组织分割不同染色权重配置文件，需要权重的绝对路径')
-    input_path: Union[str, Path] = Field('', description='输入图像')
-    stain_type: TechType = Field('', description='输入图像的染色类型')
-    chip_size: Tuple[Union[float, int], Union[float, int]] = Field(None, description='芯片的高和宽')  # S0.5 -> float; S1 -> int
-    threshold_list: Tuple[int, int] = Field(None, description='输入阈值的下限和上限，仅针对IF图像')
+    weight_path_cfg: TissueSegParam = Field('', description='config file for different staining tissue segmentation, absolute path required for the checkpoint')
+    input_path: Union[str, Path] = Field('', description='input image ')
+    stain_type: TechType = Field('', description='staining type of input image ')
+    chip_size: Tuple[Union[float, int], Union[float, int]] = Field(None, description='height and width for the chip')  # S0.5 -> float; S1 -> int
+    threshold_list: Tuple[int, int] = Field(None, description='input lower and upper bound of threshold (applies to IF images only)')
 
 
 class TissueSegmentation:
@@ -302,7 +302,7 @@ def main():
 
     input_path = args.input
     output_path = args.output
-    model_path = args.model  # 模型路径，以onnx结尾
+    model_path = args.model  # model path, end with onnx 
     user_s_type = args.stain
     gpu = args.gpu
     chip_size = args.chip_size

@@ -44,16 +44,16 @@ class StereoChip(object):
         with open(chip_mask_file, 'r') as fd:
             self.chip_mask = json.load(fd)
         self._name: str = None
-        self.chip_specif = ''  # 芯片规格： S0.5, S1
+        self.chip_specif = ''  # chip specifications:S0.5, S1
         self.fov_edge_len = 2940
         self.fov_template = [[240, 300, 330, 390, 390, 330, 300, 240, 420],
                              [240, 300, 330, 390, 390, 330, 300, 240, 420]]
-        self.name_type = ''  # 长短还是短码
+        self.name_type = ''  # long code or short code
         self.width = 0
         self.height = 0
         self._00pt: Tuple[int, int] = (0, 0)
         self._chip_00pt: Tuple[int, int] = (0, 0)
-        self.is_from_S13: bool = False  # 拆分自S13还是S6
+        self.is_from_S13: bool = False  # seperated from S13 or S6 
         self.S1_fov_count = 6.8
         self.exp_r = [0.2, 0.2]  # WH
 
@@ -167,12 +167,12 @@ class StereoChip(object):
         zero_x = x_set[_x_index + 1]
         zero_y = y_set[_y_index + 1]
 
-        # 补充00点距芯片角距离
+        # added: distance between 00 point and chip corner补充00点距芯片角距离
         index = np.where(((points_finish[:, 0] == zero_x) & (points_finish[:, 1] == zero_y)) == True)[0][0]
         chip_point = (points_fov[index] - [fov_x_min, fov_y_min]) * 2
 
-        self._00pt = (zero_x, zero_y)  # 00点距矩阵图左上角坐标
-        self._chip_00pt = chip_point  # 00点距芯片左上角坐标
+        self._00pt = (zero_x, zero_y)  # distance between 00 point and matrix left top corner coordinate 
+        self._chip_00pt = chip_point  # distance between 00 point and chip left top corner coordinate 
 
     def _get_chip_rc(self, info1, info2):
         if max(self.chip_specif) > 1:
@@ -221,7 +221,7 @@ class StereoChip(object):
         return sx, sy
 
     def get_chip_specif_str(self, ):
-        return '{}x{}'.format(self.chip_specif[1], self.chip_specif[0])  # 字母（行）在前，数字（列）在后
+        return '{}x{}'.format(self.chip_specif[1], self.chip_specif[0])  # letters (rows) first, numbers (columns) second
 
     def get_version(self, ): return self._name[1:6]
 
@@ -274,11 +274,13 @@ class StereoChip(object):
             s6_min_num=3205,
             deprecated_word = ["B", "I", "O"]
     ) -> bool:
-        """  配准前置用该参数作为是否满足调用的条件，这是条件之一，还需要满足拍图时芯片放置角度Rot90=0
+        """  
+        Registration pre-process uses this parameter as a condition,
+        and it requires the chip placement angle Rot90=0 during imaging
         :param s13_min_num:
         :param s6_min_num:
         :param deprecated_word:
-        :return: True表示该芯片产自230508后
+        :return: True means chip produced after 05/23/23 
         """
         if self.name_type is ChipNameType.SHORT:
 
@@ -296,12 +298,12 @@ class StereoChip(object):
                     return True
                 else:
                     return False
-        else:  # 长码现在无法判断，因此算作旧数据
+        else:  # long code cannot be determined yet, considered it as old data
             return False
 
     def parse_info(self, chip_no: str):
         self._name = chip_no
-        name_len = len(self._name)  # 长码还是断码判断
+        name_len = len(self._name)  # determine long code or short code
         if name_len in [8, 10]:
             self.name_type = ChipNameType.SHORT
         elif name_len in [14, 16, 17, 18]:
@@ -309,7 +311,7 @@ class StereoChip(object):
         else:
             self.name_type = ChipNameType.UNKNOWN
 
-        self.is_from_S13 = self._name[0] == 'Y' and True or False  # 判断S13
+        self.is_from_S13 = self._name[0] == 'Y' and True or False  # determine S13
         self.set_chip_specif()
         if self.is_after_230508():
             self.set_zero_point_info()
