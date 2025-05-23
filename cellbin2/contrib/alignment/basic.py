@@ -469,7 +469,7 @@ def transform_points(
     """
 
     Args:
-        points: n * 2/4大小数组 -- (x, y)
+        points: n * 2/4 array size -- (x, y)
         src_shape: original image size -- (h, w)
         scale:
         rotation:

@@ -278,7 +278,8 @@ class AlignByTrack:
         score_max = np.Inf if self.new_method else 0
         offset_last = []
 
-        # Iterate through the matching scores of 9 surrounding FOVs 依次遍历上下左右9个FOV的匹配程度
+        # Iterate through the matching scores of 9 surrounding FOVs 
+        # 依次遍历上下左右9个FOV的匹配程度
         for row in self.search_range_x:
             for col in self.search_range_y:
                 offset_temp = [offset_ori[0] + col * self.fov_size, offset_ori[1] + row * self.fov_size]

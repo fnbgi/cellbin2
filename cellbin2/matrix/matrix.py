@@ -270,7 +270,7 @@ def generate_vis_gef(src_path: str, dst_path):
 
 
 def save_tissue_bin_data(src_path: str, dst_path: str, tissue_mask: str, bin_siz: int = 1):
-    """ fetch: BinN data within the tissue area 获取：组织区域内BinN数据 ? """
+    """ save: BinN data within the tissue area """
     src_path = str(src_path)
     dst_path = str(dst_path)
     tissue_mask = str(tissue_mask)
@@ -287,7 +287,7 @@ def save_tissue_bin_data(src_path: str, dst_path: str, tissue_mask: str, bin_siz
 
 
 def get_tissue_bin_data(file_path: str, tissue_mask: np.ndarray, bin_siz: int = 1):
-    """ 获取：组织区域内BinN数据 """
+    """ fetch: BinN data within the tissue area """
     from gefpy.bgef_creater_cy import BgefCreater
 
     bc = BgefCreater()
@@ -295,7 +295,7 @@ def get_tissue_bin_data(file_path: str, tissue_mask: np.ndarray, bin_siz: int = 
 
 
 def get_bin_n_data(file_path: str, bin_siz: int = 1):
-    """ fetch: BinN data within the tissue area 获取：芯片全部区域内BinN数据 """
+    """ fetch: BinN data with chip area """
     from stereo.io import read_gef, read_gem
 
     if file_path.endswith(".gem") or file_path.endswith(".gem.gz"):

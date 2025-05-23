@@ -7,8 +7,7 @@ trackPoints:
   second_level_thr: 20  # [th2  # inf) -> track_point_score = 2
   good_thresh: 5  # value above this threshold is counted as good_fov 
   process: 10  # number of inference process for point detection 
-  conf_filter: 0.5  # filter detection results base on this threshold, no filtering applied for values lower than 0
-  依据此数值对检测结果进行置信度过滤，若值小于0就不做过滤")  # only points with score above 0.5 are kept for global template 
+  conf_filter: 0.5  # filter detection results base on this threshold, no filtering applied for values lower than 0 # only points with score above 0.5 are kept for global template 
   high_freq_angle_thr: 0.05  # 
   DEFAULT_STAIN_TYPE: 1  # staining type ssDNA
   SUPPORTED_STAIN_TYPE: [1, 2, 3]  # staining type ssDAN, DAPI，HE
