@@ -31,11 +31,11 @@ import numpy as np
 # 1M cells
 # file = 'D:/gef/SS200000144TR_C1E4.cellbin-new.gef'
 # output_folder = 'D:/ng_local_data/cell_border/2D_data/SS200000144TR_C1E4'
-# TODO 需要另外输入info中设置properties，properties中内容需要可配置
+# TODO :need to input some info to set properties. The properties needs to be configurable.
 # fixed number, number of points of cell contour
 final_border_length = 16
 
-# TODO 需要改成读取gef文件中的属性名称对应的数据下标
+# TODO : will be changed to read the data subscript corresponding to the attribute name in the gef file.
 attr_x_index = 1
 attr_y_index = 2
 attr_gene_count_index = 4
@@ -597,7 +597,7 @@ class Chunk:
                 buf = cell_border.get_LOD_vertices_index()
                 bytes_out += buf
 
-            # TODO bytes_out拼接效率很低，可能是bytes_out拼接时长度不定，需要不定时扩展长度，导致性能下降。需要做性能优化
+            # TODO bytes_out :Now concatenation efficiency is poor. The issue might be that when concatenating bytes_out, its length is indeterminate, necessitating frequent length expansions, which degrades performance. Performance optimization is required.
             f_out.write(gzip.compress(bytes_out))
 
     def write_h5(self, group):

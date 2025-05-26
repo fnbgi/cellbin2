@@ -83,7 +83,7 @@ class Image(object):
             tifffile.imwrite(output_path, image)
 
     def get_channel(self, ch):
-        # TODO: return new image without covering self.image 返回新的image，不要覆盖self.image
+        # TODO: return new image without covering self.image
         if self.channel == 1 or ch == -1:
             return
         else:

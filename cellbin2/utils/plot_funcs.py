@@ -369,7 +369,7 @@ def chip_box_painting(
     for point in points:
         x, y = int(point[0]), int(point[1])
         # calculate cutting area (center point (x,y), range is image_size x image_size)
-        x_start = x  # since original image already padded with 'half_image_size'，no offset required for the coordinate
+        x_start = x  # since original image already padded with 'half_image_size',no offset required for the coordinate
         y_start = y
         x_end = x_start + image_size
         y_end = y_start + image_size

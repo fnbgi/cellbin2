@@ -10,7 +10,7 @@ trackPoints:
   conf_filter: 0.5  # filter detection results base on this threshold, no filtering applied for values lower than 0 # only points with score above 0.5 are kept for global template 
   high_freq_angle_thr: 0.05  # 
   DEFAULT_STAIN_TYPE: 1  # staining type ssDNA
-  SUPPORTED_STAIN_TYPE: [1, 2, 3]  # staining type ssDAN, DAPI，HE
+  SUPPORTED_STAIN_TYPE: [1, 2, 3]  # staining type ssDAN, DAPI,HE
   ssDNA_weights_path: points_detect_yolov5obb_SSDNA_20220513_pytorch.onnx  # checkpoint file for ssDNA staining image
   DAPI_weights_path: points_detect_yolov5obb_SSDNA_20220513_pytorch.onnx  # checkpoint file for DAPI staining image
   HE_weights_path: points_detect_yolov5obb_SSDNA_20220513_pytorch.onnx  # checkpoint file for HE staining image

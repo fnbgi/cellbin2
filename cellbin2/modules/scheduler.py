@@ -259,7 +259,7 @@ class Scheduler(object):
                 tissue_mask=tissue_mask,
                 cell_mask=cell_mask,
                 chip_box=c_box,
-                method=1,
+                method=0,
                 stain_type=f.tech
             )
             btcm = BestTissueCellMask.get_best_tissue_cell_mask(input_data=input_data)
@@ -385,7 +385,6 @@ class Scheduler(object):
         """
         # involve coorperation of multiple images
         # since this is registration, single-image processing is considered complete by default
-        # 这里涉及多张图的配合，因为是配准。所以默认但张图的处理都结束了
         for idx, f in self._files.items():
             if f.is_image:
                 clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
