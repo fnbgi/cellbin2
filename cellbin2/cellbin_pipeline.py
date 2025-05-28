@@ -30,6 +30,7 @@ SUPPORTED_STAINED_Types = []
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 os.environ["HDF5_DISABLE_VERSION_CHECK"] = "1"
 
+
 class CellBinPipeline(object):
     """
     CellBinPipeline class is designed to handle the entire pipeline of cellular image processing and analysis.
@@ -219,7 +220,6 @@ class CellBinPipeline(object):
                 matrix_list = [matrix_lists[0]]
             else:
                 matrix_list = []
-
 
             fs = metrics.FileSource(
                 ipr_file=ipr_file, rpi_file=rpi_file, matrix_list=matrix_list, sn=self._chip_no,

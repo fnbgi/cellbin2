@@ -249,6 +249,9 @@ def run_qc(
         fov_wh=fov_wh
     )
 
+    if config.registration.flag_pre_registration or config.registration.flag_chip_registration:
+        image_file.chip_detect = True
+
     if image_file.chip_detect:
         chip_info = detect_chip(
             image_file=image_file,
@@ -288,21 +291,25 @@ def run_qc(
             clog.info('Template Scale is {}, rotation is {}'.format(
                 (template_info.scale_x, template_info.scale_y), template_info.rotation))
 
-    if image_file.chip_detect and param_chip.is_after_230508():  # Satisfies pre-registration conditions
-        if chip_info.IsAvailable and template_info.trackcross_qc_pass_flag:
-            clog.info('The chip-data meets the pre-registration conditions')
-            pre_out = pre_registration(
-                image_file=image_file,
-                param_chip=param_chip,
-                channel_image=channel_image,
-                output_path=output_path,
-                config=config
-            )
-            channel_image.Register.Register00.update(pre_out)
-            channel_image.Register.Method = AlignMode.Template00Pt.name
-    # TODO: The chip box QC is always 0, 25/03/04
-    cpf = 0
-    # cpf = 1 if channel_image.QCInfo.ChipDetectQCPassFlag == 1 else 0
+    if config.registration.flag_pre_registration:
+        if image_file.chip_detect and param_chip.is_after_230508():  # Satisfies pre-registration conditions
+            if chip_info.IsAvailable and template_info.trackcross_qc_pass_flag:
+                clog.info('The chip-data meets the pre-registration conditions')
+                pre_out = pre_registration(
+                    image_file=image_file,
+                    param_chip=param_chip,
+                    channel_image=channel_image,
+                    output_path=output_path,
+                    config=config
+                )
+                channel_image.Register.Register00.update(pre_out)
+                channel_image.Register.Method = AlignMode.Template00Pt.name
+
+    if config.registration.flag_chip_registration:
+        cpf = 1 if channel_image.QCInfo.ChipDetectQCPassFlag == 1 else 0
+    else:
+        cpf = 0
+
     tcf = 1 if channel_image.QCInfo.TrackCrossQCPassFlag == 1 else 0
     channel_image.QCInfo.QCPassFlag = (cpf or tcf)
 

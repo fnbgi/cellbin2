@@ -21,6 +21,8 @@ class RegistrationParam(BaseModel):
     HE_channel: int
     rot90: bool
     flip: bool
+    flag_pre_registration: bool
+    flag_chip_registration: bool
 
 
 def transform_to_register(
@@ -101,7 +103,8 @@ def run_register(
         debug: bool
 ):
     """
-    This module integrates the overall logic for image registration and returns registration parameters for downstream use.
+    This module integrates the overall logic for image registration and
+    returns registration parameters for downstream use.
 
     There are several scenarios:
     1. IF image: Returns the registration parameters of the reused image.
@@ -110,7 +113,8 @@ def run_register(
 
     Returns (RegisterOutput): Registration parameters
     """
-    # TODO: The flip and rot90 switches have been passed in the config. Enable these switches internally in the registration process.
+    # TODO: The flip and rot90 switches have been passed in the config.
+    #  Enable these switches internally in the registration process.
     clog.info(f"Running register module")
     sn = param_chip.chip_name
 
@@ -177,21 +181,30 @@ def run_register(
         else:
             # TODO
             """
-            Currently, both the centroid method and the chip box registration are performed because the QC now considers the QC successful if either the template derivation or the chip box detection passes.
-            Therefore, the following selection first performs the centroid method registration, followed by the chip box registration.
-            This change is being made to prepare for the mutual correction of the two registration algorithms in the future.
+            Currently, both the centroid method and the chip box registration are performed because 
+            the QC now considers the QC successful if either the template derivation or the chip box detection passes.
+            
+            Therefore, the following selection first performs the centroid method registration, 
+            followed by the chip box registration.
+            
+            This change is being made to prepare for the mutual correction of 
+            the two registration algorithms in the future.
             """
+            chip_re = 1 if config.registration.flag_chip_registration and param1.QCInfo.ChipDetectQCPassFlag else 0
+
             info, temp_info = registration(
                 moving_image=moving_image,
                 fixed_image=fixed_image,
                 ref=param_chip.fov_template,
                 from_stitched=False,
-                qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag),
+                qc_info=(param1.QCInfo.TrackCrossQCPassFlag, chip_re),
                 flip_flag=config.registration.flip,
                 rot90_flag=config.registration.rot90
             )
-            clog.info(f"{info}")
-            clog.info(f"{temp_info}")
+
+            clog.info(f"Track cross registration: {info}")
+            clog.info(f"Chip box registration: {temp_info}")
+
             if temp_info is not None and debug:
                 temp_info.register_mat.write(
                     os.path.join(output_path, f"{sn}_chip_box_register.tif")

@@ -238,7 +238,9 @@ class ImageQC(object):
                 channel_image = ipr.IFChannel()
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
                 self._align_channels(f)
-                files.append((f.file_path, f"{f.tech.name}/{f.get_group_name(sn=self.param_chip.chip_name)}/{f.tag}.tif"))
+                files.append(
+                    (f.file_path, f"{f.tech.name}/{f.get_group_name(sn=self.param_chip.chip_name)}/{f.tag}.tif")
+                )
             else:
                 channel_image = ipr.ImageChannel()
                 self._channel_images[f.get_group_name(sn=self.param_chip.chip_name)] = channel_image
@@ -270,7 +272,8 @@ class ImageQC(object):
 
 
 def image_quality_control(weights_root: str, chip_no: str, input_image: str,
-                          stain_type: str, param_file: str, output_path: str, debug: bool = False, research_mode=False):
+                          stain_type: str, param_file: str, output_path: str,
+                          debug: bool = False, research_mode=False):
     """
     Perform image quality control tasks.
 
