@@ -1,11 +1,14 @@
-import numpy as np
+# -*- coding: utf-8 -*-
 import copy
 import math
 import tqdm
-import cv2 as cv
 import glog
 
-from .image import Image
+import cv2 as cv
+import numpy as np
+import tifffile as tif
+
+from .scan_method import ImageBase
 
 
 def rc_key(row: int, col: int):
@@ -31,15 +34,19 @@ class StitchingWSI(object):
         self._fuse_size = fuse_size
 
     def _init_parm(self, src_image: dict):
-        test_image_path = list(src_image.values())[0]
-        test_image_path = test_image_path.image
-        img = Image()
-        img.read(test_image_path)
+        _image_path = list(src_image.values())[0]
 
-        self.fov_height = img.height
-        self.fov_width = img.width
-        self.fov_channel = img.channel
+        # TODO 可调用其他解析方式
+        if isinstance(_image_path, str):
+            img = tif.imread(_image_path)
+        elif isinstance(_image_path, ImageBase):
+            img = _image_path.get_image()
+        else:
+            raise ValueError('Image type error.')
+
         self.fov_dtype = img.dtype
+        self.fov_height, self.fov_width = img.shape[:2]
+        self.fov_channel = img.shape[2] if len(img.shape) > 2 else 1
 
     def _set_location(self, loc):
         if loc is not None:
@@ -194,10 +201,10 @@ class StitchingWSI(object):
                     1 - math.sin(math.radians(k[i])))
         return result, _x
 
-    def save(self, output_path, compression = False):
-        img = Image()
-        img.image = self.buffer
-        img.write(output_path, compression = compression)
+    # def save(self, output_path, compression = False):
+    #     img = Image()
+    #     img.image = self.buffer
+    #     img.write(output_path, compression = compression)
 
 
 def main():
