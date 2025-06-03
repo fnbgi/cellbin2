@@ -159,26 +159,28 @@ class FOVAligner(object):
                 glog.info(f"Stitch using {self.num} process")
                 pool = Pool(processes=self.num)
 
-                with tqdm(total=len(tesk_list)) as pbar:
-                    for tesk in tesk_list:
-                        if list(tesk.keys())[0] == 'row':
-                            row_index = tesk['row']
-                            pool.apply_async(
-                                func=self._multi_jitter,
-                                args=(h_j, confi_h, row_index, None, 0),
-                                callback = lambda _: pbar.update(1)
-                            )
+                pb = tqdm(total=len(tesk_list))
+                pb.set_description('Calculate jitter: ')
 
-                        elif list(tesk.keys())[0] == 'col':
-                            col_index = tesk['col']
-                            pool.apply_async(
-                                func=self._multi_jitter,
-                                args=(v_j, confi_v, None, col_index, 1),
-                                callback = lambda _: pbar.update(1)
-                            )
+                for tesk in tesk_list:
+                    if list(tesk.keys())[0] == 'row':
+                        row_index = tesk['row']
+                        pool.apply_async(
+                            func=self._multi_jitter,
+                            args=(h_j, confi_h, row_index, None, 0),
+                            callback = lambda *args: pb.update(1)
+                        )
 
-                        else:
-                            pass
+                    elif list(tesk.keys())[0] == 'col':
+                        col_index = tesk['col']
+                        pool.apply_async(
+                            func=self._multi_jitter,
+                            args=(v_j, confi_v, None, col_index, 1),
+                            callback = lambda *args: pb.update(1)
+                        )
+
+                    else:
+                        pass
 
                 pool.close()
                 pool.join()
