@@ -6,6 +6,12 @@
 </div>
 
 ## Introduction
+CellBin is an image processing pipeline designed to delineate cell boundaries for spatial analysis. It consists of several image analysis steps. Given the image and gene expression data as input, CellBin performs image registration, tissue segmentation, nuclei segmentation, and molecular labeling (i.e., cell border expanding), ultimately defining the molecular boundaries of individual cells. It incorporates a suite of self-developed algorithms, including deep-learning models, for each of the analysis task. The processed data is then mapped onto the chip to extract molecular information, resulting in an accurate single-cell expression matrix. (Cover image) For more information on CellBin, please refer to the following link.
+
+**Cellbin2** is an upgraded version of the original [CellBin](https://github.com/STOmics/CellBin) platform with two key enhancements:
+1. **Expanded Algorithm Library**: Incorporates additional image processing algorithms to serve broader application scenarios like single-cell RNA-seq, Plant cellbin.
+2. **Configurable Architecture**: Refactored codebase allows users to customize analysis pipelines through [JSON](cellbin2.config/demos/only_matrix.json) and YAML configuration files.
+
 [CellBin introduction](docs/md/CellBin_1.0/CellBin解决方案技术说明.md) (Chinese) 
 
 ***Tweets*** <br>
@@ -25,18 +31,31 @@
 [One-stop solution for spatial single-cell data acquisition](https://www.bilibili.com/video/BV1Me4y1T77T/?spm_id_from=333.337.search-card.all.click) (Chinese) <br>
 [Single-cell processing framework for high resolution spatial omics](https://www.bilibili.com/video/BV1M14y1q7YR/?spm_id_from=333.788.recommend_more_video.12) (Chinese) 
 
-## Installation
+## Installation and Quick Start
 Linux
 ```shell
+# Clone the main repository
 git clone https://github.com/STOmics/cellbin2
 # git clone -b dev https://github.com/STOmics/cellbin2
+
+# Create and activate a Conda environment
 conda create --name cellbin2 python=3.8
 conda activate cellbin2
+
+# Install package dependencies
 cd cellbin2
-pip install .[rs]
-# pip install -e .[rs] # developer mode
-python demo.py  # run 1 demo, approximately 30-40 mins on GPU
+pip install .[cp,rs]
+
+# For development mode (optional):
+# pip install -e .[cp,rs]      # Editable install with basic extras
+# pip install -e .[cp,rs,rp]   # Editable install including report module
+
+# Execute the demo (takes ~30-40 minutes on GPU hardware)
+python demo.py
 ```
+
+**Output Verification:**  
+After completion, validate the output integrity by comparing your results with the [Outputs](##Outputs). 
 
 
 ## Tutorials
@@ -178,20 +197,27 @@ refer to [error.md](docs/v2/error.md)
 
 | File Name | Description |
 | ---- | ---- |
-| A03599D1_cell_mask.tif | Final cell mask |
-| A03599D1_mask.tif | Final nuclear mask |
-| A03599D1_tissue_mask.tif | Final tissue mask |
-| A03599D1_params.json | CellBin 2.0 input params |
-| A03599D1.ipr | Image processing record |
+| SN_cell_mask.tif | Final cell mask |
+| SN_mask.tif | Final nuclear mask |
+| SN_tissue_mask.tif | Final tissue mask |
+| SN_params.json | CellBin 2.0 input params |
+| SN.ipr | Image processing record |
 | metrics.json | CellBin 2.0 Metrics |
 | CellBin_0.0.1_report.html | CellBin 2.0 report |
-| A03599D1.rpi | Recorded image processing (for visualization) |
-| A03599D1_DAPI_mask.tif | Cell mask on registered image |
-| A03599D1_DAPI_regist.tif | Registered image |
-| A03599D1_DAPI_tissue_cut.tif | Tissue mask on registered image |
-| A03599D1_IF_mask.tif | Cell mask on registered image |
-| A03599D1_IF_regist.tif | Registered image |
-| A03599D1_IF_tissue_cut.tif | Tissue mask on registered image |
+| SN.rpi | Recorded image processing (for visualization) |
+| SN.stereo | A JSON-formatted manifest file that records the visualization files in the result |
+| SN.tar.gz | tar.gz file |
+| SN_DAPI_mask.tif | Cell mask on registered image |
+| SN_DAPI_regist.tif | Registered image |
+| SN_DAPI_tissue_cut.tif | Tissue mask on registered image |
+| SN_IF_mask.tif | Cell mask on registered image |
+| SN_IF_regist.tif | Registered image |
+| SN_IF_tissue_cut.tif | Tissue mask on registered image |
+| SN_Transcriptomics_matrix_template.txt | Track template on gene matrix |
+
+- **Image files (`*.tif`):** Inspect using [ImageJ](https://imagej.net/ij/)
+- **Gene expression file** (generated only when optional pipeline is enabled): 
+  Visualize with [StereoMap v4](https://www.stomics.tech/service/stereoMap_4_1/docs/kuai-su-kai-shi.html#ke-shi-hua-shu-ru-wen-jian).   
 
 
 ## Other content
