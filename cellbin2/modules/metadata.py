@@ -112,14 +112,14 @@ class ProcFile(BaseModel):
         Generates a group name based on the serial number (sn) and pattern.
         """
         if pattern in self.tag:
-            start_index = self.tag.find(sn) + len(sn)
-            end_index = self.tag.find(pattern)
-            middle = self.tag[start_index: end_index]
-            middle = middle.strip("_")
-            if middle:
-                g_name = middle + "_" + self.tech.name
+            if sn in self.tag:
+                _n = self.tag.split(sn)
+                g_name = '_'.join(_n).strip("_")
             else:
-                g_name = sn + "_" + self.tech.name
+                _n = self.tag.split(pattern)
+                g_name = '_'.join(_n).strip("_") + f'_{pattern}'
+        elif self.tech == TechType.IF:
+            g_name = self.tag + f'_{pattern}'
         else:
             g_name = self.tech.name
         return g_name
