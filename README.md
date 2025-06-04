@@ -58,7 +58,7 @@ python demo.py
 If the demo runs on CPU instead of GPU, see our [troubleshooting guide]() to verify your GPU setup.
 
 **Output Verification:**  
-After completion, validate the output integrity by comparing your results with the [Outputs](##Outputs). 
+After completion, validate the output integrity by comparing your results with the [Outputs](#outputs). 
 
 
 ## Tutorials
@@ -102,11 +102,11 @@ python cellbin2/cellbin_pipeline.py -h
 ```python
 KIT_VERSIONS = (
     # Standard product versions
-    'Stereo-seq T FF V1.2',        # Standard tissue
+    'Stereo-seq T FF V1.2',       
     'Stereo-seq T FF V1.3',
-    'Stereo-CITE T FF V1.0',       # CITE-seq multi-omics
+    'Stereo-CITE T FF V1.0',   
     'Stereo-CITE T FF V1.1',
-    'Stereo-seq N FFPE V1.0',      # FFPE samples
+    'Stereo-seq N FFPE V1.0', 
     
     # Research versions
     'Stereo-seq T FF V1.2 R',
@@ -214,9 +214,8 @@ ssDNA + HE + trans gef
 ## ErrorCode
 refer to [error.md](docs/v2/error.md)
 
-
+<a id="outputs"></a>
 ## Outputs
-
 | File Name | Description |
 | ---- | ---- |
 | SN_cell_mask.tif | Final cell mask |
