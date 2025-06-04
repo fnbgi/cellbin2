@@ -1,4 +1,4 @@
-# 图像质控
+# Image Quality Control
 import os
 import sys
 from typing import List, Dict, Any, Tuple, Union
@@ -148,7 +148,7 @@ class ImageQC(object):
             for idx, f in self._files.items():
                 if not os.path.exists(f.file_path):
                     clog.error('Missing file, {}'.format(f.file_path))
-                    sys.exit(ErrorCode.missFile.value)  # 缺失文件，非正常退出
+                    sys.exit(ErrorCode.missFile.value)  # missing file, abnormal exit
                 image = cbimread(f.file_path)
                 wh[f.tag] = [image.width, image.height]
             s = np.unique(list(wh.values()), axis=0)

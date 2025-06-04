@@ -281,8 +281,8 @@ class ChipDetector(object):
             square_corner_points = obb8_detector.run()
             scale_w = w / new_size
             scale_h = h / new_size
-            square_corner_points[:, 0] *= scale_w  # 调整x坐标
-            square_corner_points[:, 1] *= scale_h  # 调整y坐标
+            square_corner_points[:, 0] *= scale_w  # adjust x-coordinates
+            square_corner_points[:, 1] *= scale_h  # adjust y-coordinates
             self.rough_corner_points = square_corner_points
         else:
             obb8_detector = OBB8Detector(self.onnx_model_global, self.source_image)

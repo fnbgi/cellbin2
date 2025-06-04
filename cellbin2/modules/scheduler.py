@@ -187,7 +187,7 @@ class Scheduler(object):
                     continue
                 if not os.path.exists(f.file_path):
                     clog.warning('Missing file, {}'.format(f.file_path))
-                    sys.exit(ErrorCode.missFile.value)  # 缺失文件，非正常退出
+                    sys.exit(ErrorCode.missFile.value)  # missing file, abnormal exit
                 image = cbimread(f.file_path)
                 wh.append([image.width, image.height])
 
@@ -259,7 +259,7 @@ class Scheduler(object):
                 tissue_mask=tissue_mask,
                 cell_mask=cell_mask,
                 chip_box=c_box,
-                method=1,
+                method=0,
                 stain_type=f.tech
             )
             btcm = BestTissueCellMask.get_best_tissue_cell_mask(input_data=input_data)
@@ -383,7 +383,8 @@ class Scheduler(object):
 
         :return: None
         """
-        # 这里涉及多张图的配合，因为是配准。所以默认但张图的处理都结束了
+        # involve coorperation of multiple images
+        # since this is registration, single-image processing is considered complete by default
         for idx, f in self._files.items():
             if f.is_image:
                 clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))

@@ -94,7 +94,7 @@ class Template00PtAlignment(Alignment):
             rot90=4 - rot90,
             offset=offset,
             dst_size=self._register_shape,
-            flip_ud=True  # 配准前置默认是上下翻转即可对齐
+            flip_ud=True  # default pre-registration: vertical flip for alignment 
         )
 
         return result
@@ -365,7 +365,7 @@ if __name__ == '__main__':
     #     reference = template_ref
     # )
 
-    # 移动图像信息
+    # move image 
     moving_image = ChipFeature()
     moving_image.tech_type = TechType.DAPI
     moving_mat = cbimread(r"E:\03.users\liuhuanlin\01.data\cellbin2\stitch\A03599D1_gene.tif")
@@ -387,7 +387,7 @@ if __name__ == '__main__':
     m_info = detect_chip(moving_mat.image, cfg=cfg, stain_type=TechType.DAPI, actual_size=(19992, 19992))
     moving_image.set_chip_box(m_info)
 
-    # 矩阵理论原点位置
+    # theoretical origin position of the matrix 
     chip_mask_file = os.path.join(r'E:\03.users\liuhuanlin\02.code\cellbin2\cellbin\config\chip_mask.json')
     sc = StereoChip(chip_mask_file)
     sc.parse_info('A03599D1')

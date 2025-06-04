@@ -22,36 +22,36 @@ from cellbin2.modules.naming import DumpPipelineFileNaming
 from cellbin2.contrib.alignment.basic import ChipBoxInfo
 
 
-# 这里定义metrics所需要的所有入参，后面再加也需要用这个方式
+# define all the input parameters required by metrics, use this method to add other parameters in the future
 class MatrixArray(BaseModel):
-    bin1_matrix: str = Field(..., description="原始Bin1矩阵路径")
-    tissue_bin_matrix: str = Field(..., description="TissueBin矩阵路径")
-    cell_bin_matrix: str = Field(..., description="CellBin修正前的矩阵的绝对路径")
-    cell_bin_adjusted_matrix: str = Field(..., description="CellBin修正后的矩阵的绝对路径")
-    matrix_type: TechType = Field(..., description="测序矩阵采用的技术类型，包含：Transcriptomics 和 Protein")
+    bin1_matrix: str = Field(..., description="path for original Bin1 matrix")
+    tissue_bin_matrix: str = Field(..., description="path for TissueBin matrix")
+    cell_bin_matrix: str = Field(..., description="absolute path for raw CellBin matrix")
+    cell_bin_adjusted_matrix: str = Field(..., description="absolute path for adjusted CellBin matrix")
+    matrix_type: TechType = Field(..., description="sequencing matrix technology types, including Transcriptomics and Protein")
 
 
 class ImageSource(BaseModel):
-    stitch_image: str = Field(..., description="拼接图路径")
+    stitch_image: str = Field(..., description="path for stitch image")
     cell_mask: str = Field(default=..., description="cell mask")
-    registration_image: str = Field(default=..., description="配准图")
+    registration_image: str = Field(default=..., description="registration image")
     tissue_mask: str = Field(default=..., description="tissue mask")
     cell_correct_mask: str = Field(default=..., description="cell correct mask")
 
 
 class FileSource(BaseModel):
-    ipr_file: str = Field(..., description="图像分析记录文件绝对路径")
-    rpi_file: str = Field(..., description="图像金字塔文件绝对路径")
-    matrix_list: List[MatrixArray] = Field(..., description="对每个Bin1矩阵进行多种提取方式后的新矩阵列表")
-    sn: str = Field(..., description="这些gef文件的芯片号")
-    image_dict: Dict[str, ImageSource] = Field(..., description="cellbin2 的文件，要求跟ipr的命名一致")
+    ipr_file: str = Field(..., description="absolute path of image analysis record file")
+    rpi_file: str = Field(..., description="absolute path of the image pyramid file")
+    matrix_list: List[MatrixArray] = Field(..., description="list of new matrices generated from multiple extraction methods applied to each Bin1 matrix")
+    sn: str = Field(..., description="chip id for the gef files")
+    image_dict: Dict[str, ImageSource] = Field(..., description="cellbin2 file must be named the same as ipr")
 
 
 BIN_OUTPUT_VIEW = 10
 
 
 class Metrics(object):
-    """ 指标：基于流程结果，汇总及计算各个模块指标，服务于报告 """
+    """ Metrics: aggregate and compute module-specific metrics from pipeline results for report generation """
 
     def __init__(self, filesource: FileSource, output_path: str):
         self.filesource = filesource
@@ -82,21 +82,21 @@ class Metrics(object):
             print("-" * 50)
             self.output_figure_path = os.path.join(self._output_path, "assets")
             print(f"Creat report required path in {self.output_figure_path}")
-            ### RNA 目录
+            ### RNA menu
             self.output_figure_path_rna_cellbin = os.path.join(self.output_figure_path, "rna", "cellbin")
             os.makedirs(self.output_figure_path_rna_cellbin, exist_ok=True)
             self.output_figure_path_rna_adjusted = os.path.join(self.output_figure_path, "rna", "adjusted")
             os.makedirs(self.output_figure_path_rna_adjusted, exist_ok=True)
-            ### protein 目录
+            ### protein menu
             self.output_figure_path_protein_cellbin = os.path.join(self.output_figure_path, "protein", "cellbin")
             self.output_figure_path_protein_adjusted = os.path.join(self.output_figure_path, "protein", "adjusted")
             os.makedirs(self.output_figure_path_protein_cellbin, exist_ok=True)
             os.makedirs(self.output_figure_path_protein_adjusted, exist_ok=True)
             print("-" * 50)
-            ### image 目录
+            ### image menu
             self.output_figure_path_image = os.path.join(self.output_figure_path, "image")
             os.makedirs(self.output_figure_path_image, exist_ok=True)
-            # 临时目录
+            # temperary menu
             self.output_tmp_dir = os.path.join(self.output_figure_path_image, "tmp")
             os.makedirs(self.output_tmp_dir, exist_ok=True)
         else:
@@ -346,7 +346,7 @@ class Metrics(object):
             return
         else:
             _ipr, channel_images = ipr.read(self.filesource.ipr_file)
-            # if len(self.filesource.image_dict) != len(_ipr.layers):  TODO: 先关了，先测单个染色的
+            # if len(self.filesource.image_dict) != len(_ipr.layers):  TODO: turn off, test single staining image first
             #     raise Exception(
             #         f"the stain file is {len(self.filesource.image_dict)}, which is not match .ipr file number")
             # (self.output_data["image_ipr"]["ManualState"],
@@ -488,15 +488,15 @@ class Metrics(object):
 
 def calculate(param: FileSource, output_path: str):
     """
-    :param param: CellBin结果文件（多个）
-    :param output_path: 指标统计结束后生成的临时及静态文件，服务于报告生成
+    :param param: CellBin result files (multiple)
+    :param output_path: temporary and static files generated after metrics calculation, for report generation 
     :return: None
     """
     pass
     # TODO: zhangying
     mcs = Metrics(param, output_path=output_path)
     mcs.set_report_para()
-    mcs.save_json_file(os.path.join(mcs.pipe_naming.metrics))  # 命名统一管理
+    mcs.save_json_file(os.path.join(mcs.pipe_naming.metrics))  # unified naming management
 
 
 def main():
@@ -504,7 +504,7 @@ def main():
     main_s_type = "ssDNA"
     # path = r"/media/Data/wqs/hedongdong/tissue_segmentation/cellbin2_test/report_test_data/SS200000135TL_D1_demo"
     path = r"F:\01.users\hedongdong\cellbin2_test\report_result\pipline\SS200000135TL_D1"
-    sn = "SS200000135TL_D1"  ###芯片号
+    sn = "SS200000135TL_D1"  ###chip id
     ipr_file = glob(os.path.join(path, f"**.ipr"))[0]
     rpi_file = glob(os.path.join(path, f"**.rpi"))[0]
     tissue_gef = glob(os.path.join(path, f"**.tissue.gef"))[0]

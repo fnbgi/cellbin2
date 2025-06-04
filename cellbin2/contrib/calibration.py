@@ -40,7 +40,7 @@ class Calibrate:
             down_size: int = 4000
     ):
         """
-        Initialize parameters, transform dst to src ！！！
+        Initialize parameters, transform dst to src!!!
 
         Args:
             src_image: image path | array  Representing the target registration image

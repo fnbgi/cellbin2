@@ -66,7 +66,7 @@ class CellBinPipeline(object):
         # naming
         self._naming: Optional[naming.DumpPipelineFileNaming] = None
 
-        # 内部需要的
+        # required by internal
         self.pp: ProcParam
         self.config: Config
 
@@ -180,7 +180,7 @@ class CellBinPipeline(object):
             files = pp.get_image_files(do_image_qc=False, do_scheduler=True, cheek_exists=True)
             ipr_file = str(self._naming.ipr)
             rpi_file = str(self._naming.rpi)
-            # 图片类的输入
+            # input image type
             ipr_r, channel_images = ipr.read(ipr_file)
             src_img_dict = {}
             for c_name, c_info in channel_images.items():
@@ -223,7 +223,7 @@ class CellBinPipeline(object):
 
             fs = metrics.FileSource(
                 ipr_file=ipr_file, rpi_file=rpi_file, matrix_list=matrix_list, sn=self._chip_no,
-                image_dict=src_img_dict)  # TODO 蛋白矩阵没放进去
+                image_dict=src_img_dict)  # TODO no protein matrix yet 
             metrics.calculate(param=fs, output_path=self._output_path)
             clog.info("Metrics generated")
 
@@ -277,7 +277,7 @@ class CellBinPipeline(object):
             nuclear_cell_idx = im_count
             im_count += 1
 
-            # 转录组矩阵
+            # Transcriptomics matrix 
             if self._matrix_path is not None:
                 trans_tp = pp.image_process[TechType.Transcriptomics.name]
                 trans_tp.file_path = self._matrix_path
@@ -323,7 +323,7 @@ class CellBinPipeline(object):
 
             # end of image part info parsing
 
-            # 矩阵提取
+            # extract matrix 
             if trans_exp_idx != -1:
                 trans_m_tp = pp.molecular_classify[TechType.Transcriptomics.name]
                 trans_m_tp.exp_matrix = trans_exp_idx
@@ -393,11 +393,11 @@ class CellBinPipeline(object):
         # self.pipe_run_state = PipelineRunState(self._chip_no, self._output_path)
 
         self.usr_inp_to_param()
-        self.image_quality_control()  # 图像质控
-        self.image_analysis()  # 图像分析
-        self.m_extract()  # 矩阵提取
-        self.metrics()  # 指标计算
-        self.export_report()  # 生成报告
+        self.image_quality_control()  # image quality control 
+        self.image_analysis()  # image analysis 
+        self.m_extract()  # matrix extraction 
+        self.metrics()  # metrics calculation 
+        self.export_report()  # report generation 
 
 
 @process_decorator('GiB')
@@ -525,7 +525,7 @@ if __name__ == '__main__':  # main()
                 f"-k  \"Stereo-CITE T FF V1.0 R\" \\ \n" \
                 f"-r"
 
-    # 负责接收字典类的参数
+    # responsible for receiving dictionary class parameters
     class MoreimsKwargs(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             mif_im_count = 0
