@@ -10,7 +10,7 @@ CellBin is an image processing pipeline designed to delineate cell boundaries fo
 
 **Cellbin2** is an upgraded version of the original [CellBin](https://github.com/STOmics/CellBin) platform with two key enhancements:
 1. **Expanded Algorithm Library**: Incorporates additional image processing algorithms to serve broader application scenarios like single-cell RNA-seq, Plant cellbin.
-2. **Configurable Architecture**: Refactored codebase allows users to customize analysis pipelines through [JSON](cellbin2.config/demos/only_matrix.json) and YAML configuration files.
+2. **Configurable Architecture**: Refactored codebase allows users to customize analysis pipelines through [JSON](cellbin2/config/demos/sample.json) and [YAML configuration files](cellbin2/config/cellbin.yaml).
 
 [CellBin introduction](docs/md/CellBin_1.0/CellBin解决方案技术说明.md) (Chinese) 
 
@@ -54,140 +54,162 @@ pip install .[cp,rs]
 python demo.py
 ```
 
+**GPU Troubleshooting:**  
+If the demo runs on CPU instead of GPU, see our [troubleshooting guide]() to verify your GPU setup.
+
 **Output Verification:**  
 After completion, validate the output integrity by comparing your results with the [Outputs](##Outputs). 
 
 
 ## Tutorials
+### Core Workflow
+The `cellbin_pipeline.py` script serves as the main entry point for CellBin2 analysis. It supports two configuration approaches:
+1. **Configuration files** : Use JSON files for full customization
+2. **Command-line arguments**: Quick setup using key parameters with kit-based defaults
+
+📘 **Configuration Guide**:<br>
+See [JSON Configuration Documentation](docs/v2/JsonConfigurationDocumention.md) for full parameter specifications.
+
+### Basic Usage
 ```shell
+# Minimal configuration (requires complete parameters in JSON)
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py -c <SN> -p <config.json> -o <output_dir> 
+
+# Kit-based configuration (auto-loads predefined settings)
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py -c <SN> -i <image.tif> -s <stain_type> -m <expression.gef> -o <output_dir> -k "Kit Name"
+
+# View all available parameters
+python cellbin2/cellbin_pipeline.py -h
+```
+
+### Key Parameters
+
+| Parameter | Required* | Description                                                                                                   | Examples                                                  |
+| :-------- | :-------- |:--------------------------------------------------------------------------------------------------------------|:----------------------------------------------------------|
+| `-c`      | ✓         | Serial number of chip                                                                                         | `SN`                                                      |
+| `-o`      | ✓         | Output directory                                                                                              | `results/SAMPLE123`                                       |
+| `-i`      | ✓△        | Primary image path (required for kit-based mode)                                                              | `SN.tif`                                                  |
+| `-s`      | ✓△        | Stain type (required for kit-based mode)                                                                      | `DAPI`, `ssDNA`, `HE`                                     |
+| `-p`      | △         | Path to custom configuration file<br/> [JSON Configuration Documentation](docs/v2/JsonConfigurationDocumention.md) | [`config/custom.json`](cellbin2/config/demos/sample.json) |
+| `-m`      | △         | Gene expression matrix                                                                                        | `SN.raw.gef`                                              |
+| `-mi`     | △         | Multi-channel images                                                                                          | `IF=SN_IF.tif`                                            |
+| `-pr`     | △         | Protein expression matrix                                                                                     | `SN_IF.protein.gef`                                       |
+| `-k`      | ✓△        | Kit type (required for kit-based mode,See kit list below)                                                     | `"Stereo-CITE T FF V1.1 R"`                               |
+
+> *✓ = Always required, ✓△ = Required for kit-based mode, △ = Optional
+
+### Supported Kit Types
+```python
 KIT_VERSIONS = (
-    'Stereo-seq T FF V1.2',
+    # Standard product versions
+    'Stereo-seq T FF V1.2',        # Standard tissue
     'Stereo-seq T FF V1.3',
-    'Stereo-CITE T FF V1.0',
+    'Stereo-CITE T FF V1.0',       # CITE-seq multi-omics
     'Stereo-CITE T FF V1.1',
-    'Stereo-seq N FFPE V1.0',
+    'Stereo-seq N FFPE V1.0',      # FFPE samples
+    
+    # Research versions
+    'Stereo-seq T FF V1.2 R',
+    'Stereo-seq T FF V1.3 R',
+    'Stereo-CITE T FF V1.0 R',
+    'Stereo-CITE T FF V1.1 R',
+    'Stereo-seq N FFPE V1.0 R',     
 )
-``` 
-***Each product line has the configurations of the product and R&D versions. You can visit [config.md](docs/v2/config.md) to view the detailed configurations.***
-
-### Research mode
-case 1:
-Stereo-CITE <br>
-DAPI + IF + trans gef
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c A02677B5 \
--i A02677B5.tif \
--s DAPI \
--mi IF=A02677B5_IF.tif \
--m A02677B5.raw.gef \
--o test/A02677B5 \
--k "Stereo-CITE T FF V1.1 R"
 ```
 
-case 2: 
-Stereo-CITE <br>
-DAPI + protein gef
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c A03899A4 \
--i A03899A4_fov_stitched.tif \
--s DAPI \
--pr IF=A03899A4.protein.tissue.gef \
--o /test/A03899A4 \
--k "Stereo-CITE T FF V1.1 R"
-```
+> The kit controls the module switches and parameters in the JSON configuration to customize the analysis workflow. <br>
+> Detailed configurations per kit: [config.md](docs/v2/config.md). <br>
+> More introduction about kits type, you can view [STOmics official website](https://en.stomics.tech/products/stereo-seq-transcriptomics-solution/list.html).
 
-case 3:
-Stereo-CITE <br>
-DAPI + IF + trans gef + protein gef
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c A03599D1 \ # chip number
--i A03599D1_DAPI_fov_stitched.tif \  # ssDNA, DAPI, HE data path
--mi IF=A02677B5_IF.tif \
--s DAPI \  # stain type，(ssDNA, DAPI, HE)
--m A03599D1.raw.gef \  # Transcriptomics gef path
--pr A03599D1.protein.raw.gef \  # protein gef path
--o test/A03599D1 \ # output dir
--k "Stereo-CITE T FF V1.1 R"
-```
+### Common Use Cases
 
-case 4:
-Single RNA <br>
-trans gef
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c B01715B4 \ # chip number
--p only_matrix.json \ # Personalized Json File
--o test/B01715B4 \ # output dir
-```
-please modify [only_matrix.json](cellbin2/config/demos/only_matrix.json)<br>
-
-case 5:
-Plant cellbin<br>
-ssDNA + FB + trans gef
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c FP200000449TL_C3 \ # chip number
--p Plant.json \ # Personalized Json File
--o test/FP200000449TL_C3 \ # output dir
-```
-please modify [Plant.json](cellbin2/config/demos/Plant.json)<br>
-
-case 6:
-CytAssist <br>
-ssDNA + HE + trans gef
- ```shell
- CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
- -c Q00001A1 \ # chip number
- -i Q00001A1_ssDNA_fov_stitched.tif \  # ssDNA,DAPI data path
- -mi HE=Q00001A1_HE_fov_stitched.tif \ # HE data path. This image has been registered with ssDNA(DAPI) image
- -s ssDNA \  # stain type (ssDNA, DAPI)
- -m Q00001A1.raw.gef \  # Transcriptomics gef path
- -o test/Q00001A1 \ # output dir
- -k "Stereo-CITE T FF V1.1 R"
- ```
-
-### Official product
-case 1: 
-Stereo-seq T FF
-DAPI + mIF
-```shell
-CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c SS200000045_M5 \
--i SS200000045_M5_fov_stitched.tif \
--s DAPI \
--mi ATP_IF=SS200000045_M5_ATP_IF_fov_stitched.tif CD31_IF=SS200000045_M5_CD31_IF_fov_stitched.tif NeuN_IF=SS200000045_M5_NeuN_IF_fov_stitched.tif \
--m SS200000045_M5.raw.gef \
--o test/SS200000045_M5_11 \
--k "Stereo-seq T FF V1.2"
-```
-case 2: 
-Stereo-seq T FF
+#### Case 1:Stereo-seq T FF <br>
 ssDNA
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c SS200000135TL_D1 \
--i SS200000135TL_D1.tif \
+-c SN \
+-i SN.tif \
 -s ssDNA \
--m SS200000135TL_D1.raw.gef \
--o test/SS200000135TL_D1 \
+-m SN.raw.gef \
+-o test/SN \
 -k "Stereo-seq T FF V1.2"
 ```
-case 3: 
-Stereo-seq T FF
-H&E
+
+#### Case 2:Stereo-CITE <br>
+DAPI + IF + trans gef
 ```shell
 CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
--c C04042E3 \
--i C04042E3.tif \
--s HE \
--m C04042E3.raw.gef \
--o /test/C04042E3 \
--k "Stereo-seq T FF V1.2"
+-c SN \
+-i SN.tif \
+-s DAPI \
+-mi IF=SN_IF.tif \
+-m SN.raw.gef \
+-o test/SN \
+-k "Stereo-CITE T FF V1.1 R"
 ```
-more examples, please visit [example.md](docs/v2/example.md)
+
+#### Case 3:Stereo-CITE
+DAPI + protein gef
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c SN \
+-i SN_fov_stitched.tif \
+-s DAPI \
+-pr IF=SN.protein.tissue.gef \
+-o /test/SN \
+-k "Stereo-CITE T FF V1.1 R"
+```
+
+#### Case 4:Stereo-CITE
+DAPI + IF + trans gef + protein gef
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c SN \ # chip number
+-i SN_DAPI_fov_stitched.tif \  # ssDNA, DAPI, HE data path
+-mi IF=SN_IF.tif \
+-s DAPI \  # stain type (ssDNA, DAPI, HE)
+-m SN.raw.gef \  # Transcriptomics gef path
+-pr SN.protein.raw.gef \  # protein gef path
+-o test/SN \ # output dir
+-k "Stereo-CITE T FF V1.1 R"
+```
+
+#### Case 5:Single RNA <br>
+trans gef
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c SN \ # chip number
+-p only_matrix.json \ # Personalized Json File
+-o test/SN \ # output dir
+```
+please modify [only_matrix.json](cellbin2/config/demos/only_matrix.json)<br>
+
+
+#### Case 6: Plant cellbin<br>
+ssDNA + FB + trans gef
+```shell
+CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+-c SN \ # chip number
+-p Plant.json \ # Personalized Json File
+-o test/SN \ # output dir
+```
+please modify [Plant.json](cellbin2/config/demos/Plant.json)<br>
+
+
+#### Case 7: Multi-stain cellbin <br>
+ssDNA + HE + trans gef
+ ```shell
+ CUDA_VISIBLE_DEVICES=0 python cellbin2/cellbin_pipeline.py \
+ -c SN \ # chip number
+ -i SN_ssDNA_fov_stitched.tif \  # ssDNA,DAPI data path
+ -mi HE=SN_HE_fov_stitched.tif \ # HE data path. This image has been registered with ssDNA(DAPI) image
+ -s ssDNA \  # stain type (ssDNA, DAPI)
+ -m SN.raw.gef \  # Transcriptomics gef path
+ -o test/SN \ # output dir
+ -k "Stereo-CITE T FF V1.1 R"
+ ```
+
+> more examples, please visit [example.md](docs/v2/example.md)
 
 ## ErrorCode
 refer to [error.md](docs/v2/error.md)
@@ -216,7 +238,7 @@ refer to [error.md](docs/v2/error.md)
 | SN_Transcriptomics_matrix_template.txt | Track template on gene matrix |
 
 - **Image files (`*.tif`):** Inspect using [ImageJ](https://imagej.net/ij/)
-- **Gene expression file** (generated only when optional pipeline is enabled): 
+- **Gene expression file** (generated only when matrix_extract module is enabled): 
   Visualize with [StereoMap v4](https://www.stomics.tech/service/stereoMap_4_1/docs/kuai-su-kai-shi.html#ke-shi-hua-shu-ru-wen-jian).   
 
 
