@@ -216,6 +216,7 @@ class DumpPipelineFileNaming(object):
 
     @my_property_dec
     def stereo(self):
+        """A JSON-formatted manifest file that records the visualization files in the result"""
         return f"{self._chip_no}.stereo"
 
 

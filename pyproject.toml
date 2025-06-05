@@ -49,9 +49,12 @@ where = ["."]
 cp = ['cellpose==3.0.11', 'patchify==0.2.3']
 rs = [
     'gefpy==1.2.3',  # generate cellbin matrix
+]
+rp = [
     'mapbox_earcut',
-#    'stereopy==1.6.0',  # research report
-#    'beautifulsoup4',
-#    'csscompressor',
-#    'jsmin'
+    'fastcluster==1.2.6',
+    'stereopy==1.6.0', # research report
+    'beautifulsoup4',
+    'csscompressor',
+    'jsmin'
 ]
