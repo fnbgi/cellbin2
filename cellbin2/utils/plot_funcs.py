@@ -158,10 +158,10 @@ def crop_image(corner_qc_points, temp_points, qc_points,
 
         for i in temp_ctp:
             cv.circle(_ci, list(map(int, i))[:2],
-                      draw_radius * 2, template_color, draw_thickness)
+                      draw_radius , template_color, draw_thickness)
         for i in qc_ctp:
             cv.circle(_ci, list(map(int, i))[:2],
-                      draw_radius * 2, qc_color, draw_thickness)
+                      draw_radius , qc_color, draw_thickness)
 
         cp_image_list.append(_ci)
 
@@ -216,7 +216,7 @@ def template_painting(
     tissue_image = cbimread(tissue_seg_data)
 
     _temp, _qc = TemplateReferenceV1.pair_to_template(
-        qc_points, template_points
+        qc_points, template_points, threshold=5
     )
 
     # qc_track point closest to chip corner
