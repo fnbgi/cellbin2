@@ -10,6 +10,7 @@ if platform.system() == 'Windows':
 import pyvips
 import numpy as np
 import math
+os.environ["G_MESSAGES_DEBUG"] = ""
 
 format_to_dtype = {
     'uchar': np.uint8,

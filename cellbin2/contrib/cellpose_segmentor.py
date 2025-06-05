@@ -146,12 +146,12 @@ def main(
         pip.main(['install', 'patchify==0.2.3'])
     from cellpose import models
     import patchify
-
+    import logging
     overlap = photo_size - photo_step
     if (overlap % 2) == 1:
         overlap = overlap + 1
     act_step = ceil(overlap / 2)
-
+    logging.getLogger('cellpose.models').setLevel(logging.WARNING)
     model = models.Cellpose(gpu=True, model_type=model_name)
 
     img = cbimread(file_path, only_np=True)
