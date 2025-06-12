@@ -36,7 +36,7 @@ Linux
 ```shell
 # Clone the main repository
 git clone https://github.com/STOmics/cellbin2
-# git clone -b dev https://github.com/STOmics/cellbin2
+# git clone -b <branch> https://github.com/STOmics/cellbin2
 
 # Create and activate a Conda environment
 conda create --name cellbin2 python=3.8
@@ -49,6 +49,7 @@ pip install .[cp,rs]
 # For development mode (optional):
 # pip install -e .[cp,rs]      # Editable install with basic extras
 # pip install -e .[cp,rs,rp]   # Editable install including report module
+# if you pip install packages error, please refer to the pyproject.toml file for more details.
 
 # Execute the demo (takes ~30-40 minutes on GPU hardware)
 python demo.py

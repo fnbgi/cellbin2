@@ -12,7 +12,6 @@
             },
             "tissue_segmentation": true,
             "cell_segmentation": true,
-            "correct_r": -1,
             "channel_align": -1
         }
     },
@@ -20,6 +19,7 @@
         "0": {
             "exp_matrix": 1,
             "cell_mask": [1],
+            "correct_r": 0,
             "extra_method": ""
         }
     },
