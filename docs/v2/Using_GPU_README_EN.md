@@ -70,9 +70,13 @@ After downloading the archive file perform the following installation steps:
 2. Drag the files in the unzipped archive file into the folder with the corresponding name of the CUDA environment you want to install.
 
 eg：
-  ![cuDNN 文件夹](../images/Use_GPU/cuDNN.png)
+
+![cuDNN 文件夹](../images/Use_GPU/cuDNN.png)
+
 (This is the unzipped folder of cuDNN)
-  ![CUDA 文件夹](../images/Use_GPU/CUDA.png)
+
+![CUDA 文件夹](../images/Use_GPU/CUDA.png)
+
 (This is the folder in the corresponding version of CUDA)
 
 ## 2.Package installation related to version conflicts
@@ -118,7 +122,9 @@ pip install onnxruntime-gpu==x.x.x
 pip show onnxruntime-gpu 
 ```
 ### Other steps GPU calls work fine, mIF has problems using cellpose
+
 ![GPU 转 CPU](../images/Use_GPU/cellpose_wa.png)
+
 The main reason for the above is the mismatch between PyTorch version and CUDA version.  
 
 If you run test_gpu.py without error. You can use the following method to try to solve the problem 
@@ -132,6 +138,7 @@ pip show torch
 ```
 For example: current PyTorch version: 2.4.1, prompts requires: cuda-cu12  
 PyTorch and current cuda version conflict. This is due to the fact that the highest version of PyTorch is installed by default in the cellpose environment.
+
 ![环境检查](../images/Use GPU/pytorch_version.png)
 
 If this is the case, you can first check the appropriate current version of ``PyTorch`` for CUDA by following the link  
