@@ -1,15 +1,63 @@
-import onnxruntime as ort
-from onnxruntime.capi.onnxruntime_pybind11_state import RuntimeException
-import requests
+import sys
 import os
+import argparse
+
+# 1. 提前验证 onnxruntime 是否安装
+try:
+    import onnxruntime as ort
+except ImportError:
+    print("onnxruntime is not installed! Please install onnxruntime-gpu first.")
+    sys.exit(1)
+
+import requests
 from tqdm import tqdm
-# config_file = os.path.join(curr_path, r'../config/cellbin.yaml')
+
+def get_cuda_version():
+    # Try nvcc nvidia
+    try:
+        result = os.popen('nvcc --version').read()
+        for line in result.split('\n'):
+            if 'release' in line:
+                return line.strip()
+    except Exception:
+        pass
+    return "Unknown"
+
+
+def get_nvidia_smi_cuda_version():
+    # Try nvidia-smi to get maximum supported CUDA version
+    try:
+        result = os.popen('nvidia-smi').read()
+        for line in result.split('\n'):
+            if 'CUDA Version:' in line:
+                return line.strip()
+    except Exception:
+        pass
+    return "Unknown"
+
+
+def get_onnxruntime_version():
+    # Try onnxruntime-gpu version
+    ret = ''
+    try:
+        result = os.popen('pip show onnxruntime-gpu').read()
+        for line in result.split('\n'):
+            if 'Version:' in line:
+                ret = ret + line.strip()
+            if 'Required-by:' in line:
+                ret = ret + line.strip()
+        return ret
+    except Exception:
+        pass
+    return "Unknown"
 
 CURR_DIR = os.path.dirname(os.path.realpath(__file__))
 CELLBIN2_DIR = os.path.join(CURR_DIR, 'cellbin2')
 WEIGHTS_DIR = os.path.join(CELLBIN2_DIR, 'weights')
-PATH = os.path.join(CELLBIN2_DIR, 'test_GPU.onnx')
+PATH = os.path.join(WEIGHTS_DIR, 'test_GPU.onnx')
 URL = "https://bgipan.genomics.cn/v3.php/download/ln-file?FileId=795370&ShareKey=5iV92x1JzBSwQd77ZAG6&VersionId=608268&UserId=3503&Policy=eyJBSyI6IjdjNmJhYjNkMGZkNWNlZDhjMmNjNzJjNzdjMDc4ZWE3IiwiQWF0IjoxLCJBaWQiOiJKc1FDc2pGM3lyN0tBQ3lUIiwiQ2lkIjoiZjc0YzY3OWQtNjZlZS00NzU5LTg4OWYtZDIzNzNhOWM4NjkyIiwiRXAiOjkwMCwiRGF0ZSI6IlR1ZSwgMDggT2N0IDIwMjQgMDc6MDk6MzUgR01UIn0%3D&Signature=f192cf38b04204f9feb634be2bfcaa5e24a21263"
+ONNX_URL = 'https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html'
+
 
 def download(local_file, file_url):
     f_name = os.path.basename(local_file)
@@ -30,98 +78,103 @@ def download(local_file, file_url):
     else:
         print('{} already exists'.format(f_name))
 
-def check_onnxruntime_env():
-    """全面检测 ONNX Runtime 运行环境支持情况"""
-    # 基础环境检测
+def check_onnxruntime_env(gpu_id=0):
+    print("Starting to check maximum supported CUDA version, actual CUDA version and ONNXRuntime-gpu version...")
+    print(f"**Maximum CUDA version supported by GPU (nvidia-smi): {get_nvidia_smi_cuda_version()}")
+    print(f"**Actual installed CUDA version: {get_cuda_version()}")
+    print(f"**onnxruntime-gpu version: {get_onnxruntime_version()}")
+    print("Note: The actual installed CUDA version should not be higher than the maximum supported CUDA version!")
+    
+
     use_list = ort.get_available_providers()
     gpu_available = 'CUDAExecutionProvider' in use_list
     cpu_available = 'CPUExecutionProvider' in use_list
 
-    # 场景1: 完全不支持 GPU
     if not gpu_available:
         if cpu_available:
-            print("❌ 环境不支持 GPU，仅支持 CPU")
-            return {"status": "cpu_only", "gpu_support": False}
+            print("❌ GPU is not supported, only CPU is available.")
+            return {
+                "status": "cpu_only",
+                "gpu_support": False,
+                "reason": "CUDAExecutionProvider is not available. Possible reasons:\n"
+                          "1. No NVIDIA GPU detected\n"
+                          "2. CUDA is not installed\n"
+                          "3. onnxruntime-gpu is not installed (you might have installed the CPU version instead)\n"
+                          "4. Version mismatch between onnxruntime-gpu, CUDA, and cuDNN (Confirm the version matching information by accessing the \nURL: {ONNX_URL}）\n"
+            }
         else:
-            print("❌ 环境既不支持 GPU 也不支持 CPU（异常情况）")
-            return {"status": "no_provider", "gpu_support": False}
+            print("❌ Neither GPU nor CPU is supported (abnormal situation)")
+            return {
+                "status": "no_provider",
+                "gpu_support": False,
+                "reason": "Neither CUDAExecutionProvider nor CPUExecutionProvider is available. Possible reasons:\n"
+                          "1. onnxruntime is not installed correctly\n"
+                          "2. Python environment is broken\n"
+                          "3. System is missing required dependencies"
+            }
 
-
-    print("✅ 环境理论支持 GPU，开始实际验证...")
+    print("✅ GPU is theoretically supported, starting actual verification...")
     if not os.path.exists(PATH):
         os.makedirs(WEIGHTS_DIR, exist_ok=True)
         download(PATH, URL)
 
     try:
-        # 尝试 GPU 初始化
         session = ort.InferenceSession(
             PATH,
-            providers=['CUDAExecutionProvider'],
-            provider_options=[{'device_id': '0'}]
+            providers=[('CUDAExecutionProvider', {'device_id': str(gpu_id)}), 'CPUExecutionProvider']
         )
-
-        # 获取实际运行的 Provider
         active_provider = session.get_providers()[0]
-
-        # 场景3: 成功运行在 GPU
         if active_provider == 'CUDAExecutionProvider':
-            print("🎉 成功运行在 GPU 模式")
+            print("🎉 Successfully running in GPU mode")
             return {
                 "status": "gpu_ok",
                 "gpu_support": True,
                 "active_provider": active_provider
             }
-
-        # 场景4: 自动回退到 CPU
         elif active_provider == 'CPUExecutionProvider':
-            print(f"⚠️ GPU 初始化失败，自动回退到 CPU")
+            print(f"⚠️ GPU initialization failed, automatically fell back to CPU")
             return {
                 "status": "gpu_fallback_cpu",
                 "gpu_support": False,
                 "active_provider": active_provider,
-                "reason": "Possible reasons:\n"
-                          "1. CUDA/cuDNN version mismatch\n"
+                "reason": "Failed to initialize CUDAExecutionProvider. Possible reasons:\n"
+                          "1. CUDA/cuDNN/onnxruntioiem-gpu version mismatch (Confirm the version matching information by accessing the \nURL: {ONNX_URL}）\n"
                           "2. GPU out of memory\n"
-                          "3. Missing CUDA dependencies"
+                          "3. Missing CUDA dependencies\n"
+                          "4. The selected GPU device is not available or busy (Check the GPU status and try again)"
             }
-
-        # 场景5: 其他异常回退（如 TensorRT）
         else:
-            print(f"⚠️ 意外回退到 {active_provider}")
+            print(f"⚠️ Unexpected fallback to {active_provider}")
             return {
                 "status": "unexpected_fallback",
                 "gpu_support": False,
-                "active_provider": active_provider
+                "active_provider": active_provider,
+                "reason": "Session did not use CUDAExecutionProvider or CPUExecutionProvider. Possible reasons:\n"
+                          "1. Fallback to another provider (e.g. TensorRT, OpenVINO)\n"
+                          "2. Provider configuration error\n"
+                          f"3. Check the \n{active_provider} \ncontent and consult relevant documentation"
             }
-
-    except RuntimeException as e:
-        # 场景6: GPU 初始化抛出明确异常
-        print(f"❌ GPU 初始化失败: {str(e)}")
-        return {
-            "status": "gpu_init_failed",
-            "gpu_support": False,
-            "error_type": "RuntimeException",
-            "error_details": str(e),
-            "solution": "Check:\n"
-                        "1. CUDA/cuDNN installation\n"
-                        "2. onnxruntime-gpu package version\n"
-                        "3. GPU driver status"
-        }
-
     except Exception as e:
-        # 场景7: 其他未知异常
-        print(f"❌ 未知错误: {str(e)}")
+        import traceback
+        print(f"❌ Unknown error: {str(e)}")
+        traceback.print_exc()
         return {
             "status": "unknown_error",
             "gpu_support": False,
             "error_type": type(e).__name__,
-            "error_details": str(e)
+            "error_details": str(e),
+            "reason": "Exception occurred during session creation. Possible reasons:\n"
+                      "1. CUDA/cuDNN/onnxruntime-gpu version mismatch\n"
+                      "2. GPU driver or hardware failure\n"
+                      "3. Model file is corrupted or incompatible\n"
+                      "4. Python environment issues"
         }
 
-
-# 使用示例
 if __name__ == "__main__":
-    result = check_onnxruntime_env()
-    print("\n详细诊断信息:")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--gpu', type=int, default=0, help='GPU device id to use (default: 0)')
+    args = parser.parse_args()
+    result = check_onnxruntime_env(gpu_id=args.gpu)
+    print("\nDetailed diagnostic information:")
     for k, v in result.items():
         print(f"{k:>20}: {v}")
