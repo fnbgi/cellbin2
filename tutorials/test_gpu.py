@@ -52,7 +52,7 @@ def get_onnxruntime_version():
     return "Unknown"
 
 CURR_DIR = os.path.dirname(os.path.realpath(__file__))
-CELLBIN2_DIR = os.path.join(CURR_DIR, 'cellbin2')
+CELLBIN2_DIR = os.path.join(CURR_DIR, '../cellbin2')
 WEIGHTS_DIR = os.path.join(CELLBIN2_DIR, 'weights')
 PATH = os.path.join(WEIGHTS_DIR, 'test_GPU.onnx')
 URL = "https://bgipan.genomics.cn/v3.php/download/ln-file?FileId=795370&ShareKey=5iV92x1JzBSwQd77ZAG6&VersionId=608268&UserId=3503&Policy=eyJBSyI6IjdjNmJhYjNkMGZkNWNlZDhjMmNjNzJjNzdjMDc4ZWE3IiwiQWF0IjoxLCJBaWQiOiJKc1FDc2pGM3lyN0tBQ3lUIiwiQ2lkIjoiZjc0YzY3OWQtNjZlZS00NzU5LTg4OWYtZDIzNzNhOWM4NjkyIiwiRXAiOjkwMCwiRGF0ZSI6IlR1ZSwgMDggT2N0IDIwMjQgMDc6MDk6MzUgR01UIn0%3D&Signature=f192cf38b04204f9feb634be2bfcaa5e24a21263"

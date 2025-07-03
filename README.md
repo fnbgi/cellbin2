@@ -12,7 +12,7 @@ CellBin is an image processing pipeline designed to delineate cell boundaries fo
 1. **Expanded Algorithm Library**: Incorporates additional image processing algorithms to serve broader application scenarios like single-cell RNA-seq, Plant cellbin.
 2. **Configurable Architecture**: Refactored codebase allows users to customize analysis pipelines through [JSON](cellbin2/config/demos/sample.json) and [YAML](cellbin2/config/cellbin.yaml) configuration files.
 
-[CellBin introduction](docs/md/CellBin_1.0/CellBin解决方案技术说明.md) (Chinese) 
+
 
 ## Installation and Quick Start
 Linux
@@ -38,8 +38,20 @@ pip install .[cp,rs]
 python demo.py
 ```
 
-**GPU Troubleshooting:**  
-If the demo runs on CPU instead of GPU, see our [troubleshooting guide](docs/v2/Using_GPU_README_EN.md) to verify your GPU setup.
+**Performance Note:**  
+We strongly recommend using GPU acceleration for optimal performance. Below is the runtime comparison of two processing modes for an S1 chip (1cm² chip area):
+
+| Processing Mode | Runtime    |
+|-----------------|------------|
+| **GPU**         | 30-40 mins |
+| **CPU**         | 6-7 hours  |
+
+> **Benchmark hardware**:  
+> GPU: NVIDIA GeForce RTX 3060  
+> CPU: AMD Ryzen 7 5800H   
+> Memory: 16GB
+
+If the pipeline defaults to CPU mode unexpectedly, follow our [GPU troubleshooting guide](docs/v2/Using_GPU_README_EN.md) to verify your hardware setup.
 
 **Output Verification:**  
 After completion, validate the output integrity by comparing your results with the [Outputs](#outputs). 
@@ -224,11 +236,10 @@ refer to [error.md](docs/v2/error.md)
 - **Gene expression file** (generated only when matrix_extract module is enabled): 
   Visualize with [StereoMap v4](https://www.stomics.tech/service/stereoMap_4_1/docs/kuai-su-kai-shi.html#ke-shi-hua-shu-ru-wen-jian).   
 
-
-## Other content
-
-
+  
 ## Reference
+
+[CellBin introduction](docs/md/CellBin_1.0/CellBin解决方案技术说明.md) (Chinese) <br>
 https://github.com/STOmics/CellBin <br>
 https://github.com/MouseLand/cellpose <br>
 https://github.com/matejak/imreg_dft <br>

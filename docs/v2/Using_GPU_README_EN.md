@@ -1,13 +1,13 @@
 # Using the GPU READNE_EN
 
-If you wish to use the GPU or have problems with the GPU during use, troubleshoot the cause by running ``test_gpu.py``.
+If you wish to use the GPU or have problems with the GPU during use, troubleshoot the cause by running ``tutorials/test_gpu.py``.
 
-If it appears that test_gpu.py runs with normal results, but no CUDA version is too old to use the GPU on the mIF data. Please check the method directly at the end of the article.
+If it appears that **test_gpu.py**  runs with normal results, but no CUDA version is too old to use the GPU on the mIF data. Please check the method directly at the end of the article.
 ```bash
 # Enter the environment to be tested
 conda activate env_name
 # Run the GPU test code
-python test_gpu.py --gpu <Select the GPU number to be tested>
+python tutorials/test_gpu.py --gpu <Select the GPU number to be tested>
 ```
 Execute the code When the following example appears, the run was successful! You will be able to start using the GPU for accelerated inference.
 ```bash
@@ -127,7 +127,7 @@ pip show onnxruntime-gpu
 
 The main reason for the above is the mismatch between PyTorch version and CUDA version.  
 
-If you run test_gpu.py without error. You can use the following method to try to solve the problem 
+If you run **test_gpu.py** without error. You can use the following method to try to solve the problem 
 
 View CUDA, PyTorch version
 ```bash
