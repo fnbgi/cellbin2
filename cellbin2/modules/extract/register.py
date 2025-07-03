@@ -14,12 +14,15 @@ from cellbin2.utils.stereo_chip import StereoChip
 from cellbin2.utils.config import Config
 from cellbin2.contrib.alignment.basic import transform_points
 from cellbin2.image import cbimread, cbimwrite
+from cellbin2.utils.rle import RLEncode
 
 
 class RegistrationParam(BaseModel):
     HE_channel: int
     rot90: bool
     flip: bool
+    flag_pre_registration: bool
+    flag_chip_registration: bool
 
 
 def transform_to_register(
@@ -27,6 +30,14 @@ def transform_to_register(
         info: Optional[RegistrationOutput] = None,
         cur_c_image: Optional[Union[IFChannel, ImageChannel]] = None
 ):
+    """
+    Transforms and registers images based on provided parameters.
+
+    Args:
+        cur_f_name (naming.DumpImageFileNaming): The current file naming object.
+        info (Optional[RegistrationOutput], optional): The registration output information. Defaults to None.
+        cur_c_image (Optional[Union[IFChannel, ImageChannel]], optional): The current channel image. Defaults to None.
+    """
     dct = {
         cur_f_name.transformed_image: cur_f_name.registration_image,
         cur_f_name.transform_cell_mask: cur_f_name.cell_mask,
@@ -49,7 +60,7 @@ def transform_to_register(
             # if os.path.exists(dst_path):
             #     continue
             if os.path.exists(src_path):
-                if os.path.splitext(src_path)[1] == ".txt":  # 或其他判断
+                if os.path.splitext(src_path)[1] == ".txt":  # Or other judgment
                     points, _ = transform_points(
                         src_shape=cur_c_image.Stitch.TransformShape,
                         points=np.loadtxt(src_path),
@@ -67,6 +78,18 @@ def transform_to_register(
                         flip_lr=info.flip, rot90=info.counter_rot90, offset=info.offset,
                         dst_size=info.dst_shape)
                     cbimwrite(dst_path, dst_image)
+        if os.path.exists(cur_f_name.tissue_mask):
+            tissue_mask = cbimread(cur_f_name.tissue_mask, only_np=True)
+            cur_c_image.TissueSeg.TissueSegShape = list(tissue_mask.shape)
+            bmr = RLEncode()
+            t_mask_encode = bmr.encode(tissue_mask)
+            cur_c_image.TissueSeg.TissueMask = t_mask_encode
+        if os.path.exists(cur_f_name.cell_mask):
+            cell_mask = cbimread(cur_f_name.cell_mask, only_np=True)
+            cur_c_image.CellSeg.CellSegShape = list(cell_mask.shape)
+            bmr = RLEncode()
+            c_mask_encode = bmr.encode(cell_mask)
+            cur_c_image.CellSeg.CellMask = c_mask_encode
 
 
 def run_register(
@@ -80,15 +103,18 @@ def run_register(
         debug: bool
 ):
     """
-    这个模块的任务就是对配准整体逻辑的整合，返回一个下游要用的配准参数
-    这里有以下几种情况：
-    1. if图，返回reuse图的配准参数
-    2. 影像图+矩阵：前置配准、重心法、芯片框配准
-    3. 影像图+影像图：暂不支持
+    This module integrates the overall logic for image registration and
+    returns registration parameters for downstream use.
 
-    返回（RegisterOutput）：配准参数
+    There are several scenarios:
+    1. IF image: Returns the registration parameters of the reused image.
+    2. Image + Matrix: Performs pre-registration, centroid method, and chip box registration.
+    3. Image + Image: Not supported yet.
+
+    Returns (RegisterOutput): Registration parameters
     """
-    # TODO: config种已传入flip和rot90的开关，在registration，lzp在配准内部启用开关
+    # TODO: The flip and rot90 switches have been passed in the config.
+    #  Enable these switches internally in the registration process.
     clog.info(f"Running register module")
     sn = param_chip.chip_name
 
@@ -100,22 +126,22 @@ def run_register(
         clog.info('Get registration param from ipr')
     else:
 
-        """ 动图参数构建 """
+        """ Constructing parameters for the moving image """
         moving_image = ChipFeature(
             tech_type=image_file.tech,
         )
         moving_image.tech_type = image_file.tech
         moving_image.set_mat(cur_f_name.transformed_image)
-        # 这里建议不要去ipr读，而是
+        # It is recommended not to read from ipr here
         if param1.QCInfo.TrackCrossQCPassFlag:
             moving_image.set_template(param1.Stitch.TransformTemplate)  # param1.transform_template_info
         if param1.QCInfo.ChipDetectQCPassFlag:
             moving_image.set_chip_box(param1.Stitch.TransformChipBBox.get())
 
-        """ 静图参数构建 """
+        """ Constructing parameters for the fixed image """
         fixed = files[image_file.registration.fixed_image]
         if fixed.is_matrix:
-            # 场景1：静图是矩阵
+            # Scenario 1: The fixed image is a matrix
             cm = extract4stitched(
                 image_file=fixed,
                 param_chip=param_chip,
@@ -138,38 +164,47 @@ def run_register(
         else:
             raise Exception("Not supported yet")
 
-        """ 配准开始 """
-        if param1.Register.Method == AlignMode.Template00Pt.name:  # 先前做了前置配准
-            # 从ipr获取配准参数
+        """ Starting the registration process """
+        if param1.Register.Method == AlignMode.Template00Pt.name:  # Pre-registration has been done previously
+            # Get registration parameters from ipr
             pre_info = param1.Register.Register00.get().to_dict()
             _info = template_00pt_check(
                 moving_image=moving_image,
                 fixed_image=fixed_image,
                 offset_info=pre_info,
                 fixed_offset=(cm.x_start, cm.y_start),
-                flip_flag = config.registration.flip,
-                rot90_flag = config.registration.rot90
+                flip_flag=config.registration.flip,
+                rot90_flag=config.registration.rot90
             )
             info = RegistrationOutput(**_info)
 
         else:
             # TODO
             """
-                目前以下两个配准都做，因QC现在是模板推导和芯片框检测任意一个过了，都会判定QC成功
-                所以下面的选择首先是重心法的配准，其次是芯片框配准
-                这种改动是为了两种配准算法后续相互纠错做准备
+            Currently, both the centroid method and the chip box registration are performed because 
+            the QC now considers the QC successful if either the template derivation or the chip box detection passes.
+            
+            Therefore, the following selection first performs the centroid method registration, 
+            followed by the chip box registration.
+            
+            This change is being made to prepare for the mutual correction of 
+            the two registration algorithms in the future.
             """
+            chip_re = 1 if config.registration.flag_chip_registration and param1.QCInfo.ChipDetectQCPassFlag else 0
+
             info, temp_info = registration(
                 moving_image=moving_image,
                 fixed_image=fixed_image,
                 ref=param_chip.fov_template,
                 from_stitched=False,
-                qc_info=(param1.QCInfo.TrackCrossQCPassFlag, param1.QCInfo.ChipDetectQCPassFlag),
-                flip_flag = config.registration.flip,
-                rot90_flag = config.registration.rot90
+                qc_info=(param1.QCInfo.TrackCrossQCPassFlag, chip_re),
+                flip_flag=config.registration.flip,
+                rot90_flag=config.registration.rot90
             )
-            clog.info(f"{info}")
-            clog.info(f"{temp_info}")
+
+            clog.info(f"Track cross registration: {info}")
+            clog.info(f"Chip box registration: {temp_info}")
+
             if temp_info is not None and debug:
                 temp_info.register_mat.write(
                     os.path.join(output_path, f"{sn}_chip_box_register.tif")
@@ -180,7 +215,7 @@ def run_register(
                 )
                 param1.Register.RegisterChip.update(temp_info)
 
-            # TODO 需要增加芯片框配准的ipr写入
+            # TODO Need to add ipr writing for chip box registration
             info = info if info is not None else temp_info
 
     param1.update_registration(info)

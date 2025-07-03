@@ -6,7 +6,6 @@
 🌟 Description  :
 """
 import math
-
 import imreg_dft
 
 import cv2 as cv
@@ -14,20 +13,22 @@ import numpy as np
 import tifffile as tif
 
 from typing import Tuple, Union, List
-from cellbin2.contrib.param import CalibrationInfo
 from pydantic import BaseModel, Field
+
+from cellbin2.contrib.param import CalibrationInfo
+from cellbin2.image import cbimread
 
 
 class CalibrationParam(BaseModel):
-    offset_thr: int = Field(20, description="阈值，用于判断是否通过的标志位")
+    offset_thr: int = Field(20, description="Threshold, a flag used to determine whether it has passed or not")
 
 
 class Calibrate:
     """
 
-        * 使用FFT进行图像间的匹配
-        * 两图模态需要相同或接近，否则计算准确性不高
-        * 可进行平移计算及旋转缩放计算
+        *Using FFT for image matching
+        *The two modalities need to be the same or close, otherwise the calculation accuracy is not high
+        *Can perform translation calculation and rotation scaling calculation
 
     """
 
@@ -39,15 +40,15 @@ class Calibrate:
             down_size: int = 4000
     ):
         """
-        初始化参数，变换 dst 到 src ！！！
+        Initialize parameters, transform dst to src!!!
 
         Args:
-            src_image: image path | array  表示目标配准图像
-            dst_image: image path | array  表示待配准图像
-            method: 校准使用方法  0 | 1
-                * 0 表示只做平移校准 求得参数仅为 offset
-                * 1 表示做仿射变换校准 求得参数为 scale, rotate, offset
-            down_size: 计算FFT时，图像最长边缩放至该参数
+            src_image: image path | array  Representing the target registration image
+            dst_image: image path | array  Representing the image to be registered
+            method: Calibration usage method  0 | 1
+                * 0 Indicating that only translational calibration is used to obtain parameters that are only offset
+                * 1 Perform affine transformation calibration to obtain parameters such as scale, rotate, and offset
+            down_size: When calculating FFT, the longest edge of the image is scaled to this parameter
 
         """
         self.method = (0 if method == 0 else 1)
@@ -67,7 +68,6 @@ class Calibrate:
         Returns:
 
         """
-        # TODO 可接其他io方式
         if im is None: return
 
         if isinstance(im, str):
@@ -113,6 +113,7 @@ class Calibrate:
         elif method == "same":
             _im0 = im0
             _im1 = np.zeros_like(im0, dtype=im0.dtype)
+            cx, cy = int(_im1.shape[1] / 2), int(_im1.shape[0] / 2)
 
             if im1.shape[0] <= im0.shape[0]:
                 _h = im1.shape[0]
@@ -124,7 +125,9 @@ class Calibrate:
             else:
                 _w = im0.shape[1]
 
-            _im1[:_h, :_w] = im1[:_h, :_w]
+            _im1[cy - int(_h / 2): cy + _h - int(_h / 2), cx - int(_w / 2): cx + _w - int(_w / 2)] = \
+                im1[int(im1.shape[0] / 2) - int(_h / 2): int(im1.shape[0] / 2) + _h - int(_h / 2),
+                    int(im1.shape[1] / 2) - int(_w / 2): int(im1.shape[1] / 2) + _w - int(_w / 2)]
 
         return _im0, _im1
 
@@ -168,13 +171,17 @@ class Calibrate:
 
     def calibration(self):
         """
-        * 对图像进行缩放、尺寸统一处理
-        * 并进行校准操作
+        *Scale and size the image uniformly
+        *And perform calibration operations
 
         Returns:
 
         """
         down_scale = max(self.src_image.shape) / self.down_size
+
+        self.src_image, self.dst_image = self._consistent_image(
+            self.src_image, self.dst_image, 'same'
+        )
 
         src_img = self.resize_image(
             self.src_image, 1 / down_scale
@@ -183,19 +190,12 @@ class Calibrate:
             self.dst_image, 1 / down_scale
         )
 
-        src_img, dst_img = self._consistent_image(
-            src_img, dst_img, 'same'
-        )
-
-        # 变换矩阵定义
-        # trans_mat = np.eye(3)
-
         if self.method == 0:
             ret = imreg_dft.translation(src_img, dst_img)
         else:
             ret = imreg_dft.similarity(src_img, dst_img)
 
-        # 解析结果
+        # Analysis results
         offset = np.round(ret.get('tvec')[::-1] * down_scale)
         score = ret.get('success')
         scale = ret.get('scale', 1)
@@ -203,12 +203,20 @@ class Calibrate:
 
         # trans_mat[:2, 2] = offset
         trans_info = {"score": score, "offset": offset, "scale": scale, "rotate": rotate}
+        # new_dst = imreg_dft.transform_img(img=self.dst_image, scale=scale, angle=rotate, tvec=offset[::-1])
+        new_dst = cbimread(self.dst_image)
+        new_dst = new_dst.trans_image(
+            scale = float(scale),
+            rotate = rotate,
+        )
+        new_dst = new_dst.trans_image(
+            offset = offset,
+            dst_size = new_dst.shape
+        )
 
-        # new_dst = self.trans_by_mat(self.dst_image, trans_mat, self.src_image.shape)
-        new_dst = imreg_dft.transform_img(img=self.dst_image, scale=scale, angle=rotate, tvec=offset[::-1])
-        new_dst = new_dst.astype(self.src_image.dtype)
+        _, result = self._consistent_image(self.src_image, new_dst.image, 'same')
 
-        return new_dst, trans_info
+        return result, trans_info
 
 
 def multi_channel_align(

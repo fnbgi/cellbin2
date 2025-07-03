@@ -4,26 +4,26 @@ with open('requirements.txt') as f:
     requires = f.read().splitlines()
 
 # Parse version number from cellbin2/__init__.py:
-with open('cellbin2/__init__.py') as f:
+with open('mfws/__init__.py') as f:
     info = {}
     for line in f:
-        if line.startswith('__version__'):
+        if 'version' in line:
             exec(line, info)
             break
 
-print(f"Version: {info['__version__']}")
+print(f"Version: {info['version']}")
 
 
 setup(
-    name='cellbin2',
-    version=info['__version__'],
-    description='A framework for generating single-cell gene expression data',
-    long_description_content_type="text/markdown",
-    long_description=open('README.md').read(),
+    name='MFWS',
+    version=info['version'],
+    description='Multiple Fast Fourier Transform weighted stitching algorithm.',
+    # long_description_content_type="text/markdown",
+    # long_description=open('README.md').read(),
     packages=find_packages(),
     author='cell bin research group',
     author_email='bgi@genomics.cn',
-    url='https://github.com/STOmics/cellbin2',
+    url='',
     install_requires=requires,
     python_requires='==3.8.*',
     include_package_data=True,
@@ -32,5 +32,9 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
     ],
-
+    entry_points={
+        'console_scripts': [
+            'mfws=mfws.image_stitch:arg_parser',
+        ]
+    },
   )

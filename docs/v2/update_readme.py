@@ -1,6 +1,7 @@
 import os
 import json
 import pandas as pd
+import jsonschema2md
 
 from cellbin2.utils.common import FILES_TO_KEEP, KIT_VERSIONS, KIT_VERSIONS_R
 from cellbin2.modules.naming import DumpPipelineFileNaming, DumpImageFileNaming, DumpMatrixFileNaming
@@ -11,13 +12,13 @@ from cellbin2.utils.config import Config
 def write_to_readme():
     import re
     from cellbin2.utils.common import TechType
-    sn = 'A03599D1'
+    sn = 'SN'
     save_dir = "/demo"
     im_type = TechType.DAPI
     im_type2 = TechType.IF
     m_type = TechType.Transcriptomics
     readme_p = "../../README.md"
-    with open(readme_p, "r") as f:
+    with open(readme_p, "r", encoding='utf-8') as f:
         md_cont = f.read()
     pfn = DumpPipelineFileNaming(sn, save_dir=save_dir)
     ifn = DumpImageFileNaming(sn=sn, stain_type=im_type.name, save_dir=save_dir)
@@ -53,6 +54,7 @@ def write_to_readme():
 
     print(table_md)
     updated_markdown_text = re.sub(r'# Outputs\n[\s\S]*?(?=\n#|\Z)', f'# Outputs\n\n{table_md}\n', md_cont)
+    readme_p = "../../README.md"
     with open(readme_p, "w") as f:
         f.write(updated_markdown_text)
 
@@ -60,7 +62,7 @@ def write_to_readme():
 def input_json_config():
     config_p = "../../cellbin2/config"
     info = []
-    for idx, k in KIT_VERSIONS + KIT_VERSIONS_R:
+    for idx, k in enumerate(KIT_VERSIONS + KIT_VERSIONS_R):
         tech, version = k.split("V")
         if k.endswith("R"):
             tech = tech.strip(" ") + " R"
@@ -74,36 +76,32 @@ def input_json_config():
         for i, v in pp.image_process.items():
             tmp_info = [tech]
             tmp_info.extend(
-                [i, v.chip_detect, v.quality_control, v.tissue_segmentation, v.cell_segmentation, v.correct_r,
+                [i, v.chip_detect, v.quality_control, v.tissue_segmentation, v.cell_segmentation,
                  v.channel_align])
-            tmp_info.extend([pp.run.qc, pp.run.alignment, pp.run.matrix_extract, pp.run.report, pp.run.annotation])
+            tmp_info.extend([pp.molecular_classify['Transcriptomics'].correct_r, pp.run.qc, pp.run.alignment, pp.run.matrix_extract, pp.run.report, pp.run.annotation])
             if tmp_info in info:
                 continue
             info.append(tmp_info)
     df = pd.DataFrame(info, columns=[
         'kit_type', 'stain_type', 'run_chip_detect', 'run_quality_control', "run_tissue_segmentation",
         "run_cell_segmentation",
-        'correct_radius', 'channel_align', 'run_qc', 'run_alignment', 'run_matrix_extract', 'run_report',
+        'channel_align', 'correct_radius', 'run_qc', 'run_alignment', 'run_matrix_extract', 'run_report',
         'run_annotation'
     ])
-    # df.to_csv("config_corresponds_to_product.csv")
-    # print()
-    # 获取数据框的列名
+
     columns = df.columns.tolist()
 
-    # 开始构建Markdown表格的表头部分
     markdown_table = "| " + " | ".join(columns) + " |\n"
     markdown_table += "| " + " | ".join(["---"] * len(columns)) + " |\n"
 
-    # 逐行添加数据到Markdown表格中
     for index, row in df.iterrows():
         row_data = [str(x) for x in row.tolist()]
         markdown_table += "| " + " | ".join(row_data) + " |\n"
 
-    # 将生成的Markdown表格内容写入到一个文件中（这里示例为markdown_table.md，你可以按需修改文件名）
     with open("config.md", "w") as f:
         f.write(markdown_table)
 
 
 if __name__ == '__main__':
     input_json_config()
+    # write_to_readme()

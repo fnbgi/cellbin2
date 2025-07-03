@@ -1,19 +1,16 @@
-from typing import Tuple, Any
-
+from typing import Tuple, Union
 import numpy as np
 import numpy.typing as npt
-from cv2 import Mat
-from numpy import ndarray, dtype, generic
-from typing import List
+from numpy import ndarray
 from skimage.exposure import rescale_intensity
 from skimage.morphology import remove_small_objects
 import cv2
 from cellbin2.image.augmentation import f_resize
 from cellbin2.image.morphology import f_fill_holes
 from cellbin2.image.threshold import f_th_li, f_th_sauvola
-
 from cellbin2.utils.common import TechType
 from cellbin2.utils import clog
+
 
 def transfer_16bit_to_8bit(image_16bit: np.ndarray) -> np.ndarray:
     """
@@ -52,7 +49,7 @@ def f_post_ssdna_240618(img: npt.NDArray, src_shape: tuple) -> npt.NDArray:
     clog.info("postprocessing data type: ssDNA")
     clog.info("version: 240618")
     img = np.uint8(rescale_intensity(img, out_range=(0, 255)))
-    for i in range(5):  # 迭代放大以及做均值滤波，平滑生成的mask边缘
+    for i in range(5):  # iteratively upscale and apply mean filtering to smooth the edges of the generated mask
         img = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
         img = cv2.blur(img, (5, 5))
     img = cv2.resize(img, (src_shape[1], src_shape[0]), interpolation=cv2.INTER_LINEAR)
@@ -94,7 +91,7 @@ def f_post_transcriptomics_protein_220909(img: npt.NDArray, src_shape: tuple) ->
     return img
 
 
-def f_post_if(img: npt.NDArray, threshold_list: Tuple[float, float]) -> Tuple[Tuple[float, float], ndarray]:
+def f_post_if(img: npt.NDArray, threshold_list: Tuple[int, int]) -> Tuple[Tuple[Union[float, int], Union[float, int]], ndarray]:
     clog.info("postprocessing data type: IF")
     clog.info(f"threshold_list: {threshold_list}")
     if threshold_list:

@@ -20,9 +20,10 @@ def get_tissue_mask(mask: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     return mask
 
 
-def get_cell_outline(mask: npt.NDArray[np.uint8], line_width=2) -> npt.NDArray[np.uint8]:
+def get_cell_outline(mask: npt.NDArray[np.uint8], line_width=1) -> npt.NDArray[np.uint8]:
+    # TODO: official product -> line_width = 2
     image = np.where(mask != 0, 1, 0).astype(np.uint8)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))  # 椭圆结构
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))  # elliptical structure
     image = cv2.morphologyEx(image, cv2.MORPH_ERODE, kernel, iterations=None)
     edge = np.zeros((image.shape), dtype=np.uint8)
     contours, hierachy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -69,7 +70,8 @@ class Image(object):
         self.MinGrayLevel = MinGrayLevel
         self.TrackLayer = TrackLayer
 
-    def pyramid(self, mat: CBImage, mag=(2, 10, 50, 100, 150)):
+    def pyramid(self, mat: CBImage, mag=(1, 10, 50, 100, 150)):
+        # TODO: official product -> mag=(2, 10, 50, 100, 150)
         for bin_siz in tqdm.tqdm(mag, desc='pyramid', file=clog.tqdm_out, mininterval=3):
             down_image = mat.image[::bin_siz, ::bin_siz]
             b = Bin()
@@ -125,7 +127,7 @@ class RecordPyramidImage(HDF5):
 
 def read(h5_path: Union[str, Path]) -> Tuple[Type[RecordPyramidImage], Dict[Any, Type[ChannelImage]]]:
     """
-    :param h5_path: 本地rpi文件路径
+    :param h5_path: local rpi file path
     :return:
     """
 
@@ -149,10 +151,12 @@ def read(h5_path: Union[str, Path]) -> Tuple[Type[RecordPyramidImage], Dict[Any,
 
 def write(h5_path: Union[str, Path], extra_images: Dict[str, Dict[str, str]]):
     """
-    :param h5_path: rpi文件待保存的本地路径
-    :param extra_images: 组图路径
+    :param h5_path: local path for saving rpi file 
+    :param extra_images: image set path
     :return:
     """
+    if not isinstance(h5_path, Path):
+        h5_path = Path(h5_path)
     assert h5_path.name.endswith('.rpi'), '{}, expected file suffix is .rpi'.format(os.path.basename(h5_path))
 
     rpi = RecordPyramidImage()
@@ -186,23 +190,30 @@ def readrpi(h5, bin_size, staintype='ssDNA', tType="Image"):
 
 
 def main():
-    data = {
-        'DAPI': {
-            'CellMaskRaw': "/media/Data/dzh/data/cellbin2/test/A03599D1_demo/A03599D1_DAPI_mask.tif",
-            'Image': "/media/Data/dzh/data/cellbin2/test/A03599D1_demo/A03599D1_DAPI_regist.tif",
-            'TissueMaskRaw': "/media/Data/dzh/data/cellbin2/test/A03599D1_demo/A03599D1_DAPI_tissue_cut.tif"
-        },
-        'IF': {
-            # 'CellMask': r'E:\03.users\liuhuanlin\01.data\cellbin2\output\A03599D1\A03599D1_DAPI_mask.tif',
-            'Image': "/media/Data/dzh/data/cellbin2/test/A03599D1_demo/A03599D1_IF_regist.tif",
-            # 'TissueMask': r'E:\03.users\liuhuanlin\01.data\cellbin2\output\A03599D1\A03599D1_DAPI_tissue_cut.tif'
+    import argparse
+    import json
+    from os.path import basename
+    demo_json = """
+    {
+        "DAPI": { 
+            "CellMask": "A02677B5/A02677B5_DAPI_mask.tif",
+            "TissueMask": "A02677B5/A02677B5_DAPI_tissue_cut.tif"
         }
     }
-    ipr_path = "/media/Data/dzh/data/cellbin2/test/demo4/C04042E3.rpi"
-    write(h5_path=ipr_path, extra_images=data)
-    # ipr, image_dct = read(ipr_path)
-
-    # print(image_dct['DAPI'].Image.TrackLayer)
+    """
+    usage = f"python {basename(__file__)} -i JSON_FILE -o OUTPUT_PATH"
+    description = usage + "\n" + f"A demo -i input should be like: {demo_json}"
+    parser = argparse.ArgumentParser(
+        usage=description
+    )
+    parser.add_argument("-i", dest="data", help="The path of json file.", metavar="JSON FILE")
+    parser.add_argument("-o", action="store", type=str, required=True, metavar="OUTPUT_PATH",
+                        help="The results output path.", dest="output_path")
+    args = parser.parse_args()
+    data = args.data
+    with open(data, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    write(h5_path=args.output_path, extra_images=data)
 
 
 if __name__ == '__main__':

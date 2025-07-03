@@ -7,7 +7,9 @@ from pathlib import Path
 import numpy as np
 
 from cellbin2.utils.config import Config
-from cellbin2.utils.common import TechType, FILES_TO_KEEP, ErrorCode
+from cellbin2.utils.common import TechType, FILES_TO_KEEP, ErrorCode, FILES_TO_KEEP_RESEARCH
+from cellbin2.utils.stereo import generate_stereo_file
+from cellbin2.utils.tar import update_ipr_in_tar
 from cellbin2.utils import clog
 from cellbin2.image import cbimread, CBImage
 from cellbin2.utils.stereo_chip import StereoChip
@@ -18,7 +20,6 @@ from cellbin2.modules import naming, run_state
 from cellbin2.modules.metadata import ProcParam, ProcFile, read_param_file
 from cellbin2.contrib.fast_correct import run_fast_correct
 from cellbin2.utils.pro_monitor import process_decorator
-from cellbin2.utils.common import ErrorCode
 from cellbin2.modules.extract.register import run_register, transform_to_register
 from cellbin2.modules.extract.transform import run_transform
 from cellbin2.modules.extract.tissue_seg import run_tissue_seg
@@ -29,10 +30,29 @@ from cellbin2.modules.extract.matrix_extract import extract4stitched
 
 class Scheduler(object):
     """
-        配准、分割及校准、矩阵提取
+    A scheduler class responsible for managing the registration, segmentation, calibration, and matrix extraction processes.
+    
+    Attributes:
+        weights_root (str): The root directory for storing CNN weight files.
+        param_chip (StereoChip): An instance of StereoChip for handling chip mask information.
+        config (Config): An instance of Config for managing configuration settings.
+        _files (Dict[int, ProcFile]): A dictionary to store processed files.
+        _ipr (ImageProcessRecord): An instance of ImageProcessRecord for managing image processing records.
+        _channel_images (Dict[str, Union[IFChannel, ImageChannel]]): A dictionary to store channel images.
+        _output_path (str): The output directory path.
+        p_naming (DumpPipelineFileNaming): An instance of DumpPipelineFileNaming for managing file naming conventions.
+        matrix_file: The matrix file to be processed.
     """
 
     def __init__(self, config_file: str, chip_mask_file: str, weights_root: str):
+        """
+        Initialize the StereoPipeline object with the given configuration file, chip mask file, and weights root.
+
+        Args:
+            config_file (str): Path to the configuration file.
+            chip_mask_file (str): Path to the chip mask file.
+            weights_root (str): Root directory for weights.
+        """
         self.weights_root = weights_root
         self.param_chip = StereoChip(chip_mask_file)
         self.config = Config(config_file, weights_root)
@@ -42,37 +62,53 @@ class Scheduler(object):
         self._output_path: str = ''
 
         self.p_naming: naming.DumpPipelineFileNaming = None
+        self.matrix_file = None
         # self._image_naming: naming.DumpImageFileNaming
         # self._matrix_naming: naming.DumpMatrixFileNaming
 
     @process_decorator('GiB')
     def _dump_ipr(self, output_path: str):
+        """
+        Dumps the internal representation (ipr) to a specified output path.
+
+        Args:
+            output_path (str): The path where the ipr will be written.
+
+        Returns:
+            None
+        """
         ipr.write(file_path=output_path, ipr=self._ipr, extra_images=self._channel_images)
         clog.info('Dump ipr to {}'.format(output_path))
 
     @process_decorator('GiB')
     def _dump_rpi(self, rpi_path: str):
+        """
+        Dumps the registration pipeline (rpi) data to a specified path.
+
+        Args:
+            rpi_path (str): The path where the rpi data will be saved.
+
+        This method iterates through the files in the pipeline, checks for the existence of various image and mask files,
+        and collects the paths of these files into a dictionary. It then writes this dictionary to an HDF5 file using the
+        `rpi.write` method. Additionally, it logs a message indicating the path where the rpi data was saved.
+        """
         data = {}
         for idx, f in self._files.items():
             if f.is_image:
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
                 n = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name, stain_type=g_name, save_dir=self._output_path)
-                # c_mask_path = n.cell_mask
-                # c_raw_mask_path = n.cell_mask_raw
-                # register_path = n.registration_image
-                # t_mask_path = n.tissue_mask
-                # t_raw_mask_path = n.tissue_mask_raw
+
                 data[g_name] = {}
                 if os.path.exists(n.cell_mask):
                     data[g_name]['CellMask'] = n.cell_mask
                 elif os.path.exists(n.transform_cell_mask):
                     data[g_name]['CellMaskTransform'] = n.transform_cell_mask
-
-                if os.path.exists(n.cell_mask_raw):
-                    data[g_name]['CellMaskRaw'] = n.cell_mask_raw
-                elif os.path.exists(n.transform_cell_mask_raw):
-                    data[g_name]['CellMaskRawTransform'] = n.transform_cell_mask_raw
+                if self.debug:
+                    if os.path.exists(n.cell_mask_raw):
+                        data[g_name]['CellMaskRaw'] = n.cell_mask_raw
+                    elif os.path.exists(n.transform_cell_mask_raw):
+                        data[g_name]['CellMaskRawTransform'] = n.transform_cell_mask_raw
 
                 if os.path.exists(n.registration_image):
                     data[g_name]['Image'] = n.registration_image
@@ -84,10 +120,11 @@ class Scheduler(object):
                 elif os.path.exists(n.transform_tissue_mask):
                     data[g_name]['TissueMaskTransform'] = n.transform_tissue_mask
 
-                if os.path.exists(n.tissue_mask_raw):
-                    data[g_name]['TissueMaskRaw'] = n.tissue_mask_raw
-                elif os.path.exists(n.transform_tissue_mask_raw):
-                    data[g_name]['TissueMaskRawTransform'] = n.transform_tissue_mask_raw
+                if self.debug:
+                    if os.path.exists(n.tissue_mask_raw):
+                        data[g_name]['TissueMaskRaw'] = n.tissue_mask_raw
+                    elif os.path.exists(n.transform_tissue_mask_raw):
+                        data[g_name]['TissueMaskRawTransform'] = n.transform_tissue_mask_raw
         data['final'] = {}
         data['final']['CellMask'] = self.p_naming.final_nuclear_mask
         data['final']['TissueMask'] = self.p_naming.final_tissue_mask
@@ -96,16 +133,25 @@ class Scheduler(object):
         clog.info('Dump rpi to {}'.format(rpi_path))
 
     def _weights_check(self, ):
+        """
+        Check and download the weights for cell and tissue segmentation.
+
+        This method iterates through the files in the `_files` dictionary and checks if each file has cell or tissue
+        segmentation enabled. If so, it retrieves the corresponding weights path from the configuration and appends the
+        base name of the weights path to the `weights` list. After collecting all unique weights, it attempts to download
+        them using the `WeightDownloader` class. If the download fails, a warning is logged.
+
+        Returns:
+            int: The status code of the weight download operation. 0 indicates success, non-zero indicates failure.
+        """
         weights = []
         for idx, f in self._files.items():
             if f.cell_segmentation:
                 wp = self.config.cell_segmentation.get_weights_path(f.tech)
-                if wp is None: return 1
                 weights.append(os.path.basename(wp))
 
             if f.tissue_segmentation:
                 wp = self.config.tissue_segmentation.get_weights_path(f.tech)
-                if wp is None: return 1
                 weights.append(os.path.basename(wp))
 
         weights = list(set(weights))
@@ -116,6 +162,21 @@ class Scheduler(object):
         return flag
 
     def _data_check(self, ):
+        """
+        Check the data files for consistency and availability.
+
+        This method checks if there are any data files to be analyzed. If no data
+        is found, it logs a warning and returns an error code. If data is found,
+        it checks if each file exists and if it is an image. If any file is missing
+        or not an image, it logs a warning and exits the program. If all files are
+        valid images, it checks if all images have the same size. If they do, it
+        logs the image information and returns 0. If they don't, it logs a warning
+        and returns an error code. If no image data is found, it logs a message
+        and returns an error code.
+
+        Returns:
+            int: An error code indicating the result of the data check.
+        """
         if len(self._files) < 1:
             clog.warning('No data was found that needed to be analyzed')
             return 3
@@ -126,7 +187,7 @@ class Scheduler(object):
                     continue
                 if not os.path.exists(f.file_path):
                     clog.warning('Missing file, {}'.format(f.file_path))
-                    sys.exit(ErrorCode.missFile.value)  # 缺失文件，非正常退出
+                    sys.exit(ErrorCode.missFile.value)  # missing file, abnormal exit
                 image = cbimread(f.file_path)
                 wh.append([image.width, image.height])
 
@@ -152,6 +213,21 @@ class Scheduler(object):
             cs_save_path,
             cur_c_image: Optional[Union[ipr.ImageChannel, ipr.IFChannel]] = None
     ):
+        """
+        Run tissue and cell segmentation on the given image file.
+
+        Args:
+            f (ProcFile): The file object containing segmentation settings.
+            im_path (Path): The path to the image file.
+            ts_raw_save_path (Path): The path to save the raw tissue segmentation mask.
+            cs_raw_save_path (Path): The path to save the raw cell segmentation mask.
+            ts_save_path (str): The path to save the final tissue segmentation mask.
+            cs_save_path (str): The path to save the final cell segmentation mask.
+            cur_c_image (object, optional): The current channel image or IF channel image, if available.
+
+        Returns:
+            None
+        """
         final_tissue_mask = None
         final_cell_mask = None
         if f.tissue_segmentation:
@@ -160,6 +236,7 @@ class Scheduler(object):
                 image_path=im_path,
                 save_path=ts_raw_save_path,
                 config=self.config,
+                chip_info=self.param_chip,
                 channel_image=cur_c_image
             )
             final_tissue_mask = tissue_mask
@@ -182,7 +259,7 @@ class Scheduler(object):
                 tissue_mask=tissue_mask,
                 cell_mask=cell_mask,
                 chip_box=c_box,
-                method=1,
+                method=0,
                 stain_type=f.tech
             )
             btcm = BestTissueCellMask.get_best_tissue_cell_mask(input_data=input_data)
@@ -200,7 +277,14 @@ class Scheduler(object):
             )
 
     def run_single_image(self):
-        # 遍历单张图像，执行单张图的模块
+        """
+        Process each single image in the pipeline.
+        
+        This method iterates over each image file, performs necessary transformations,
+        and applies segmentation. It handles both cases where IPR data is available and
+        where it is not.
+        """
+        # Iterate over each file in the dataset
         for idx, f in self._files.items():
             clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
             if f.is_image:
@@ -211,30 +295,31 @@ class Scheduler(object):
                     save_dir=self._output_path
                 )
                 cur_c_image = None
-                # stitch
+                # Copy the stitched image
                 shutil.copy2(f.file_path, cur_f_name.stitch_image)
                 if self._channel_images is not None and self._ipr is not None:
-                    # 传ipr进来了
-                    if not f.tech == TechType.IF:
-                        # TODO: deal with two versions of ipr
+                    # IPR data is provided
+                    if f.registration.reuse == -1:
+                        # TODO: handle two versions of IPR
                         qc_ = self._channel_images[g_name].QCInfo
                         if hasattr(qc_, 'QcPassFlag'):
                             qc_flag = getattr(qc_, 'QcPassFlag')
                         else:
                             qc_flag = getattr(qc_, 'QCPassFlag')
-                        if qc_flag != 1:  # 现有条件下无法配准
+                        if qc_flag != 1:  # Cannot register under current conditions
                             clog.warning('Image QC not pass, cannot deal this pipeline')
                             sys.exit(ErrorCode.qcFail.value)
-                    # Transform 操作：Transform > segmentation > mask merge & expand
+                    # Perform transform operations: Transform > Segmentation > Mask merge & expand
                     cur_c_image = self._channel_images[g_name]
-                    # transform in & out
+                    # Transform input and output
                     run_transform(
                         file=f,
                         channel_images=self._channel_images,
                         param_chip=self.param_chip,
                         files=self._files,
                         cur_f_name=cur_f_name,
-                        if_track=f.registration.trackline
+                        if_track=f.registration.trackline,
+                        research_mode=self.research_mode,
                     )
                     self.run_segmentation(
                         f=f,
@@ -246,7 +331,7 @@ class Scheduler(object):
                         cur_c_image=cur_c_image
                     )
                 else:
-                    # 没传ipr进来，直接基于输入的图进行分割
+                    # IPR data is not provided, perform segmentation directly on the input image
                     shutil.copy2(cur_f_name.stitch_image, cur_f_name.transformed_image)
                     self.run_segmentation(
                         f=f,
@@ -276,6 +361,7 @@ class Scheduler(object):
                             image_file=f,
                             image_path=cur_m_naming.heatmap,
                             save_path=cur_m_naming.tissue_mask,
+                            chip_info=self.param_chip,
                             config=self.config,
                         )
                     if f.cell_segmentation:
@@ -287,10 +373,21 @@ class Scheduler(object):
                         )
 
     def run_mul_image(self):
-        # 这里涉及多张图的配合，因为是配准。所以默认但张图的处理都结束了
+        """
+        Process multiple images for registration.
+
+        This method handles the registration of multiple images. It iterates over
+        the files in self._files and processes only the images. If the image is
+        registered, it performs the registration process. If not, it transforms
+        the image to a registered format.
+
+        :return: None
+        """
+        # involve coorperation of multiple images
+        # since this is registration, single-image processing is considered complete by default
         for idx, f in self._files.items():
-            clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
             if f.is_image:
+                clog.info('======>  File[{}] CellBin, {}'.format(idx, f.file_path))
                 g_name = f.get_group_name(sn=self.param_chip.chip_name)
                 cur_f_name = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name,
@@ -313,26 +410,38 @@ class Scheduler(object):
                         config=self.config,
                         debug=self.debug
                     )
+                    if f.registration.fixed_image != -1:
+                        fixed = self._files[f.registration.fixed_image]
+                        if fixed.is_matrix:
+                            self.matrix_file = self._files[f.registration.fixed_image]
                 else:
                     transform_to_register(
                         cur_f_name=cur_f_name
                     )
 
     def run_merge_masks(self):
+        """
+        This method processes and merges cell masks for each molecular classification file.
+        It extracts the cell mask from the file, determines the naming convention, and merges
+        the masks if necessary. Finally, it corrects the cell mask using the fast correction
+        algorithm and saves the results.
+
+        :return: None
+        """
         for idx, m in self.molecular_classify_files.items():
             clog.info('======>  Extract[{}], {}'.format(idx, m))
             picked_mask = m.cell_mask
             final_nuclear_path = self.p_naming.final_nuclear_mask
             final_t_mask_path = self.p_naming.final_tissue_mask
             final_cell_mask_path = self.p_naming.final_cell_mask
-            if len(picked_mask) == 1:  # 就一个mask
+            if len(picked_mask) == 1:  # Just one mask
                 im_naming = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name,
                     stain_type=self._files[picked_mask[0]].get_group_name(sn=self.param_chip.chip_name),
                     save_dir=self._output_path
                 )
                 to_fast = final_nuclear_path
-            else:  # 两个mask，现在默认第一个是核mask，第二个是膜mask
+            else:  # Two masks, assuming the first is the nuclear mask and the second is the membrane mask
                 im_naming1 = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name,
                     stain_type=self._files[picked_mask[0]].get_group_name(sn=self.param_chip.chip_name),
@@ -350,8 +459,9 @@ class Scheduler(object):
                 merged_cell_mask_path = im_naming.cell_mask_merged
                 if not os.path.exists(merged_cell_mask_path):
                     from cellbin2.contrib.mask_manager import merge_cell_mask
-                    # TODO: 这里暂时就默认im_naming1是核分割结果，im_naming2是膜分割结果
-                    if not im_naming1.cell_mask.exists() or im_naming2.cell_mask.exists():
+                    # TODO: Temporarily assume im_naming1 is the nuclear segmentation result,
+                    #       im_naming2 is the membrane segmentation result
+                    if not im_naming1.cell_mask.exists() or not im_naming2.cell_mask.exists():
                         continue
                     mask1 = cbimread(im_naming1.cell_mask, only_np=True)
                     mask2 = cbimread(im_naming2.cell_mask, only_np=True)
@@ -362,11 +472,11 @@ class Scheduler(object):
                 shutil.copy2(im_naming.cell_mask, final_nuclear_path)
             if im_naming.tissue_mask.exists():
                 shutil.copy2(im_naming.tissue_mask, final_t_mask_path)
-            # here, we got final cell mask and final tissue mask
+            # Here, we have the final cell mask and final tissue mask
             if not os.path.exists(final_cell_mask_path) and to_fast.exists():
                 fast_mask = run_fast_correct(
                     mask_path=to_fast,
-                    distance=self.config.cell_correct.expand_r,
+                    distance=m.correct_r,
                     n_jobs=self.config.cell_correct.process
                 )
                 cbimwrite(final_cell_mask_path, fast_mask)
@@ -374,15 +484,34 @@ class Scheduler(object):
     def run(self, chip_no: str, input_image: str,
             stain_type: str, param_file: str,
             output_path: str, ipr_path: str,
-            matrix_path: str, kit: str, debug: bool):
+            matrix_path: str, kit: str, debug: bool, research_mode: bool):
+        """
+        Run the main pipeline for processing the images.
+
+        Args:
+            chip_no (str): The serial number of the chip.
+            input_image (str): The path to the input image file.
+            stain_type (str): The type of stain used in the image.
+            param_file (str): The path to the parameter file.
+            output_path (str): The directory where the output files will be saved.
+            ipr_path (str): The path to the image process record file.
+            matrix_path (str): The path to the matrix file.
+            kit (str): The type of kit used (e.g., Transcriptomics, Protein).
+            debug (bool): Flag to enable debug mode.
+            research_mode (bool): Flag to enable research mode.
+
+        Returns:
+            None
+        """
 
         self._output_path = output_path
         self.debug = debug
-        # 芯片信息加载
+        self.research_mode = research_mode
+        # Load chip information
         self.param_chip.parse_info(chip_no)
         self.p_naming = naming.DumpPipelineFileNaming(chip_no=chip_no, save_dir=self._output_path)
 
-        # 数据加载
+        # Load data
         pp = read_param_file(
             file_path=param_file,
             cfg=self.config,
@@ -393,7 +522,7 @@ class Scheduler(object):
         self.molecular_classify_files = pp.get_molecular_classify()
         pp.print_files_info(self._files, mode='Scheduler')
 
-        # 数据校验失败则退出
+        # Exit if data validation fails
         flag1 = self._data_check()
         if flag1 not in [0, 2]:
             return 1
@@ -404,98 +533,176 @@ class Scheduler(object):
                 clog.info(f"No existing ipr founded, assumes qc has not been done before")
                 self._ipr, self._channel_images = None, None
 
-        # 模型加载
+        # Load model
         flag2 = self._weights_check()
         if flag2 != 0:
             sys.exit(1)
 
-        self.run_single_image()  # transform->tissue seg->cellseg
-        self.run_mul_image()  # registration between images
+        self.run_single_image()  # Process a single image (transform -> tissue seg -> cellseg)
+        self.run_mul_image()  # Register images
 
         if flag1 == 0 and self._channel_images is not None and self._ipr is not None:
             self._dump_ipr(self.p_naming.ipr)
 
-        self.run_merge_masks()  # merge multi masks if needed
+        self.run_merge_masks()  # Merge multiple masks if needed
 
-        if flag1 == 0:
+        if flag1 in [0, 2]:
             self._dump_rpi(self.p_naming.rpi)
-        if not self.debug:
-            self.del_files()
+        if research_mode:
+            if self.p_naming.tar_gz.exists() and self.p_naming.ipr.exists():
+                update_ipr_in_tar(
+                    tar_path=self.p_naming.tar_gz,
+                    ipr_path=self.p_naming.ipr,
+                )
 
-    def del_files(self):
+            if self.matrix_file is not None:
+                matrix_naming = naming.DumpMatrixFileNaming(
+                    sn=chip_no,
+                    m_type=self.matrix_file.tech.name,
+                    save_dir=output_path
+                )
+                matrix_template = matrix_naming.matrix_template
+            else:
+                matrix_template = Path("")
+
+            generate_stereo_file(
+                registered_image=self.p_naming.rpi,
+                compressed_image=self.p_naming.tar_gz,
+                matrix_template=matrix_template,
+                save_path=self.p_naming.stereo,
+                sn=chip_no
+            )
+        if not self.debug:
+            f_to_keep = FILES_TO_KEEP_RESEARCH if research_mode else FILES_TO_KEEP
+            self.del_files(f_to_keep)
+
+    def del_files(self, f_to_keep):
+        """
+        Deletes files from the output directory, excluding those specified to be kept.
+
+        Args:
+            f_to_keep (list): List of file properties that should not be deleted.
+
+        Returns:
+            None
+        """
+        # List to store all file paths
         all_ = []
+        # List to store file paths that should be kept
         k_ = []
+        # List to store file paths that should be removed
         remove_ = []
+        
+        # Iterate over files in self._files
         for idx, f in self._files.items():
+            # Get group name for the file
             g_name = f.get_group_name(sn=self.param_chip.chip_name)
+            
+            # Check if the file is a matrix
             if f.is_matrix:
+                # Create DumpMatrixFileNaming object for matrix files
                 f_name = naming.DumpMatrixFileNaming(
                     sn=self.param_chip.chip_name,
                     m_type=f.tech.name,
                     save_dir=self._output_path,
                 )
             else:
+                # Create DumpImageFileNaming object for image files
                 f_name = naming.DumpImageFileNaming(
                     sn=self.param_chip.chip_name,
                     stain_type=g_name,
                     save_dir=self._output_path
                 )
+            
+            # Iterate over attributes of the file naming object
             for p in dir(f_name):
                 att = getattr(f_name, p)
                 pt = f_name.__class__.__dict__.get(p)
+                
+                # Check if the attribute is a property and the file exists
                 if isinstance(pt, property) and att.exists():
                     all_.append(att)
-                    if f.is_matrix:
-                        remove_.append(att)
-                    elif pt not in FILES_TO_KEEP:
+                    
+                    # Check if the file should be removed or kept
+                    if pt not in f_to_keep:
                         remove_.append(att)
                     else:
                         k_.append(att)
+        
+        # Iterate over attributes of self.p_naming
         for p_p in dir(self.p_naming):
             p_att = getattr(self.p_naming, p_p)
             p_pt = self.p_naming.__class__.__dict__.get(p_p)
+            
+            # Check if the attribute is a property and the file exists
             if isinstance(p_pt, property) and p_att.exists():
                 all_.append(p_att)
-                if p_pt not in FILES_TO_KEEP:
+                
+                # Check if the file should be removed or kept
+                if p_pt not in f_to_keep:
                     remove_.append(p_att)
                 else:
                     k_.append(p_att)
+        
+        # Iterate over files in the output directory
         for f in os.listdir(self._output_path):
             path = os.path.join(self._output_path, f)
+            
+            # Remove the file if it is in the remove_ list
             if Path(path) in remove_:
                 os.remove(path)
 
 
 def scheduler_pipeline(weights_root: str, chip_no: str, input_image: str, stain_type: str,
                        param_file: str, output_path: str, matrix_path: str, ipr_path: str,
-                       kit: str, debug: bool = False):
+                       kit: str, debug: bool = False, research_mode=False):
     """
-    :param weights_root: CNN权重文件本地存储目录路径
-    :param chip_no: 样本芯片号
-    :param input_image: 染色图本地路径
-    :param stain_type: 染色图对应的染色类型
-    :param param_file: 入参文件本地路径
-    :param output_path: 输出文件本地存储目录路径
-    :param matrix_path: 表达矩阵本地存储路径
-    :param ipr_path: 图像记录文件本地存储路径
-    :param kit:
-    :return: int(状态码)
+    This function serves as the main pipeline for scheduling the image processing tasks.
+
+    Args:
+        weights_root (str): Local directory path for storing CNN weight files.
+        chip_no (str): Sample chip number.
+        input_image (str): Local path of the stained image.
+        stain_type (str): Staining type corresponding to the stained image.
+        param_file (str): Local path of the parameter file.
+        output_path (str): Local directory path for storing output files.
+        matrix_path (str): Local directory path for storing the expression matrix.
+        ipr_path (str): Local directory path for storing the image processing record file.
+        kit (str): Kit type (e.g., Transcriptomics, Protein).
+        debug (bool, optional): Debug mode flag. Defaults to False.
+        research_mode (bool, optional): Research mode flag. Defaults to False.
+
+    Returns:
+        int: Status code.
     """
     curr_path = os.path.dirname(os.path.realpath(__file__))
     config_file = os.path.join(curr_path, r'../config/cellbin.yaml')
     chip_mask_file = os.path.join(curr_path, r'../config/chip_mask.json')
 
+    # Initialize the Scheduler with configuration and weights
     iqc = Scheduler(config_file=config_file, chip_mask_file=chip_mask_file, weights_root=weights_root)
+    # Run the main pipeline with the provided parameters
     iqc.run(chip_no=chip_no,
             input_image=input_image,
             stain_type=stain_type,
             param_file=param_file,
             output_path=output_path,
             ipr_path=ipr_path,
-            matrix_path=matrix_path, kit=kit, debug=debug)
+            matrix_path=matrix_path, kit=kit, debug=debug, research_mode=research_mode)
 
 
 def main(args, para):
+    """
+    The main function that initializes and runs the scheduler pipeline.
+
+    Args:
+        args (argparse.Namespace): Parsed command - line arguments containing the configuration and input data.
+        para (dict): Additional parameters required for the pipeline.
+
+    Returns:
+        None
+    """
+    # Call the scheduler_pipeline function with the parsed arguments
     scheduler_pipeline(weights_root=args.weights_root, chip_no=args.chip_no,
                        input_image=args.image_path, stain_type=args.stain_type,
                        param_file=args.param_file, output_path=args.output_path,

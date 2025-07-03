@@ -34,20 +34,34 @@ FILES_TO_KEEP = (
     naming.DumpImageFileNaming.tissue_mask,
     naming.DumpImageFileNaming.cell_mask,
     naming.DumpPipelineFileNaming.ipr,
-    naming.DumpPipelineFileNaming.rpi,
     naming.DumpPipelineFileNaming.final_nuclear_mask,
     naming.DumpPipelineFileNaming.final_cell_mask,
     naming.DumpPipelineFileNaming.final_tissue_mask,
-    naming.DumpPipelineFileNaming.input_json
+    naming.DumpPipelineFileNaming.input_json,
+    naming.DumpMatrixFileNaming.matrix_template,
+)
+
+FILES_TO_KEEP_RESEARCH = FILES_TO_KEEP + (
+    naming.DumpPipelineFileNaming.stereo,
+    naming.DumpPipelineFileNaming.tar_gz,
+    naming.DumpPipelineFileNaming.rpi,
 )
 
 
 class ErrorCode(Enum):
-    init = 'value __doc__'
-    qcFail = 1, 'image qc failed'
-    missFile = 2, 'missing file'
-    sizeInconsistent = 3, 'input images are not in the same size'
-    weightDownloadFail = 4, 'weight file download fail'
+    # value should be in 0-255
+    qcFail = (1, 'image qc failed')
+    missFile = (2, 'missing file')
+    sizeInconsistent = (3, 'input images are not in the same size')
+    weightDownloadFail = (4, 'weight file download fail')
+    unexpectedError = (254, 'unexpected error')
+
+    def __new__(cls, value, doc):
+        # create a new enumeration member instance
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.doc = doc
+        return obj
 
 
 def write_e2f():

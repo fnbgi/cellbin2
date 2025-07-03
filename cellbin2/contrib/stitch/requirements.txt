@@ -1,0 +1,15 @@
+# base
+PyYAML
+tifffile
+scikit-image
+opencv-python
+tqdm
+scikit-learn
+scipy
+imagecodecs
+pandas
+requests
+matplotlib
+numpy
+ipython
+glog

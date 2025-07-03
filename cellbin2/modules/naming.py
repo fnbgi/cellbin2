@@ -3,14 +3,13 @@ from typing import Union, Callable
 from cellbin2 import __version__
 
 
-
 def my_property_dec(func: Callable[..., str]) -> property:
     def wrapper(self) -> Path:
         result = func(self)
         result = Path(self.save_dir).joinpath(result)
         return result
 
-    wrapper.__doc__ = func.__doc__  # 保留原始函数的文档字符串
+    wrapper.__doc__ = func.__doc__  # keep string for original function document
     return property(wrapper)
 
 
@@ -128,17 +127,17 @@ class DumpImageFileNaming:
         return f'{self.sn}_{self.stain_type}_mask.tif'
 
     @my_property_dec
-    def cell_mask_merged(self, ):  # 配准后的
+    def cell_mask_merged(self, ):  # after registration
         """Merged cell mask on registered image (nuclear + cell membrane)"""
         return f'{self.sn}_{self.stain_type}_mask_merged.tif'
 
     @my_property_dec
-    def cell_mask_raw(self, ):  # 配准后的
+    def cell_mask_raw(self, ):  # after registration
         """Cell raw mask on registered image"""
         return f'{self.sn}_{self.stain_type}_mask_raw.tif'
 
     # @property
-    # def cell_correct_mask(self, ):  # 配准后的
+    # def cell_correct_mask(self, ):  # after registration
     #     """Cell correct mask on registered image"""
     #     return f'{self.sn}_{self.stain_type}_mask_edm_dis_10.tif'
 
@@ -164,7 +163,7 @@ class DumpImageFileNaming:
 
 
 class DumpPipelineFileNaming(object):
-    """ 实现对CellBin输出文件的命名管理，输出文件内部关键字段的命名管理 """
+    """ implement naming management of CellBin output files and key string within the output files """
 
     def __init__(self, chip_no: str, save_dir):
         self._chip_no = chip_no
@@ -173,22 +172,22 @@ class DumpPipelineFileNaming(object):
     @my_property_dec
     def report(self, ):
         """CellBin 2.0 report"""
-        return 'CellBin_{}_report.html'.format(__version__)  # 报告文件
+        return 'CellBin_{}_report.html'.format(__version__)  # report file 
 
     @my_property_dec
     def metrics(self, ):
         """CellBin 2.0 Metrics"""
-        return 'metrics.json'  # 统计指标文件
+        return 'metrics.json'  # statistical indicator file
 
     @my_property_dec
     def ipr(self, ):
         """Image processing record"""
-        return '{}.ipr'.format(self._chip_no)  # 图像记录文件
+        return '{}.ipr'.format(self._chip_no)  # image record file 
 
     @my_property_dec
     def rpi(self, ):
         """Recorded image processing (for visualization)"""
-        return '{}.rpi'.format(self._chip_no)  # 图像金字塔文件
+        return '{}.rpi'.format(self._chip_no)  # image pyramid files
 
     @my_property_dec
     def final_nuclear_mask(self, ):
@@ -209,6 +208,16 @@ class DumpPipelineFileNaming(object):
     def input_json(self):
         """CellBin 2.0 input params"""
         return f"{self._chip_no}_params.json"
+
+    @my_property_dec
+    def tar_gz(self):
+        """tar.gz file"""
+        return f"{self._chip_no}.tar.gz"
+
+    @my_property_dec
+    def stereo(self):
+        """A JSON-formatted manifest file that records the visualization files in the result"""
+        return f"{self._chip_no}.stereo"
 
 
 def main():
